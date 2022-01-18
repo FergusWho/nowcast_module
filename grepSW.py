@@ -10,9 +10,9 @@ from datetime import timedelta
 from datetime import datetime
 import pytz
 import json
-
-root_dir = '/home/junxiang/Workspace/cron_test/'
-
+import sys
+import os
+import argparse
 
 # some parameters 
 AU  = 1.5e11        
@@ -23,6 +23,23 @@ t_o = 2858068.3
 vo  = 52483.25 
 co  = 3.0e8
 n_0 = 1.0e6
+
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--root_dir", type=str, default='/home/junxiang/nowcast_module', \
+       help=("Root directory"))
+parser.add_argument("--run_name", type=str, default='', \
+       help=("folder name for the run"))
+parser.add_argument("--date_time", type=str, default='', \
+       help=("date time string if not using current time"))
+args = parser.parse_args()
+
+
+root_dir = args.root_dir
+run_name = args.run_name
+
+
+
 
 #### Get the current time
 now = datetime.now()
@@ -161,7 +178,7 @@ T_mean = T_mean/count
 
 #### Create Input files for the iPATH
 
-f3 = open(root_dir+'cronlog.txt', 'a')
+f3 = open(root_dir+'/cronlog.txt', 'a')
 f3.write('{}  {:5.2f}  {:5.2f}  {:6.1f}  {:9.1f}\n'.format(local_time, B_mean, n_mean, v_mean, T_mean))
 f3.close()
 
@@ -195,9 +212,8 @@ data ={
        'r0_e': 1.0,
        'phi_e': 80.0,
        'cturb_au': 0.5,
-       'MPI_compiler': 'mpif90',
-       'ranks': 10
+       'MPI_compiler': 'mpif90'
 }
 
-with open('input.json', 'w') as write_file:
+with open(root_dir+'/'+run_name+'_input.json', 'w') as write_file:
     json.dump(data, write_file)
