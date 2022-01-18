@@ -25,6 +25,16 @@ vo  = 52483.25
 co  = 3.0e8
 n_0 = 1.0e6
 
+parser = argparse.ArgumentParser()
+parser.add_argument("--root_dir", type=str, default='/home/junxiang/nowcast_module', \
+       help=("Root directory"))
+parser.add_argument("--run_name", type=str, default='', \
+       help=("folder name for the run"))
+args = parser.parse_args()
+
+
+root_dir = args.root_dir
+run_name = args.run_name
 
 #### Get the current time
 now = datetime.utcnow()
@@ -36,7 +46,7 @@ utc = pytz.timezone("UTC")
 
 #utc_datetime = now.astimezone(utc)
 
-utc_datetime = datetime.strptime('2022-01-14T16:15Z', '%Y-%m-%dT%H:%MZ')
+utc_datetime = datetime.strptime('2022-01-15T16:15Z', '%Y-%m-%dT%H:%MZ')
 
 utc_datetime= utc_datetime.replace(tzinfo=utc)
 
@@ -97,7 +107,7 @@ if len(CME_index) != 0:
     else:
         bgsw_folder_name =t3.strftime('%Y-%m-%d_%H:%M')
 
-    print(bgsw_folder_name)
+
 
 #### modify input.json for the CME run
     f2 = open(bgsw_folder_name+'/input.json', 'r')
@@ -108,6 +118,10 @@ if len(CME_index) != 0:
     input_data['cme_width'] = data[CME_index[0]].get('halfAngle')*2 
     input_data['phi_e'] = 100.0-data[CME_index[0]].get('longitude') 
     
-    f3 = open(bgsw_folder_name+'/'+data[CME_index[0]].get('associatedCMEID')+'input.json', 'w')
+    f3 = open(bgsw_folder_name+'/'+run_name+'_input.json', 'w')
     json.dump(input_data, f3)
     f3.close()
+else:
+    bgsw_folder_name=''
+
+print (bgsw_folder_name)

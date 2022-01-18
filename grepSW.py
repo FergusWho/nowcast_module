@@ -31,8 +31,6 @@ parser.add_argument("--root_dir", type=str, default='/home/junxiang/nowcast_modu
        help=("Root directory"))
 parser.add_argument("--run_name", type=str, default='', \
        help=("folder name for the run"))
-parser.add_argument("--date_time", type=str, default='', \
-       help=("date time string if not using current time"))
 args = parser.parse_args()
 
 
