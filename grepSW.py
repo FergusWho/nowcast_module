@@ -4,6 +4,7 @@ import math
 import numpy as np
 import matplotlib.pyplot as plt
 
+import urllib.parse
 import urllib.request
 import datetime
 from datetime import timedelta
@@ -41,25 +42,28 @@ run_name = args.run_name
 
 
 
-#### Get the current time
-now = datetime.now()
-LOCAL_TIMEZONE = datetime.now().astimezone().tzinfo
-local_time = now.strftime("%Y-%m-%d %H:%M:%S")
+# #### Get the current time
+# now = datetime.now()
+# LOCAL_TIMEZONE = datetime.now().astimezone().tzinfo
+# local_time = now.strftime("%Y-%m-%d %H:%M:%S")
 
-utc = pytz.timezone("UTC")
-utc_datetime = now.astimezone(utc)
+# utc = pytz.timezone("UTC")
+# utc_datetime = now.astimezone(utc)
+# utc_time = utc_datetime.strftime("%Y-%m-%d %H:%M:%S")
+
+#print("Current Local Time =", local_time, '\nUTC Time =', utc_time)
+utc_datetime = datetime.strptime(run_name, '%Y-%m-%d_%H:%M')
 utc_time = utc_datetime.strftime("%Y-%m-%d %H:%M:%S")
-
-print("Current Local Time =", local_time, '\nUTC Time =', utc_time)
 
 
 #### Find the API urls 
 # the output files contains magnetic field and plasma data during the last 24 hours
 # See https://ccmc.gsfc.nasa.gov/support/iswa/iswa-webservices.php for source
+encoded_endtime = urllib.parse.urlencode({'end-time':utc_time})
 
-url_mag = "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/DatabaseDataStreamServlet?format=TEXT&resource=DSCOVR&quantity=B_t&duration=1"
+url_mag =  "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/DatabaseDataStreamServlet?format=TEXT&resource=DSCOVR&quantity=B_t&duration=1&"+encoded_endtime
 
-url_pla = "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/DatabaseDataStreamServlet?format=TEXT&resource=DSCOVR,DSCOVR,DSCOVR&quantity=BulkSpeed,ProtonDensity,IonTemperature&duration=1"
+url_pla =  "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/DatabaseDataStreamServlet?format=TEXT&resource=DSCOVR,DSCOVR,DSCOVR&quantity=BulkSpeed,ProtonDensity,IonTemperature&duration=1&"+encoded_endtime
 
 url_seed = "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/DatabaseDataStreamServlet?format=TEXT&resource=ACE&quantity=ProtonFlux_115_195&duration=1"
 
@@ -179,7 +183,7 @@ T_mean = T_mean/count
 #### Create Input files for the iPATH
 
 f3 = open(root_dir+'/cronlog.txt', 'a')
-f3.write('{}  {:5.2f}  {:5.2f}  {:6.1f}  {:9.1f}\n'.format(local_time, B_mean, n_mean, v_mean, T_mean))
+f3.write('{}  {:5.2f}  {:5.2f}  {:6.1f}  {:9.1f}\n'.format(utc_time, B_mean, n_mean, v_mean, T_mean))
 f3.close()
 
 data ={

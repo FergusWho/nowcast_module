@@ -99,6 +99,15 @@ if len(CME_index) != 0:
 
     print(bgsw_folder_name)
 
-
-
 #### modify input.json for the CME run
+    f2 = open(bgsw_folder_name+'/input.json', 'r')
+    input_data = json.load(f2)
+    f2.close()
+
+    input_data['cme_speed'] = data[CME_index[0]].get('speed') 
+    input_data['cme_width'] = data[CME_index[0]].get('halfAngle')*2 
+    input_data['phi_e'] = 100.0-data[CME_index[0]].get('longitude') 
+    
+    f3 = open(bgsw_folder_name+'/'+data[CME_index[0]].get('associatedCMEID')+'input.json', 'w')
+    json.dump(input_data, f3)
+    f3.close()

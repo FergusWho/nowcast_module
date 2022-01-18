@@ -4,6 +4,10 @@ root_dir='/home/junxiang/nowcast_module'
 
 run_dir=$(date +'%Y-%m-%d_%H:%M' -u)
 
+## testing for specific event:
+#run_dir='2022-01-14_16:00'
+
+
 /usr/bin/python3 $root_dir/grepSW.py --root_dir $root_dir --run_name $run_dir
 
 mkdir $root_dir/$run_dir
