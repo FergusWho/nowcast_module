@@ -29,47 +29,83 @@ n_0 = 1.0e6
 parser = argparse.ArgumentParser()
 parser.add_argument("--root_dir", type=str, default='/home/junxiang/nowcast_module', \
        help=("Root directory"))
-parser.add_argument("--run_name", type=str, default='', \
-       help=("folder name for the run"))
+parser.add_argument("--run_time", type=str, default='', \
+       help=("timestamp for the run, in %Y-%m-%d_%H:%M"))
 args = parser.parse_args()
 
 
 root_dir = args.root_dir
-run_name = args.run_name
+run_time = args.run_time
+
+######################################################################################################
+
+if (run_time == ""):
+       # get current time
+       now = datetime.now()
+       LOCAL_TIMEZONE = datetime.now().astimezone().tzinfo
+       local_time = now.strftime("%Y-%m-%d %H:%M:%S")
+
+       utc = pytz.timezone("UTC")
+       utc_datetime = now.astimezone(utc)
+       utc_datetime = utc_datetime.replace(tzinfo=None) # remove the timezone info for consistency
+       
+       #print("Current Local Time =", local_time, '\nUTC Time =', utc_time)
+else:
+       utc_datetime = datetime.strptime(run_time, '%Y-%m-%d_%H:%M')
 
 
-
-
-# #### Get the current time
-# now = datetime.now()
-# LOCAL_TIMEZONE = datetime.now().astimezone().tzinfo
-# local_time = now.strftime("%Y-%m-%d %H:%M:%S")
-
-# utc = pytz.timezone("UTC")
-# utc_datetime = now.astimezone(utc)
-# utc_time = utc_datetime.strftime("%Y-%m-%d %H:%M:%S")
-
-#print("Current Local Time =", local_time, '\nUTC Time =', utc_time)
-utc_datetime = datetime.strptime(run_name, '%Y-%m-%d_%H:%M')
 utc_time = utc_datetime.strftime("%Y-%m-%d %H:%M:%S")
+print ("test timestamp:", utc_time)
+
+### define folder name
+# separate date and %H:%M:%S
+date_str= utc_datetime.strftime("%Y-%m-%d")
+time_str= utc_datetime.strftime("%H:%M:%S")
+
+print("time is", time_str)
+date = datetime.strptime(date_str, '%Y-%m-%d')
+
+seconds = (utc_datetime - date).total_seconds()
+
+if (seconds < 8*3600):
+       run_name = date_str+'_00:00'
+elif (seconds < 16*3600):
+       run_name = date_str+'_08:00'
+else:
+       run_name = date_str+'_16:00' 
+
+print ("folder name:", run_name)
+
+f0 = open(root_dir+'/temp.txt','w')
+f0.write(run_name)
+f0.close()
+
+######################################################################################################
+
 
 
 #### Find the API urls 
 # the output files contains magnetic field and plasma data during the last 24 hours
 # See https://ccmc.gsfc.nasa.gov/support/iswa/iswa-webservices.php for source
-encoded_endtime = urllib.parse.urlencode({'end-time':utc_time})
+#encoded_endtime = urllib.parse.urlencode({'end-time':utc_time})
+endtime = utc_datetime.strftime("%Y-%m-%d %H:%M:%S")
+encoded_endtime = date_str+'%20'+time_str
 
-url_mag =  "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/DatabaseDataStreamServlet?format=TEXT&resource=DSCOVR&quantity=B_t&duration=1&"+encoded_endtime
+# starttime = (utc_datetime - timedelta(days=5) ).strftime("%Y-%m-%d %H:%M:%S")
+# print (endtime)
+# print (starttime)
 
-url_pla =  "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/DatabaseDataStreamServlet?format=TEXT&resource=DSCOVR,DSCOVR,DSCOVR&quantity=BulkSpeed,ProtonDensity,IonTemperature&duration=1&"+encoded_endtime
-
-url_seed = "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/DatabaseDataStreamServlet?format=TEXT&resource=ACE&quantity=ProtonFlux_115_195&duration=1"
+url_mag =  "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/DatabaseDataStreamServlet?format=TEXT&resource=DSCOVR&quantity=B_t&duration=1&end-time="+encoded_endtime
+url_pla =  "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/DatabaseDataStreamServlet?format=TEXT&resource=DSCOVR,DSCOVR,DSCOVR&quantity=BulkSpeed,ProtonDensity,IonTemperature&duration=1&end-time="+encoded_endtime
+url_seed = "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/DatabaseDataStreamServlet?format=TEXT&resource=ACE&quantity=ProtonFlux_115_195&duration=1&end-time="+encoded_endtime
 
 url_cme = "https://kauai.ccmc.gsfc.nasa.gov/DONKI/WS/get/CMEAnalysis.txt?mostAccurateOnly=true&speed=500&halfAngle=35"
 # most accurate only, speed lower limit: 500km/s, half width lower limit 35 degrees.
 
 print(url_mag)
-
+print(url_pla)
+print(url_seed)
+print(url_cme)
 ##### Read data from the URL
 
 line_no1 = 0
@@ -105,9 +141,9 @@ for line in f1:
               B_data.append(float(columns[2])) 
        line_no1 +=1
 
-print(time1[0], B_data[0])
-
-
+# print(time1[0], B_data[0])
+# print(len(time1), line_no1)
+# print(time1[len(time1)-1], B_data[len(time1)-1])
 
 
 for line in f2:
@@ -123,7 +159,7 @@ for line in f2:
               T_data.append(float(columns[4]))
        line_no2 +=1
 
-print(time2[0], usw_data[0], n_data[0], T_data[0])
+#print(time2[0], usw_data[0], n_data[0], T_data[0])
 
 
 

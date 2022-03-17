@@ -5,14 +5,20 @@ root_dir='/home/junxiang/nowcast_module'
 MPI_comp='mpif90'
 FCOMP='gfortran'
 
-CME_dir=$(date +'%Y-%m-%d_%H:%M' -u)
+#run_time=$(date +'%Y-%m-%d_%H:%M' -u)
+
+# testing for specific event:
+run_time='2022-01-20_08:30'
+
+
+
+CME_dir=$run_time
+
 trspt_dir='transport'
 thread_count=18
-## testing for specific event:
-#CME_dir='2022-01-14_16:00'
 
 # save last line of output to bgsw_folder_name
-bgsw_folder_name=`/usr/bin/python3 $root_dir/check_CME.py --root_dir $root_dir --run_name $CME_dir | tail -n 1`
+bgsw_folder_name=`/usr/bin/python3 $root_dir/check_CME.py --root_dir $root_dir --run_time $run_time | tail -n 1`
 
 echo $bgsw_folder_name
 

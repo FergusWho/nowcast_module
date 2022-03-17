@@ -28,41 +28,76 @@ n_0 = 1.0e6
 parser = argparse.ArgumentParser()
 parser.add_argument("--root_dir", type=str, default='/home/junxiang/nowcast_module', \
        help=("Root directory"))
-parser.add_argument("--run_name", type=str, default='', \
+parser.add_argument("--run_time", type=str, default='', \
        help=("folder name for the run"))
 args = parser.parse_args()
 
 
 root_dir = args.root_dir
-run_name = args.run_name
+run_time = args.run_time
 
-#### Get the current time
-now = datetime.utcnow()
+######################################################################################################
 
-LOCAL_TIMEZONE = datetime.now().astimezone().tzinfo
-local_time = now.strftime("%Y-%m-%d %H:%M:%S")
+if (run_time == ""):
+       # get current time
+       now = datetime.now()
+       LOCAL_TIMEZONE = datetime.now().astimezone().tzinfo
+       local_time = now.strftime("%Y-%m-%d %H:%M:%S")
 
-utc = pytz.timezone("UTC")
+       utc = pytz.timezone("UTC")
+       utc_datetime = now.astimezone(utc)
+       utc_datetime = utc_datetime.replace(tzinfo=None) # remove the timezone info for consistency
+       
+       #print("Current Local Time =", local_time, '\nUTC Time =', utc_time)
+else:
+       utc_datetime = datetime.strptime(run_time, '%Y-%m-%d_%H:%M')
 
-#utc_datetime = now.astimezone(utc)
 
-utc_datetime = datetime.strptime('2022-01-15T16:15Z', '%Y-%m-%dT%H:%MZ')
+utc_time = utc_datetime.strftime("%Y-%m-%d %H:%M:%S")
+print ("test timestamp:", utc_time)
 
-utc_datetime= utc_datetime.replace(tzinfo=utc)
+### define folder name
+# separate date and %H:%M:%S
+date_str= utc_datetime.strftime("%Y-%m-%d")
+date = datetime.strptime(date_str, '%Y-%m-%d')
 
+seconds = (utc_datetime - date).total_seconds()
+
+# if (seconds < 8*3600):
+#        run_name = date_str+'_00:00'
+# elif (seconds < 16*3600):
+#        run_name = date_str+'_08:00'
+# else:
+#        run_name = date_str+'_16:00' 
+
+# print ("folder name:", run_name)
+
+# f0 = open(root_dir+'/temp.txt','w')
+# f0.write(run_name)
+# f0.close()
+
+######################################################################################################
+
+
+enddate = utc_datetime.strftime("%Y-%m-%d")
+startdate = (utc_datetime - timedelta(days=5) ).strftime("%Y-%m-%d")
 
 dt_start = utc_datetime - timedelta(minutes=15)
-utc_time = utc_datetime.strftime("%Y-%m-%d %H:%M:%S")
-
-print("Current Local Time =", local_time, '\nUTC Time =', utc_time)
-print("Current Local Time =", utc_datetime, '\nUTC Time =', dt_start)
 
 
-# text: 
-url_cme = "https://kauai.ccmc.gsfc.nasa.gov/DONKI/WS/get/CMEAnalysis.txt?mostAccurateOnly=true&speed=500&halfAngle=35"
 
-# JSON:
-url_cme = "https://kauai.ccmc.gsfc.nasa.gov/DONKI/WS/get/CMEAnalysis?&mostAccurateOnly=true&speed=500&halfAngle=35&catalog=ALL"
+#------ get the current list ------
+# # text: 
+# url_cme = "https://kauai.ccmc.gsfc.nasa.gov/DONKI/WS/get/CMEAnalysis.txt?startmostAccurateOnly=true&speed=500&halfAngle=35"
+# # JSON:
+# url_cme = "https://kauai.ccmc.gsfc.nasa.gov/DONKI/WS/get/CMEAnalysis?&mostAccurateOnly=true&speed=500&halfAngle=35&catalog=ALL"
+
+#------ get the list for target date -----
+url_cme = "https://kauai.ccmc.gsfc.nasa.gov/DONKI/WS/get/CMEAnalysis?startDate="+startdate+"&endDate="+enddate+"&mostAccurateOnly=true&speed=500&halfAngle=35"
+
+
+print (url_cme)
+
 
 f1 = urllib.request.urlopen(url_cme)
 data = json.load(f1)
@@ -72,16 +107,18 @@ data = json.load(f1)
 
 print (len(data))
 
-print (data[0].get('speed'))
-
-print (data[1])
+#print (data[0].get('speed'))
+#print (data[1])
 
 CME_index=[]
+
+
+
 
 #### check CMEs in the last 15 mins
 for i in range(0, len(data)):
     datetime_CME = datetime.strptime(data[i].get('time21_5'), '%Y-%m-%dT%H:%MZ')
-    datetime_CME = datetime_CME.replace(tzinfo=utc) # make it an aware datetime object
+    #datetime_CME = datetime_CME.replace(tzinfo=utc) # make it an aware datetime object
     print (datetime_CME)
 
     if datetime_CME > dt_start and datetime_CME <= utc_datetime:
@@ -93,8 +130,6 @@ print ('total CME counts in the last 15 mins:', len(CME_index))
 # now assuming there can be only at most 1 CME in the 15 mins time window
 
 if len(CME_index) != 0:
-    dt_start = dt_start.replace(tzinfo=None)
-
     target_date = dt_start.strftime('%Y-%m-%d')
     t1 = datetime.strptime(target_date, '%Y-%m-%d')     # 00:00
     t2 = t1 + timedelta(hours=8)                        # 08:00
@@ -118,7 +153,7 @@ if len(CME_index) != 0:
     input_data['cme_width'] = data[CME_index[0]].get('halfAngle')*2 
     input_data['phi_e'] = 100.0-data[CME_index[0]].get('longitude') 
     
-    f3 = open(bgsw_folder_name+'/'+run_name+'_input.json', 'w')
+    f3 = open(bgsw_folder_name+'/'+run_time+'_input.json', 'w')
     json.dump(input_data, f3)
     f3.close()
 else:

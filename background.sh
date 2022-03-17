@@ -2,13 +2,17 @@
 iPATH_dir='/home/junxiang/iPATH2.0'
 root_dir='/home/junxiang/nowcast_module'
 
-#run_dir=$(date +'%Y-%m-%d_%H:%M' -u)
+#run_time=$(date +'%Y-%m-%d_%H:%M' -u)
 
 # testing for specific event:
-run_dir='2022-01-14_16:00'
+run_time='2022-01-20_08:30'
 
 
-/usr/bin/python3 $root_dir/grepSW.py --root_dir $root_dir --run_name $run_dir
+/usr/bin/python3 $root_dir/grepSW.py --root_dir $root_dir --run_time $run_time
+
+run_dir=`cat temp.txt`
+rm temp.txt
+
 
 mkdir $root_dir/$run_dir
 cp -r $iPATH_dir/Acceleration/zeus3.6/* $root_dir/$run_dir
