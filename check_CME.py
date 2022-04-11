@@ -26,7 +26,7 @@ co  = 3.0e8
 n_0 = 1.0e6
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--root_dir", type=str, default='/home/junxiang/nowcast_module', \
+parser.add_argument("--root_dir", type=str, default='/data/iPATH/nowcast_module', \
        help=("Root directory"))
 parser.add_argument("--run_time", type=str, default='', \
        help=("folder name for the run"))
@@ -126,6 +126,8 @@ for i in range(0, len(data)):
 
 print ('total CME counts in the last 15 mins:', len(CME_index))
 
+f4 = open(root_dir+'/CMElog.txt', 'a')
+
 #### check if there is a background solar wind setup in the most recent 8-hour window
 # now assuming there can be only at most 1 CME in the 15 mins time window
 
@@ -156,7 +158,10 @@ if len(CME_index) != 0:
     f3 = open(bgsw_folder_name+'/'+run_time+'_input.json', 'w')
     json.dump(input_data, f3)
     f3.close()
+    f4.write('Checking Time:{} | CME found:{} speed:{}\n'.format(utc_time, data[CME_index[0]].get('associatedCMEID'), data[CME_index[0]].get('speed')))
 else:
     bgsw_folder_name=''
+    f4.write('Checking Time:{} | No CME found\n'.format(utc_time))
 
+f4.close()
 print (bgsw_folder_name)

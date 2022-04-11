@@ -27,7 +27,7 @@ n_0 = 1.0e6
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--root_dir", type=str, default='/home/junxiang/nowcast_module', \
+parser.add_argument("--root_dir", type=str, default='/data/iPATH/nowcast_module', \
        help=("Root directory"))
 parser.add_argument("--run_time", type=str, default='', \
        help=("timestamp for the run, in %Y-%m-%d_%H:%M"))
