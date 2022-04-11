@@ -82,7 +82,7 @@ seconds = (utc_datetime - date).total_seconds()
 enddate = utc_datetime.strftime("%Y-%m-%d")
 startdate = (utc_datetime - timedelta(days=5) ).strftime("%Y-%m-%d")
 
-dt_start = utc_datetime - timedelta(minutes=15)
+
 
 
 
@@ -115,16 +115,31 @@ CME_index=[]
 
 
 
-#### check CMEs in the last 15 mins
+#### check CMEs in the last 30 mins
+#### check every 15 mins
+
+dt_start = utc_datetime - timedelta(minutes=30)
+
 for i in range(0, len(data)):
     datetime_CME = datetime.strptime(data[i].get('time21_5'), '%Y-%m-%dT%H:%MZ')
     #datetime_CME = datetime_CME.replace(tzinfo=utc) # make it an aware datetime object
     print (datetime_CME)
 
     if datetime_CME > dt_start and datetime_CME <= utc_datetime:
-        CME_index.append(i)
+        with open(root_dir+'/pastCME.json') as cme_list:
+            list_obj = json.load(cme_list)
+        
+        # check whether this CME has been simulated before
+        result = [x for x in list_obj if x.get('associatedCMEID')==data[i].get('associatedCMEID')]
 
-print ('total CME counts in the last 15 mins:', len(CME_index))
+        if result == []:
+        # no run found for this CME:
+            list_obj.append({"associatedCMEID":data[i].get('associatedCMEID')})
+            with open(root_dir+'/pastCME.json', 'w') as write_file:
+                json.dump(list_obj, write_file)
+            CME_index.append(i)
+
+print ('total NEW CME counts in the last 30 mins:', len(CME_index))
 
 f4 = open(root_dir+'/CMElog.txt', 'a')
 
@@ -161,7 +176,7 @@ if len(CME_index) != 0:
     f4.write('Checking Time:{} | CME found:{} speed:{}\n'.format(utc_time, data[CME_index[0]].get('associatedCMEID'), data[CME_index[0]].get('speed')))
 else:
     bgsw_folder_name=''
-    f4.write('Checking Time:{} | No CME found\n'.format(utc_time))
+    f4.write('Checking Time:{} | No newC ME found\n'.format(utc_time))
 
 f4.close()
 print (bgsw_folder_name)

@@ -110,25 +110,28 @@ print(url_cme)
 
 line_no1 = 0
 line_no2 = 0
+line_no3 = 0
 
 time1 = [] # time stamp for mag
 time2 = [] # time stamp for plasma
+time3 = [] # time stamp for seed
 
 B_data = []   # nT
 n_data = []   # p/cc
 usw_data = [] # km/s
 T_data = []   # K
-
+flux_data = [] # 
 
 
 
 
 f1 = urllib.request.urlopen(url_mag)
 f2 = urllib.request.urlopen(url_pla)
+f4 = urllib.request.urlopen(url_seed)
 
-# if fail to open then set to default
+#--- if it fails to open then set to default
       #add this later 
-
+#---
 
        
 for line in f1:
@@ -159,15 +162,27 @@ for line in f2:
               T_data.append(float(columns[4]))
        line_no2 +=1
 
+# read data for proton flux in the range of 115-195 KeV
+# data source: ACE
+for line in f4:
+       line = line.decode("utf-8")
+       line = line.strip()
+       
+       if line_no3 >0 and line != '':
+              columns = line.split()
+
+              time3.append(str(columns[0]) + ' '+ str(columns[1]))
+              flux_data.append(float(columns[2]))
+       line_no3 +=1
+
 #print(time2[0], usw_data[0], n_data[0], T_data[0])
 
 
 
 f1.close()
 f2.close()
+f4.close()
 
-#### Find if there is any CME during the last 8 hours
-# To be added
 
 #### average the observation values during the 8 hours prior to the current time
 
@@ -210,14 +225,31 @@ v_mean = v_mean/count
 T_mean = T_mean/count
 
 
-#print (n_mean, v_mean, T_mean, count)
+flux_mean = 0.0
+count = 0
+end_time3 = datetime.strptime(time3[len(time3)-1], "%Y-%m-%d %H:%M:%S.%f")
+#print (end_time1)
+
+for i in range(0, len(time3)):
+       tobj = datetime.strptime(time3[i], "%Y-%m-%d %H:%M:%S.%f")
+       diff = end_time3-tobj
+       if diff.seconds/3600 < 8:
+              flux_mean += flux_data[i]
+              count += 1
+
+flux_mean = flux_mean/count
+
+# Calculate injection rate based on the flux:
+
+inj_rate = 0.004 * (flux_mean/104.2)**0.9
+       # 0.004 corresponding to the flux of 104.2 is based on the May 17, 2012 event.
 
 
 
 #### Create Input files for the iPATH
 
 f3 = open(root_dir+'/cronlog.txt', 'a')
-f3.write('{}  {:5.2f}  {:5.2f}  {:6.1f}  {:9.1f}\n'.format(utc_time, B_mean, n_mean, v_mean, T_mean))
+f3.write('{}  {:5.2f}  {:5.2f}  {:6.1f}  {:9.1f}  {:5.2f}\n'.format(utc_time, B_mean, n_mean, v_mean, T_mean, flux_mean))
 f3.close()
 
 data ={
@@ -236,7 +268,7 @@ data ={
 # CME parameters
        'i_heavy': 2,
        'seed_spec': 3.5,
-       'inj_rate': 0.004,
+       'inj_rate': inj_rate,
        'run_time': 80.0,
        'cme_speed': 2500.0,
        'cme_width': 120.0,
