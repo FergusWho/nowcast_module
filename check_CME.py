@@ -54,6 +54,7 @@ else:
 
 
 utc_time = utc_datetime.strftime("%Y-%m-%d %H:%M:%S")
+utc_time_json = utc_datetime.strftime("%Y-%m-%dT%H:%M:%SZ")
 print ("test timestamp:", utc_time)
 
 ### define folder name
@@ -115,15 +116,16 @@ CME_index=[]
 
 
 
-#### check CMEs in the last 30 mins
-#### check every 15 mins
+#### check CMEs in the last 2 hours, every 15 mins
 
-dt_start = utc_datetime - timedelta(minutes=30)
+dt_start = utc_datetime - timedelta(minutes=120)
 
 for i in range(0, len(data)):
-    datetime_CME = datetime.strptime(data[i].get('time21_5'), '%Y-%m-%dT%H:%MZ')
+    cme_start_time = data[i].get('associatedCMEID').split("-CME-")[0]
+
+    datetime_CME = datetime.strptime(cme_start_time, '%Y-%m-%dT%H:%M:%S')
     #datetime_CME = datetime_CME.replace(tzinfo=utc) # make it an aware datetime object
-    print (datetime_CME)
+    print (datetime_CME, dt_start, utc_datetime)
 
     if datetime_CME > dt_start and datetime_CME <= utc_datetime:
         with open(root_dir+'/pastCME.json') as cme_list:
@@ -131,15 +133,19 @@ for i in range(0, len(data)):
         
         # check whether this CME has been simulated before
         result = [x for x in list_obj if x.get('associatedCMEID')==data[i].get('associatedCMEID')]
+        
 
         if result == []:
         # no run found for this CME:
             list_obj.append({"associatedCMEID":data[i].get('associatedCMEID')})
             with open(root_dir+'/pastCME.json', 'w') as write_file:
-                json.dump(list_obj, write_file)
+                json.dump(list_obj, write_file, indent=4)
             CME_index.append(i)
+        else:
+            print ('Previous simulation run found:', result)
 
-print ('total NEW CME counts in the last 30 mins:', len(CME_index))
+print ('total NEW CME counts in the last 120 mins:', len(CME_index))
+ii = len(CME_index)-1 # index number for the latest CME
 
 f4 = open(root_dir+'/CMElog.txt', 'a')
 
@@ -147,14 +153,18 @@ f4 = open(root_dir+'/CMElog.txt', 'a')
 # now assuming there can be only at most 1 CME in the 15 mins time window
 
 if len(CME_index) != 0:
-    target_date = dt_start.strftime('%Y-%m-%d')
+    cme_start_time = data[CME_index[ii]].get('associatedCMEID').split("-CME-")[0]
+    datetime_CME = datetime.strptime(cme_start_time, '%Y-%m-%dT%H:%M:%S')
+
+    target_date = datetime_CME.strftime('%Y-%m-%d')
     t1 = datetime.strptime(target_date, '%Y-%m-%d')     # 00:00
     t2 = t1 + timedelta(hours=8)                        # 08:00
     t3 = t2 + timedelta(hours=8)                        # 16:00
+    
     # assuming the background solar wind setup can finish in 15 mins
-    if dt_start < t2: 
+    if datetime_CME < t2: 
         bgsw_folder_name =t1.strftime('%Y-%m-%d_%H:%M')
-    elif dt_start < t3:
+    elif datetime_CME < t3:
         bgsw_folder_name =t2.strftime('%Y-%m-%d_%H:%M')
     else:
         bgsw_folder_name =t3.strftime('%Y-%m-%d_%H:%M')
@@ -162,21 +172,73 @@ if len(CME_index) != 0:
 
 
 #### modify input.json for the CME run
-    f2 = open(bgsw_folder_name+'/input.json', 'r')
+    f2 = open(root_dir+'/'+bgsw_folder_name+'/input.json', 'r')
     input_data = json.load(f2)
     f2.close()
 
-    input_data['cme_speed'] = data[CME_index[0]].get('speed') 
-    input_data['cme_width'] = data[CME_index[0]].get('halfAngle')*2 
-    input_data['phi_e'] = 100.0-data[CME_index[0]].get('longitude') 
+    input_data['cme_speed'] = data[CME_index[ii]].get('speed') 
+    input_data['cme_width'] = data[CME_index[ii]].get('halfAngle')*2 
+    input_data['phi_e'] = 100.0-data[CME_index[ii]].get('longitude') 
     
-    f3 = open(bgsw_folder_name+'/'+run_time+'_input.json', 'w')
-    json.dump(input_data, f3)
+    f3 = open(root_dir+'/'+bgsw_folder_name+'/'+run_time+'_input.json', 'w')
+    json.dump(input_data, f3, indent=4)
     f3.close()
-    f4.write('Checking Time:{} | CME found:{} speed:{}\n'.format(utc_time, data[CME_index[0]].get('associatedCMEID'), data[CME_index[0]].get('speed')))
+    f4.write('Checking Time:{} | CME found:{} speed:{}\n'.format(utc_time, data[CME_index[ii]].get('associatedCMEID'), data[CME_index[ii]].get('speed')))
+#### Generating Output JSON 
+
+    json_data={"sep_forecast_submission":{
+           "model": { "short_name": "iPATH", "spase_id": "spase://CCMC/SimulationModel/MODEL_NAME/VERSION" },
+           "issue_time": utc_time_json,       
+           "mode": "forecast",
+           "triggers": [],
+           "inputs": [],
+           "forecasts": []
+    }}
+
+    cme = {
+           "cme":{
+           "start_time":cme_start_time,
+           "lat": data[CME_index[ii]].get('latitude'),
+           "lon": data[CME_index[ii]].get('longitude'),
+#           "pa": 261,          
+           "half_width": data[CME_index[ii]].get('halfAngle'),
+           "speed": data[CME_index[ii]].get('speed'),
+           "height": 21.5,
+           "time_at_height": { "time":data[CME_index[ii]].get('time21_5'), "height": 21.5 },
+           "coordinates": "HEEQ",
+           "catalog": data[CME_index[ii]].get('catalog'),
+           "catalog_id": data[CME_index[ii]].get('associatedCMEID'),
+           "urls": [ data[CME_index[ii]].get('link') ]
+           }
+    }
+
+    json_data["sep_forecast_submission"]["triggers"].append(cme)
+
+    inputs = {
+        "magnetic_connectivity":{
+        "method": "Parker Spiral",
+        "lat": 0.0,
+        "lon": 0.0,
+        "solar_wind":{
+            "observatory":"DSCOVR",
+            "speed":input_data['glv'],
+            "proton_density":input_data['gln'],
+            "magnetic_field":input_data['glb']
+        }
+        }
+    }
+    
+    json_data["sep_forecast_submission"]["inputs"].append(inputs)
+
+    with open(root_dir+'/'+bgsw_folder_name+'/'+run_time+'_output.json', 'w') as write_file:
+        json.dump(json_data, write_file, indent=4)
+
+
 else:
     bgsw_folder_name=''
-    f4.write('Checking Time:{} | No newC ME found\n'.format(utc_time))
+    f4.write('Checking Time:{} | No new CME found\n'.format(utc_time))
 
 f4.close()
 print (bgsw_folder_name)
+
+

@@ -50,8 +50,9 @@ else
 	mv ./trspt.out $root_dir/$bgsw_folder_name/path_output/$trspt_dir
 	mv ./combine.out $root_dir/$bgsw_folder_name/path_output/$trspt_dir
 	cp $iPATH_dir/Transport/trspt_input $root_dir/$bgsw_folder_name/path_output/$trspt_dir
-	cp $iPATH_dir/plotting/plot_iPATH.py $root_dir/$bgsw_folder_name/path_output/$trspt_dir
+	cp $root_dir/plot_iPATH_nowcast.py $root_dir/$bgsw_folder_name/path_output/$trspt_dir
 	cp $root_dir/$bgsw_folder_name/${CME_dir}_input.json $root_dir/$bgsw_folder_name/path_output/$trspt_dir
+	mv $root_dir/$bgsw_folder_name/${CME_dir}_output.json $root_dir/$bgsw_folder_name/path_output/$trspt_dir/output.json
 
 	/opt/slurm/bin/sbatch -W run_transport.sh -r $root_dir/$bgsw_folder_name/path_output/$trspt_dir	
 	wait
@@ -60,6 +61,6 @@ else
 	rm RawData*
 	
 	# Plot result:
-	$python_bin $root_dir/$bgsw_folder_name/path_output/$trspt_dir/plot_iPATH.py
+	$python_bin $root_dir/$bgsw_folder_name/path_output/$trspt_dir/plot_iPATH_nowcast.py
 fi
 

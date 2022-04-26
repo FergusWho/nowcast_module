@@ -1,5 +1,5 @@
 #=================================================================================
-# Python script to grep real time Solar wind parameters from API
+# Python script to get real time Solar wind parameters from API
 import math
 import numpy as np
 import matplotlib.pyplot as plt
@@ -97,7 +97,7 @@ encoded_endtime = date_str+'%20'+time_str
 
 url_mag =  "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/DatabaseDataStreamServlet?format=TEXT&resource=DSCOVR&quantity=B_t&duration=1&end-time="+encoded_endtime
 url_pla =  "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/DatabaseDataStreamServlet?format=TEXT&resource=DSCOVR,DSCOVR,DSCOVR&quantity=BulkSpeed,ProtonDensity,IonTemperature&duration=1&end-time="+encoded_endtime
-url_seed = "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/DatabaseDataStreamServlet?format=TEXT&resource=ACE&quantity=ProtonFlux_115_195&duration=1&end-time="+encoded_endtime
+url_seed = "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/DatabaseDataStreamServlet?format=TEXT&resource=ACE&quantity=ProtonFlux_47_68&duration=1&end-time="+encoded_endtime
 
 url_cme = "https://kauai.ccmc.gsfc.nasa.gov/DONKI/WS/get/CMEAnalysis.txt?mostAccurateOnly=true&speed=500&halfAngle=35"
 # most accurate only, speed lower limit: 500km/s, half width lower limit 35 degrees.
@@ -162,7 +162,7 @@ for line in f2:
               T_data.append(float(columns[4]))
        line_no2 +=1
 
-# read data for proton flux in the range of 115-195 KeV
+# read data for proton flux in the range of 47-68 KeV
 # data source: ACE
 for line in f4:
        line = line.decode("utf-8")
@@ -241,8 +241,8 @@ flux_mean = flux_mean/count
 
 # Calculate injection rate based on the flux:
 
-inj_rate = 0.004 * (flux_mean/104.2)**0.9
-       # 0.004 corresponding to the flux of 104.2 is based on the May 17, 2012 event.
+inj_rate = 0.004 * (flux_mean/n_mean*5.6/1554.8)**0.8
+       # 0.004 corresponding to the flux of 1554.8 and density of 5.6 is based on the May 17, 2012 event.
 
 
 
@@ -286,4 +286,4 @@ data ={
 }
 
 with open(root_dir+'/'+run_name+'_input.json', 'w') as write_file:
-    json.dump(data, write_file)
+    json.dump(data, write_file, indent=4)
