@@ -116,9 +116,9 @@ CME_index=[]
 
 
 
-#### check CMEs in the last 2 hours, every 15 mins
+#### check CMEs in the last 4 hours, every 15 mins
 
-dt_start = utc_datetime - timedelta(minutes=120)
+dt_start = utc_datetime - timedelta(minutes=240)
 
 for i in range(0, len(data)):
     cme_start_time = data[i].get('associatedCMEID').split("-CME-")[0]
