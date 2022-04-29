@@ -116,9 +116,9 @@ CME_index=[]
 
 
 
-#### check CMEs in the last 4 hours, every 15 mins
+#### check CMEs in the last 6 hours, every 15 mins
 
-dt_start = utc_datetime - timedelta(minutes=240)
+dt_start = utc_datetime - timedelta(minutes=360)
 
 for i in range(0, len(data)):
     cme_start_time = data[i].get('associatedCMEID').split("-CME-")[0]
@@ -236,7 +236,7 @@ if len(CME_index) != 0:
 
 else:
     bgsw_folder_name=''
-    f4.write('Checking Time:{} | No new CME found\n'.format(utc_time))
+    f4.write('Checking Time:{} | No new CME found, last CME: {}\n'.format(utc_time, data[len(data)-1].get('associatedCMEID') ))
 
 f4.close()
 print (bgsw_folder_name)

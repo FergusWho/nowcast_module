@@ -241,8 +241,8 @@ flux_mean = flux_mean/count
 
 # Calculate injection rate based on the flux:
 
-inj_rate = 0.004 * (flux_mean/n_mean*5.6/1554.8)**0.8
-       # 0.004 corresponding to the flux of 1554.8 and density of 5.6 is based on the May 17, 2012 event.
+inj_rate = 0.002 * (flux_mean/n_mean*5.6/1554.8)**0.8
+       # 0.002 corresponding to the flux of 1554.8 and density of 5.6 is based on the May 17, 2012 event.
 
 
 
