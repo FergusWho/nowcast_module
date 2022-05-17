@@ -144,13 +144,14 @@ for i in range(0, len(data)):
         else:
             print ('Previous simulation run found:', result)
 
-print ('total NEW CME counts in the last 120 mins:', len(CME_index))
+print ('total NEW CME counts in the last 6 hours:', len(CME_index))
 ii = len(CME_index)-1 # index number for the latest CME
 
 f4 = open(root_dir+'/CMElog.txt', 'a')
 
 #### check if there is a background solar wind setup in the most recent 8-hour window
 # now assuming there can be only at most 1 CME in the 15 mins time window
+print ('CME_index', len(CME_index))
 
 if len(CME_index) != 0:
     cme_start_time = data[CME_index[ii]].get('associatedCMEID').split("-CME-")[0]
@@ -161,6 +162,8 @@ if len(CME_index) != 0:
     t2 = t1 + timedelta(hours=8)                        # 08:00
     t3 = t2 + timedelta(hours=8)                        # 16:00
     
+    f4.write('Checking Time:{} | CME found:{} speed:{}\n'.format(utc_time, data[CME_index[ii]].get('associatedCMEID'), data[CME_index[ii]].get('speed')))
+
     # assuming the background solar wind setup can finish in 15 mins
     if datetime_CME < t2: 
         bgsw_folder_name =t1.strftime('%Y-%m-%d_%H:%M')
@@ -171,7 +174,7 @@ if len(CME_index) != 0:
 
 
 
-#### modify input.json for the CME run
+    #### modify input.json for the CME run
     f2 = open(root_dir+'/'+bgsw_folder_name+'/input.json', 'r')
     input_data = json.load(f2)
     f2.close()
@@ -183,8 +186,7 @@ if len(CME_index) != 0:
     f3 = open(root_dir+'/'+bgsw_folder_name+'/'+run_time+'_input.json', 'w')
     json.dump(input_data, f3, indent=4)
     f3.close()
-    f4.write('Checking Time:{} | CME found:{} speed:{}\n'.format(utc_time, data[CME_index[ii]].get('associatedCMEID'), data[CME_index[ii]].get('speed')))
-#### Generating Output JSON 
+    #### Generating Output JSON 
 
     json_data={"sep_forecast_submission":{
            "model": { "short_name": "iPATH", "spase_id": "spase://CCMC/SimulationModel/MODEL_NAME/VERSION" },
@@ -232,8 +234,6 @@ if len(CME_index) != 0:
 
     with open(root_dir+'/'+bgsw_folder_name+'/'+run_time+'_output.json', 'w') as write_file:
         json.dump(json_data, write_file, indent=4)
-
-
 else:
     bgsw_folder_name=''
     f4.write('Checking Time:{} | No new CME found, last CME: {}\n'.format(utc_time, data[len(data)-1].get('associatedCMEID') ))
