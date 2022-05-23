@@ -81,7 +81,7 @@ seconds = (utc_datetime - date).total_seconds()
 
 
 enddate = utc_datetime.strftime("%Y-%m-%d")
-startdate = (utc_datetime - timedelta(days=5) ).strftime("%Y-%m-%d")
+startdate = (utc_datetime - timedelta(days=7) ).strftime("%Y-%m-%d")
 
 
 
@@ -236,8 +236,10 @@ if len(CME_index) != 0:
         json.dump(json_data, write_file, indent=4)
 else:
     bgsw_folder_name=''
-    f4.write('Checking Time:{} | No new CME found, last CME: {}\n'.format(utc_time, data[len(data)-1].get('associatedCMEID') ))
-
+    if len(data) > 0:
+        f4.write('Checking Time:{} | No new CME found, last CME in 7 days: {}\n'.format(utc_time, data[len(data)-1].get('associatedCMEID') ))
+    else:
+        f4.write('Checking Time:{} | No new CME found, no CME in past 7 days.\n'.format(utc_time))
 f4.close()
 print (bgsw_folder_name)
 
