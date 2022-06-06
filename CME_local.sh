@@ -8,14 +8,14 @@ FCOMP='gfortran'
 #run_time=$(date +'%Y-%m-%d_%H:%M' -u)
 
 # testing for specific event:
-run_time='2022-05-25_17:15'
+run_time='2022-05-11_22:00'
 
 
 
 CME_dir=$run_time
 
 trspt_dir='transport'
-thread_count=20
+thread_count=7
 
 # save last line of output to bgsw_folder_name
 bgsw_folder_name=`/usr/bin/python3 $root_dir/check_CME.py --root_dir $root_dir --run_time $run_time | tail -n 1`
