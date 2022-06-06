@@ -258,7 +258,7 @@ data ={
     'x1min': 0.05,
     'x1max': 2.0,
     'idtag': 'JH',
-    'tlim': 0.5,
+    'tlim': 0.6,
     'FCOMP': 'gfortran',
     'gln': n_mean,
     'TinMK': 0.07,
