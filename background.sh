@@ -9,8 +9,17 @@ module load python-3.8.9-gcc-10.2.0-dtvwd3q
 cd $root_dir
 run_time=$(date +'%Y-%m-%d_%H:%M' -u)
 
+
 # testing for specific event:
-#run_time='2022-01-20_08:30'
+# example: bash background.sh -t '2022-01-20_08:30'
+while getopts 't:L' flag
+do
+    case "${flag}" in
+        t) run_time=${OPTARG};;
+        L) if_local=1;;
+    esac
+done
+
 
 
 $python_bin $root_dir/grepSW.py --root_dir $root_dir --run_time $run_time

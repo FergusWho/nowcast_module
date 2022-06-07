@@ -12,8 +12,14 @@ FCOMP='gfortran'
 run_time=$(date +'%Y-%m-%d_%H:%M' -u)
 
 # testing for specific event:
-#run_time='2022-01-20_08:30'
-
+# example: bash CME.sh -t '2022-01-20_08:30'
+while getopts 't:L' flag
+do
+    case "${flag}" in
+        t) run_time=${OPTARG};;
+        L) if_local=1;;
+    esac
+done
 
 
 CME_dir=$run_time

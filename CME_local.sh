@@ -5,10 +5,10 @@ root_dir='/home/junxiang/nowcast_module'
 MPI_comp='mpif90'
 FCOMP='gfortran'
 
-#run_time=$(date +'%Y-%m-%d_%H:%M' -u)
+run_time=$(date +'%Y-%m-%d_%H:%M' -u)
 
 # testing for specific event:
-run_time='2022-05-11_22:00'
+#run_time='2022-05-11_22:00'
 
 
 
