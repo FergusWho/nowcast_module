@@ -517,7 +517,7 @@ writer.writerow(row)
 
 for i in range(0,t_num):
        row = []
-       time_str = (simulation_zero_time + timedelta(hours=xtime[i])).strftime('%Y-%m-%d %H:%M:%SZ')
+       time_str = (simulation_zero_time + timedelta(hours=xtime[i])).strftime('%Y-%m-%d %H:%M:%S')
        row.append(time_str)
        for j in range(0, p_num_trsp):
               row.append('{:<10.6e}'.format(time_intensity1[j][i]))
