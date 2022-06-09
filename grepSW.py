@@ -95,8 +95,15 @@ encoded_endtime = date_str+'%20'+time_str
 # print (endtime)
 # print (starttime)
 
-url_mag =  "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/DatabaseDataStreamServlet?format=TEXT&resource=DSCOVR&quantity=B_t&duration=1&end-time="+encoded_endtime
-url_pla =  "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/DatabaseDataStreamServlet?format=TEXT&resource=DSCOVR,DSCOVR,DSCOVR&quantity=BulkSpeed,ProtonDensity,IonTemperature&duration=1&end-time="+encoded_endtime
+dscovr_start_time = datetime.strptime('2016-07-25_08:00', '%Y-%m-%d_%H:%M')
+# DSCOVR data only available after this time
+if utc_datetime > dscovr_start_time:
+       url_mag =  "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/DatabaseDataStreamServlet?format=TEXT&resource=DSCOVR&quantity=B_t&duration=1&end-time="+encoded_endtime
+       url_pla =  "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/DatabaseDataStreamServlet?format=TEXT&resource=DSCOVR,DSCOVR,DSCOVR&quantity=BulkSpeed,ProtonDensity,IonTemperature&duration=1&end-time="+encoded_endtime
+else:
+       url_mag =  "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/DatabaseDataStreamServlet?format=TEXT&resource=ACE&quantity=B_t&duration=1&end-time="+encoded_endtime
+       url_pla =  "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/DatabaseDataStreamServlet?format=TEXT&resource=ACE,ACE,ACE&quantity=BulkSpeed,ProtonDensity,IonTemperature&duration=1&end-time="+encoded_endtime
+
 url_seed = "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/DatabaseDataStreamServlet?format=TEXT&resource=ACE&quantity=ProtonFlux_47_68&duration=1&end-time="+encoded_endtime
 
 url_cme = "https://kauai.ccmc.gsfc.nasa.gov/DONKI/WS/get/CMEAnalysis.txt?mostAccurateOnly=true&speed=500&halfAngle=35"
@@ -215,10 +222,12 @@ for i in range(0, len(time2)):
        tobj = datetime.strptime(time2[i], "%Y-%m-%d %H:%M:%S.%f")
        diff = end_time2-tobj
        if diff.seconds/3600 < 8:
-              n_mean += n_data[i]
-              v_mean += usw_data[i]
-              T_mean += T_data[i]
-              count += 1
+              if n_data[i] > 0 and usw_data[i]> 0 and T_data[i]>0:
+              # get rid of bad points
+                     n_mean += n_data[i]
+                     v_mean += usw_data[i]
+                     T_mean += T_data[i]
+                     count += 1
 
 n_mean = n_mean/count
 v_mean = v_mean/count
@@ -228,6 +237,7 @@ if len(time3) != 0:
        flux_mean = 0.0
        count = 0
        end_time3 = datetime.strptime(time3[len(time3)-1], "%Y-%m-%d %H:%M:%S.%f")
+       print(utc_datetime, end_time3)
        diff = utc_datetime - end_time3
        if diff.seconds/3600 > 8:
               print('Warning! ACE proton flux data missing!')
@@ -235,21 +245,19 @@ if len(time3) != 0:
               flux_mean = 3000.
               inj_rate = 0.004
        #print (end_time1)
+       else:
+              for i in range(0, len(time3)):
+                     tobj = datetime.strptime(time3[i], "%Y-%m-%d %H:%M:%S.%f")
+                     diff = end_time3-tobj
+                     if diff.seconds/3600 < 8:
+                            if flux_data[i] < 2e5:
+                                   flux_mean += flux_data[i]
+                                   count += 1
+              flux_mean = flux_mean/count
 
-       for i in range(0, len(time3)):
-              tobj = datetime.strptime(time3[i], "%Y-%m-%d %H:%M:%S.%f")
-              diff = end_time3-tobj
-              if diff.seconds/3600 < 8:
-                     if flux_data[i] < 2e5:
-                            flux_mean += flux_data[i]
-                            count += 1
-
-       flux_mean = flux_mean/count
-
-       # Calculate injection rate based on the flux:
-
-       inj_rate = 0.002 * (flux_mean/n_mean*5.6/1554.8)**0.8
-              # 0.002 corresponding to the flux of 1554.8 and density of 5.6 is based on the May 17, 2012 event.
+              # Calculate injection rate based on the flux:
+              inj_rate = 0.002 * (flux_mean/n_mean*5.6/1554.8)**0.8
+                     # 0.002 corresponding to the flux of 1554.8 and density of 5.6 is based on the May 17, 2012 event.
 else:
        print('Warning! ACE proton flux data missing!!')
        print('Injection efficiency set to default!')
