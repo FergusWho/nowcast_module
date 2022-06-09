@@ -116,9 +116,9 @@ CME_index=[]
 
 
 
-#### check CMEs in the last 8 hours, every 15 mins
+#### check CMEs in the last 24 hours, every 15 mins
 
-dt_start = utc_datetime - timedelta(minutes=479)
+dt_start = utc_datetime - timedelta(minutes=1439)
 
 for i in range(0, len(data)):
     cme_start_time = data[i].get('associatedCMEID').split("-CME-")[0]
@@ -144,7 +144,7 @@ for i in range(0, len(data)):
         else:
             print ('Previous simulation run found:', result)
 
-print ('total NEW CME counts in the last 8 hours:', len(CME_index))
+print ('total NEW CME counts in the last 24 hours:', len(CME_index))
 ii = len(CME_index)-1 # index number for the latest CME
 
 f4 = open(root_dir+'/CMElog.txt', 'a')

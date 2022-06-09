@@ -224,27 +224,45 @@ n_mean = n_mean/count
 v_mean = v_mean/count
 T_mean = T_mean/count
 
+if len(time3) != 0:
+       flux_mean = 0.0
+       count = 0
+       end_time3 = datetime.strptime(time3[len(time3)-1], "%Y-%m-%d %H:%M:%S.%f")
+       diff = utc_datetime - end_time3
+       if diff.seconds/3600 > 8:
+              print('Warning! ACE proton flux data missing!')
+              print('Injection efficiency set to default!')
+              flux_mean = 3000.
+              inj_rate = 0.004
+       #print (end_time1)
 
-flux_mean = 0.0
-count = 0
-end_time3 = datetime.strptime(time3[len(time3)-1], "%Y-%m-%d %H:%M:%S.%f")
-#print (end_time1)
+       for i in range(0, len(time3)):
+              tobj = datetime.strptime(time3[i], "%Y-%m-%d %H:%M:%S.%f")
+              diff = end_time3-tobj
+              if diff.seconds/3600 < 8:
+                     if flux_data[i] < 2e5:
+                            flux_mean += flux_data[i]
+                            count += 1
 
-for i in range(0, len(time3)):
-       tobj = datetime.strptime(time3[i], "%Y-%m-%d %H:%M:%S.%f")
-       diff = end_time3-tobj
-       if diff.seconds/3600 < 8:
-              flux_mean += flux_data[i]
-              count += 1
+       flux_mean = flux_mean/count
 
-flux_mean = flux_mean/count
+       # Calculate injection rate based on the flux:
 
-# Calculate injection rate based on the flux:
+       inj_rate = 0.002 * (flux_mean/n_mean*5.6/1554.8)**0.8
+              # 0.002 corresponding to the flux of 1554.8 and density of 5.6 is based on the May 17, 2012 event.
+else:
+       print('Warning! ACE proton flux data missing!!')
+       print('Injection efficiency set to default!')
+       flux_mean = 3000.
+       inj_rate = 0.004
 
-inj_rate = 0.002 * (flux_mean/n_mean*5.6/1554.8)**0.8
-       # 0.002 corresponding to the flux of 1554.8 and density of 5.6 is based on the May 17, 2012 event.
+if inj_rate > 0.02:
+       print('Warning! injection rate too high!!')
+       inj_rate = 0.02
 
-
+if inj_rate < 0.0004:
+       print('Warning! injection rate too low!!')
+       inj_rate = 0.0004
 
 #### Create Input files for the iPATH
 
