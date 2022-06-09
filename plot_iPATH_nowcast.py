@@ -302,47 +302,6 @@ for i in range(0, p_num_trsp):
 print (count1, count2, count3, count4)
 
 
-#=======================================================================       
-# save flux to file  
-
-
-f31 = open('./differential_flux.csv', 'w')
-writer = csv.writer(f31)
-
-writer.writerow(['time(h)', 'differential flux[protons/(cm^2 s sr MeV)] at the energy [MeV]'])
-
-
-row = []
-row.append('')
-for j in range(0, p_num_trsp):
-       row.append('{:<#18.8g}'.format(energy1Mev[j]))
-
-writer.writerow(row)
-
-for i in range(0,t_num):
-       row = []
-       row.append(xtime[i])
-       for j in range(0, p_num_trsp):
-              row.append('{:<10.6e}'.format(time_intensity1[j][i]))
-       writer.writerow(row)
-f31.close()
-
-
-# f21 = open('./simulation_data/'+plot_title+'_differential_flux', 'w')
-# f21.write('Time [hrs],    Energy [MeV],     Intensity J_T [protons/(cm^2 s sr MeV)]\n')
-
-# for i in range(0, t_num):
-#        for j in range(0, p_num_trsp):
-#               f21.write('{:<15.4f}{:<#18.8g}{:<10.6e}\n'.format(xtime[i], energy1Mev[j], time_intensity1[j][i]))
-
-#f21.close()
-
-
-f41 = open('./event_integrated_fluence.txt','w')
-f41.write('Energy [MeV],     Fluence [cm^{-2} MeV^{-1}]\n')
-for j in range(0, p_num_trsp):
-       f41.write('{:<#18.8g}{:<10.6e}\n'.format(energy1Mev[j], total_fp1[j]))
-f41.close()
   
 
 #############################################################################################################################
@@ -537,5 +496,49 @@ run_time = utc_time.strftime('%Y-%m-%d_%H:%M')
 
 with open('./'+run_time+'_output.json', 'w') as write_file:
        json.dump(json_data, write_file, indent=4)
+
+
+#=======================================================================       
+# save flux to file  
+
+
+f31 = open('./differential_flux.csv', 'w')
+writer = csv.writer(f31)
+
+writer.writerow(['time(h)', 'differential flux[protons/(cm^2 s sr MeV)] at the energy [MeV]'])
+
+
+row = []
+row.append('')
+for j in range(0, p_num_trsp):
+       row.append('{:<#18.8g}'.format(energy1Mev[j]))
+
+writer.writerow(row)
+
+for i in range(0,t_num):
+       row = []
+       time_str = (simulation_zero_time + timedelta(hours=xtime[i])).strftime('%Y-%m-%d %H:%M:%SZ')
+       row.append(time_str)
+       for j in range(0, p_num_trsp):
+              row.append('{:<10.6e}'.format(time_intensity1[j][i]))
+       writer.writerow(row)
+f31.close()
+
+
+# f21 = open('./simulation_data/'+plot_title+'_differential_flux', 'w')
+# f21.write('Time [hrs],    Energy [MeV],     Intensity J_T [protons/(cm^2 s sr MeV)]\n')
+
+# for i in range(0, t_num):
+#        for j in range(0, p_num_trsp):
+#               f21.write('{:<15.4f}{:<#18.8g}{:<10.6e}\n'.format(xtime[i], energy1Mev[j], time_intensity1[j][i]))
+
+#f21.close()
+
+
+f41 = open('./event_integrated_fluence.txt','w')
+f41.write('Energy [MeV],     Fluence [cm^{-2} MeV^{-1}]\n')
+for j in range(0, p_num_trsp):
+       f41.write('{:<#18.8g}{:<10.6e}\n'.format(energy1Mev[j], total_fp1[j]))
+f41.close()
 
 
