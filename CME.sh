@@ -8,6 +8,7 @@ MPI_comp='mpif90'
 FCOMP='gfortran'
 
 run_time=$(date +'%Y-%m-%d_%H:%M' -u)
+if_local=0
 
 # testing for specific event:
 # example: bash CME.sh -t '2022-01-20_08:30'
