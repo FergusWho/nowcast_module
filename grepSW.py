@@ -201,7 +201,7 @@ end_time1 = datetime.strptime(time1[len(time1)-1], "%Y-%m-%d %H:%M:%S.%f")
 for i in range(0, len(time1)):
        tobj = datetime.strptime(time1[i], "%Y-%m-%d %H:%M:%S.%f")
        diff = end_time1-tobj
-       if diff.seconds/3600 < 8:
+       if diff.seconds/3600 < 8 and B_data[i] > 0:
               B_mean += B_data[i]
               count += 1
 
@@ -222,7 +222,7 @@ for i in range(0, len(time2)):
        tobj = datetime.strptime(time2[i], "%Y-%m-%d %H:%M:%S.%f")
        diff = end_time2-tobj
        if diff.seconds/3600 < 8:
-              if n_data[i] > 0 and usw_data[i]> 0 and T_data[i]>0:
+              if n_data[i] >= 0.2 and usw_data[i]> 0 and T_data[i]>0:
               # get rid of bad points
                      n_mean += n_data[i]
                      v_mean += usw_data[i]
@@ -278,6 +278,8 @@ f3 = open(root_dir+'/cronlog.txt', 'a')
 f3.write('{}  {:5.2f}  {:5.2f}  {:6.1f}  {:9.1f}  {:5.2f}\n'.format(utc_time, B_mean, n_mean, v_mean, T_mean, flux_mean))
 f3.close()
 
+print('Time:{}  B:{:5.2f}  n:{:5.2f}  v:{:6.1f}  T:{:9.1f}  flux:{:5.2f}\n'.format(utc_time, B_mean, n_mean, v_mean, T_mean, flux_mean))
+
 data ={
 # Solar Wind parameters
     'nbl': 500,                                  
@@ -303,7 +305,7 @@ data ={
 # Transport Setup
        'p_num': 25,
        't_num': 50,
-       'seed_num': 50,
+       'seed_num': 25,
        'if_arrival': 0,
        'r0_e': 1.0,
        'phi_e': 80.0,

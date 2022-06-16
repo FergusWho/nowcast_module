@@ -1,14 +1,11 @@
 #!/bin/bash
-
 iPATH_dir='/data/iPATH/iPATH2.0'
 root_dir='/data/iPATH/nowcast_module'
 python_bin='/data/spack/opt/spack/linux-centos7-skylake_avx512/gcc-10.2.0/python-3.8.9-dtvwd3qomfzkcimvlwvw5ilvr4eb5dvg/bin/python3'
+# default for CCMC AWS
 
-module load gcc-4.8.5
-module load python-3.8.9-gcc-10.2.0-dtvwd3q 
-cd $root_dir
 run_time=$(date +'%Y-%m-%d_%H:%M' -u)
-
+if_local=0
 
 # testing for specific event:
 # example: bash background.sh -t '2022-01-20_08:30'
@@ -20,12 +17,22 @@ do
     esac
 done
 
+if [ $if_local -eq 1 ]
+then
+    # change these accordingly if you want to run locally
+    iPATH_dir=$HOME'/iPATH2.0'
+    root_dir=$HOME'/nowcast_module'
+    python_bin='/usr/bin/python3'
+else
+    module load gcc-4.8.5
+    module load python-3.8.9-gcc-10.2.0-dtvwd3q 
+fi
 
+cd $root_dir
 
 $python_bin $root_dir/grepSW.py --root_dir $root_dir --run_time $run_time
 
 run_dir=`cat $root_dir/temp.txt`
-#run_dir=$run_time
 rm $root_dir/temp.txt
 
 
@@ -38,6 +45,12 @@ $python_bin $iPATH_dir/prepare_PATH.py --root_dir $root_dir/$run_dir --path_dir 
 
 cd $root_dir/$run_dir
 csh -v ./iPATH_zeus.s
-cd $root_dir
-/opt/slurm/bin/sbatch $root_dir/run_zeus.sh -r $root_dir/$run_dir
 
+if [ $if_local -eq 1 ]
+then
+    ./xdzeus36
+    cd ..
+else
+    cd $root_dir
+    /opt/slurm/bin/sbatch $root_dir/run_zeus.sh -r $root_dir/$run_dir
+fi

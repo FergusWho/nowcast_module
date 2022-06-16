@@ -120,6 +120,9 @@ CME_index=[]
 
 dt_start = utc_datetime - timedelta(minutes=2879)
 
+with open(root_dir+'/pastCME.json') as cme_list:
+    list_obj = json.load(cme_list)
+
 for i in range(0, len(data)):
     cme_start_time = data[i].get('associatedCMEID').split("-CME-")[0]
 
@@ -127,25 +130,22 @@ for i in range(0, len(data)):
     #datetime_CME = datetime_CME.replace(tzinfo=utc) # make it an aware datetime object
     print (datetime_CME, dt_start, utc_datetime)
 
-    if datetime_CME > dt_start and datetime_CME <= utc_datetime:
-        with open(root_dir+'/pastCME.json') as cme_list:
-            list_obj = json.load(cme_list)
-        
+    if datetime_CME > dt_start and datetime_CME <= utc_datetime:        
         # check whether this CME has been simulated before
         result = [x for x in list_obj if x.get('associatedCMEID')==data[i].get('associatedCMEID')]
         
-
         if result == []:
-        # no run found for this CME:
-            list_obj.append({"associatedCMEID":data[i].get('associatedCMEID')})
-            with open(root_dir+'/pastCME.json', 'w') as write_file:
-                json.dump(list_obj, write_file, indent=4)
+        # no run found for this CME, new CME detected:
             CME_index.append(i)
         else:
             print ('Previous simulation run found:', result)
 
 print ('total NEW CME counts in the last 48 hours:', len(CME_index))
 ii = len(CME_index)-1 # index number for the latest CME
+
+list_obj.append({"associatedCMEID":data[CME_index[ii]].get('associatedCMEID')})
+with open(root_dir+'/pastCME.json', 'w') as write_file:
+    json.dump(list_obj, write_file, indent=4)
 
 f4 = open(root_dir+'/CMElog.txt', 'a')
 
