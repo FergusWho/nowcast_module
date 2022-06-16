@@ -143,10 +143,6 @@ for i in range(0, len(data)):
 print ('total NEW CME counts in the last 48 hours:', len(CME_index))
 ii = len(CME_index)-1 # index number for the latest CME
 
-list_obj.append({"associatedCMEID":data[CME_index[ii]].get('associatedCMEID')})
-with open(root_dir+'/pastCME.json', 'w') as write_file:
-    json.dump(list_obj, write_file, indent=4)
-
 f4 = open(root_dir+'/CMElog.txt', 'a')
 
 #### check if there is a background solar wind setup in the most recent 8-hour window
@@ -154,6 +150,10 @@ f4 = open(root_dir+'/CMElog.txt', 'a')
 print ('CME_index', len(CME_index))
 
 if len(CME_index) != 0:
+    list_obj.append({"associatedCMEID":data[CME_index[ii]].get('associatedCMEID')})
+    with open(root_dir+'/pastCME.json', 'w') as write_file:
+        json.dump(list_obj, write_file, indent=4)
+
     cme_start_time = data[CME_index[ii]].get('associatedCMEID').split("-CME-")[0]
     datetime_CME = datetime.strptime(cme_start_time, '%Y-%m-%dT%H:%M:%S')
 
