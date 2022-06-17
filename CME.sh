@@ -87,7 +87,9 @@ else
 	fi
 		
 	./combine.out
+	# clean up some unused output
 	rm RawData*
+	rm $root_dir/$bgsw_folder_name/path_output/dist_all_shl.dat
 	
 	# Plot result:
 	$python_bin $root_dir/$bgsw_folder_name/path_output/$trspt_dir/plot_iPATH_nowcast.py

@@ -264,9 +264,9 @@ else:
        flux_mean = 3000.
        inj_rate = 0.004
 
-if inj_rate > 0.02:
+if inj_rate > 0.01:
        print('Warning! injection rate too high!!')
-       inj_rate = 0.02
+       inj_rate = 0.01
 
 if inj_rate < 0.0004:
        print('Warning! injection rate too low!!')
