@@ -182,6 +182,14 @@ if len(CME_index) != 0:
     input_data['cme_speed'] = data[CME_index[ii]].get('speed') 
     input_data['cme_width'] = data[CME_index[ii]].get('halfAngle')*2 
     input_data['phi_e'] = 100.0-data[CME_index[ii]].get('longitude') 
+
+    # change density multiplier based on CME speed
+    if data[CME_index[ii]].get('speed') >= 1500:
+        n_multi = 4.0
+    else:
+        n_multi = data[CME_index[ii]].get('speed')*2e-3 + 1.
+
+    input_data['n_multi'] = n_multi
     
     f3 = open(root_dir+'/'+bgsw_folder_name+'/'+run_time+'_input.json', 'w')
     json.dump(input_data, f3, indent=4)
