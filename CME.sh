@@ -30,7 +30,7 @@ then
 else
     module load gcc-4.8.5
     module load python-3.8.9-gcc-10.2.0-dtvwd3q
-    thread_count=96
+    thread_count=128
 fi
 
 CME_dir=$run_time
