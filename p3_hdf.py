@@ -6,8 +6,8 @@ from osgeo import gdal
 #tr = PolarAxes.PolarTransform()
 
 root_dir = './'
-n_start = 1
-n_end   = 26
+n_start = 20
+n_end   = 30
 
 #fileName = './zeus_cycle_24/zhto098TW'
 #gdal_dataset=gdal.Open(fileName)
