@@ -452,18 +452,24 @@ for i in range(t_num-2, -1, -1):
 
 if crossing10_index == -1:
        cross_time_10 = "no crossing"
+       all_clear_10 = True
 else:
        cross_time_10 = (simulation_zero_time + timedelta(hours=xtime[crossing10_index])).strftime('%Y-%m-%dT%H:%MZ')
+       all_clear_10 = False
 
 if crossing100_index == -1:
        cross_time_100 = "no crossing"
+       all_clear_100 = True
 else:
        cross_time_100 = (simulation_zero_time + timedelta(hours=xtime[crossing100_index])).strftime('%Y-%m-%dT%H:%MZ')
+       all_clear_100 = False
 
 #calculate integral fluence:
 gt10_fluence = total_func_numerical(energy1Mev, time_intensity1, xtime, 10.)/4./pi
 gt100_fluence = total_func_numerical(energy1Mev, time_intensity1, xtime, 100.)/4./pi
 
+utc_time = datetime.strptime(json_data["sep_forecast_submission"]["issue_time"], "%Y-%m-%dT%H:%M:%SZ")
+run_time = utc_time.strftime('%Y-%m-%d')
 
 channel10MeV ={
               "energy_channel": { "min": 10, "max": -1, "units": "MeV"},
@@ -473,7 +479,8 @@ channel10MeV ={
               "peak_intensity": { "intensity": peak10, "units": "pfu", "time": peak10time},
               "fluences": [{ "fluence": gt10_fluence, "units": "cm^-2*sr^-1"}],
               "threshold_crossings": [ { "crossing_time": cross_time_10, "threshold": 10.0, "threshold_units": "pfu" } ],
-              "sep_profile": "differential_flux.csv"
+              "all_clear":{"all_clear_boolean": all_clear_10, "threshold": 10.0, "threshold_units": "pfu"},
+              "sep_profile": run_time+"_differential_flux.csv"
            }
 channel100MeV ={
               "energy_channel": { "min": 100, "max": -1, "units": "MeV"},
@@ -483,16 +490,16 @@ channel100MeV ={
               "peak_intensity": { "intensity": peak100, "units": "pfu", "time": peak100time}, 
               "fluences": [{ "fluence": gt100_fluence, "units": "cm^-2*sr^-1"}],             
               "threshold_crossings": [ { "crossing_time": cross_time_100, "threshold": 1.0, "threshold_units": "pfu" } ],
-              "sep_profile": "differential_flux.csv"
+              "all_clear":{"all_clear_boolean": all_clear_100, "threshold": 1.0, "threshold_units": "pfu"},
+              "sep_profile": run_time+"_differential_flux.csv"
            }
 
-print(type(json_data["sep_forecast_submission"]["forecasts"]))
+#print(type(json_data["sep_forecast_submission"]["forecasts"]))
 
 json_data["sep_forecast_submission"]["forecasts"].append(channel10MeV)
 json_data["sep_forecast_submission"]["forecasts"].append(channel100MeV)
 
-utc_time = datetime.strptime(json_data["sep_forecast_submission"]["issue_time"], "%Y-%m-%dT%H:%M:%SZ")
-run_time = utc_time.strftime('%Y-%m-%d_%H:%M')
+
 
 with open('./'+run_time+'_output.json', 'w') as write_file:
        json.dump(json_data, write_file, indent=4)
@@ -502,14 +509,14 @@ with open('./'+run_time+'_output.json', 'w') as write_file:
 # save flux to file  
 
 
-f31 = open('./differential_flux.csv', 'w')
+f31 = open('./'+run_time+'_differential_flux.csv', 'w')
 writer = csv.writer(f31)
 
-writer.writerow(['time(h)', 'differential flux[protons/(cm^2 s sr MeV)] at the energy [MeV]'])
+writer.writerow(['#time(h)', 'differential flux[protons/(cm^2 s sr MeV)] at the energy [MeV]'])
 
 
 row = []
-row.append('')
+row.append('#')
 for j in range(0, p_num_trsp):
        row.append('{:<#18.8g}'.format(energy1Mev[j]))
 
@@ -535,7 +542,7 @@ f31.close()
 #f21.close()
 
 
-f41 = open('./event_integrated_fluence.txt','w')
+f41 = open('./'+run_time+'event_integrated_fluence.txt','w')
 f41.write('Energy [MeV],     Fluence [cm^{-2} MeV^{-1}]\n')
 for j in range(0, p_num_trsp):
        f41.write('{:<#18.8g}{:<10.6e}\n'.format(energy1Mev[j], total_fp1[j]))
