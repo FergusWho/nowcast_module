@@ -302,108 +302,6 @@ for i in range(0, p_num_trsp):
 print (count1, count2, count3, count4)
 
 
-  
-
-#############################################################################################################################
-#             PLOTTING
-#############################################################################################################################
-plt.figure(4, figsize=(20,13))
-# plt.suptitle(plot_title+" ($\phi$ ="+str(phi_e)+"$^\circ$, "+str(r_e)+"AU)", fontsize=35)
-
-# plot1 = plt.subplot2grid((6, 5), (0, 0), colspan=3, rowspan=6)
-# plot2 = plt.subplot2grid((6, 5), (3, 3), rowspan=3, colspan=2)
-# plot3 = plt.subplot2grid((6, 5), (0, 3), rowspan=3, colspan=2)
-
-plot1 = plt.subplot2grid((6, 6), (0, 0), colspan=3, rowspan=3)
-plot2 = plt.subplot2grid((6, 6), (3, 0), rowspan=3, colspan=3)
-plot3 = plt.subplot2grid((6, 6), (0, 3), rowspan=6, colspan=3)
-# Using Numpy to create an array x
-x = np.arange(1, 10)
-  
-# Plot for square root
-plot1.plot(xtime, time_intensity1[energy_index[0]], 'k-o', xtime, time_intensity1[energy_index[1]], 'r-o', \
-         xtime, time_intensity1[energy_index[2]], 'g-o', xtime, time_intensity1[energy_index[3]], 'b-o', \
-         xtime, time_intensity1[energy_index[4]], 'm-o', xtime, time_intensity1[energy_index[5]], 'c-o',\
-         linewidth = 2.5)
-
-plot1.set_title("Time-intensity profile", fontsize=25)
-plot1.set_yscale('log')
-plot1.set_ylim([1e-2,1e4])
-plot1.set_xlabel('time (hours)', fontsize=22)
-#plt.axvline(total_time, color='black', linestyle='dashed', linewidth=2)
-#plt.annotate(anno, xy=(0.83,0.81), xycoords='figure fraction', color='red',fontsize = 70 )
-#plt.axvline(leave_time, color='black', linestyle='dashed', linewidth=2)
-plot1.set_ylabel('$J_T(T)$ $[\#/(cm^2 \  s \ sr\  MeV)]$', fontsize=22)
-#plt.legend(['iPATH 1 MeV', 'iPATH 10 MeV', 'FLRW 1 MeV', \
-#            'FLRW 10 MeV', 'FP+FLRW 1 MeV', 'FP+FLRW 10 MeV', 'Decoupled 1 MeV', 'Decoupled 10 MeV'], \
-#            loc=2, ncol = 3, borderaxespad=0., shadow = True, fontsize=25)
-plot1.legend([e_legd[energy_index[0]], e_legd[energy_index[1]], e_legd[energy_index[2]], \
-             e_legd[energy_index[3]], e_legd[energy_index[4]], e_legd[energy_index[5]]], \
-             loc=2, ncol = 3, borderaxespad=0., shadow = True, fontsize=20)
-
-plot1.tick_params(axis='both', which='major', labelsize=20)
-
-plt.setp(plot1.spines.values(), linewidth=2)
-
-energy_index = [9,12, 14, 16,18]
-
-plot2.plot(\
-         # xtime, time_intensity1[energy_index[1]], 'y-', xtime, time_intensity1[energy_index[2]], 'g-', \
-         # xtime, time_intensity1[energy_index[3]], 'r-', xtime, time_intensity1[energy_index[4]], 'b-', \
-         xtime, int_flux[energy_index[1]], 'ro-', xtime, int_flux[energy_index[2]], 'yo-', \
-         xtime, int_flux[energy_index[3]], 'bo-', xtime, int_flux[energy_index[4]], 'go-', \
-         linewidth = 2.5)
-
-
-plot2.set_title('integral flux', fontsize=25)
-
-plot2.set_yscale('log')
-plot2.set_ylim([1e-2, 1e5])
-#plt.xlim([-1, 50])
-plot2.set_xlabel('time (hours)', fontsize=22)
-#plt.axvline(total_time, color='black', linestyle='dashed', linewidth=2)
-#plt.annotate(anno, xy=(0.83,0.81), xycoords='figure fraction', color='red',fontsize = 70 )
-#plt.axvline(leave_time, color='black', linestyle='dashed', linewidth=2)
-#plt.ylabel('$J_T(T)$ $(counts/(cm^2 s sr MeV))$', fontsize=30)
-plot2.set_ylabel('Integral Flux (pfu)', fontsize=22)
-#plt.legend(['iPATH 1 MeV', 'iPATH 10 MeV', 'FLRW 1 MeV', \
-#            'FLRW 10 MeV', 'FP+FLRW 1 MeV', 'FP+FLRW 10 MeV', 'Decoupled 1 MeV', 'Decoupled 10 MeV'], \
-#            loc=2, ncol = 3, borderaxespad=0., shadow = True, fontsize=25)
-plot2.legend([#e_legd[energy_index[1]], e_legd[energy_index[2]], e_legd[energy_index[3]], \
-#             e_legd[energy_index[4]], 
-             int_e_legd[energy_index[1]],int_e_legd[energy_index[2]],\
-             int_e_legd[energy_index[3]],int_e_legd[energy_index[4]], \
-             'GOES >10 MeV','GOES >30 MeV','GOES >60 MeV' ],
-             loc=2, ncol = 2, borderaxespad=0., shadow = True,fontsize=17)
-plot2.tick_params(axis='both', which='major', labelsize=20)
-plt.setp(plot2.spines.values(), linewidth=2)
-  
-# Plot for Square
-plot3.plot(energy1Mev, total_fp1, 'k-o', linewidth=3.0)
-plot3.plot(energy1Mev, ti_fp1, 'r-o',energy1Mev, ti_fp2, 'g-o',energy1Mev,ti_fp3, 'b-o',energy1Mev, ti_fp4, 'm-o',linewidth=1.5)
-plot3.legend(['event integrated', '0-10 hrs', '10-20 hrs', '20-30 hrs', '30-40 hrs'],fontsize=17)
-
-plot3.set_xlim([1e-1,2e3])
-plot3.set_ylim([1e2,1e11])
-plot3.set_title('Event-Integrated Spectrum', fontsize=25)
-plot3.set_xlabel('Energy[MeV]', fontsize=25)
-plot3.set_ylabel('fluence $[protons/(cm^2 MeV)]$', fontsize=22)
-plot3.set_xscale('log')
-plot3.set_yscale('log')
-plot3.tick_params(axis='both', which='major', labelsize=20)
-
-plt.setp(plot3.spines.values(), linewidth=2)
-
-# plt.gcf().text(0.02, 0.95, '(a)', fontsize=34, weight='bold')
-# plt.gcf().text(0.62, 0.95, '(b)', fontsize=34, weight='bold')
-# plt.gcf().text(0.62, 0.48, '(c)', fontsize=34, weight='bold')
-# Packing all the plots and displaying them
-plt.tight_layout()
-
-plt.savefig('plot.png')
-
-#plt.show()
-
 
 ######################################################################################################
 #           modify the output.json file
@@ -448,6 +346,12 @@ for i in range(t_num-2, -1, -1):
               crossing10_index=i+1
        if int_flux[energy_index[4]][i]<1.0 and int_flux[energy_index[4]][i+1]>1.0:
               crossing100_index=i+1
+
+if int_flux[energy_index[1]][0]>10:
+       crossing10_index = 0
+if int_flux[energy_index[4]][0]>1.0:
+       crossing100_index = 0
+       
 #calculate threshold crossing and time
 
 if crossing10_index == -1:
@@ -549,3 +453,102 @@ for j in range(0, p_num_trsp):
 f41.close()
 
 
+#############################################################################################################################
+#             PLOTTING
+#############################################################################################################################
+plt.figure(4, figsize=(20,13))
+# plt.suptitle(plot_title+" ($\phi$ ="+str(phi_e)+"$^\circ$, "+str(r_e)+"AU)", fontsize=35)
+
+# plot1 = plt.subplot2grid((6, 5), (0, 0), colspan=3, rowspan=6)
+# plot2 = plt.subplot2grid((6, 5), (3, 3), rowspan=3, colspan=2)
+# plot3 = plt.subplot2grid((6, 5), (0, 3), rowspan=3, colspan=2)
+
+plot1 = plt.subplot2grid((6, 6), (0, 0), colspan=3, rowspan=3)
+plot2 = plt.subplot2grid((6, 6), (3, 0), rowspan=3, colspan=3)
+plot3 = plt.subplot2grid((6, 6), (0, 3), rowspan=6, colspan=3)
+# Using Numpy to create an array x
+x = np.arange(1, 10)
+  
+# Plot for square root
+plot1.plot(xtime, time_intensity1[energy_index[0]], 'k-o', xtime, time_intensity1[energy_index[1]], 'r-o', \
+         xtime, time_intensity1[energy_index[2]], 'g-o', xtime, time_intensity1[energy_index[3]], 'b-o', \
+         xtime, time_intensity1[energy_index[4]], 'm-o', xtime, time_intensity1[energy_index[5]], 'c-o',\
+         linewidth = 2.5)
+
+plot1.set_title("Time-intensity profile", fontsize=25)
+plot1.set_yscale('log')
+plot1.set_ylim([1e-2,1e4])
+plot1.set_xlabel('time (hours)', fontsize=22)
+#plt.axvline(total_time, color='black', linestyle='dashed', linewidth=2)
+#plt.annotate(anno, xy=(0.83,0.81), xycoords='figure fraction', color='red',fontsize = 70 )
+#plt.axvline(leave_time, color='black', linestyle='dashed', linewidth=2)
+plot1.set_ylabel('$J_T(T)$ $[\#/(cm^2 \  s \ sr\  MeV)]$', fontsize=22)
+#plt.legend(['iPATH 1 MeV', 'iPATH 10 MeV', 'FLRW 1 MeV', \
+#            'FLRW 10 MeV', 'FP+FLRW 1 MeV', 'FP+FLRW 10 MeV', 'Decoupled 1 MeV', 'Decoupled 10 MeV'], \
+#            loc=2, ncol = 3, borderaxespad=0., shadow = True, fontsize=25)
+plot1.legend([e_legd[energy_index[0]], e_legd[energy_index[1]], e_legd[energy_index[2]], \
+             e_legd[energy_index[3]], e_legd[energy_index[4]], e_legd[energy_index[5]]], \
+             loc=2, ncol = 3, borderaxespad=0., shadow = True, fontsize=20)
+
+plot1.tick_params(axis='both', which='major', labelsize=20)
+
+plt.setp(plot1.spines.values(), linewidth=2)
+
+energy_index = [9,12, 14, 16,18]
+
+plot2.plot(\
+         # xtime, time_intensity1[energy_index[1]], 'y-', xtime, time_intensity1[energy_index[2]], 'g-', \
+         # xtime, time_intensity1[energy_index[3]], 'r-', xtime, time_intensity1[energy_index[4]], 'b-', \
+         xtime, int_flux[energy_index[1]], 'ro-', xtime, int_flux[energy_index[2]], 'yo-', \
+         xtime, int_flux[energy_index[3]], 'bo-', xtime, int_flux[energy_index[4]], 'go-', \
+         linewidth = 2.5)
+
+
+plot2.set_title('integral flux', fontsize=25)
+
+plot2.set_yscale('log')
+plot2.set_ylim([1e-2, 1e5])
+#plt.xlim([-1, 50])
+plot2.set_xlabel('time (hours)', fontsize=22)
+#plt.axvline(total_time, color='black', linestyle='dashed', linewidth=2)
+#plt.annotate(anno, xy=(0.83,0.81), xycoords='figure fraction', color='red',fontsize = 70 )
+#plt.axvline(leave_time, color='black', linestyle='dashed', linewidth=2)
+#plt.ylabel('$J_T(T)$ $(counts/(cm^2 s sr MeV))$', fontsize=30)
+plot2.set_ylabel('Integral Flux (pfu)', fontsize=22)
+#plt.legend(['iPATH 1 MeV', 'iPATH 10 MeV', 'FLRW 1 MeV', \
+#            'FLRW 10 MeV', 'FP+FLRW 1 MeV', 'FP+FLRW 10 MeV', 'Decoupled 1 MeV', 'Decoupled 10 MeV'], \
+#            loc=2, ncol = 3, borderaxespad=0., shadow = True, fontsize=25)
+plot2.legend([#e_legd[energy_index[1]], e_legd[energy_index[2]], e_legd[energy_index[3]], \
+#             e_legd[energy_index[4]], 
+             int_e_legd[energy_index[1]],int_e_legd[energy_index[2]],\
+             int_e_legd[energy_index[3]],int_e_legd[energy_index[4]], \
+             'GOES >10 MeV','GOES >30 MeV','GOES >60 MeV' ],
+             loc=2, ncol = 2, borderaxespad=0., shadow = True,fontsize=17)
+plot2.tick_params(axis='both', which='major', labelsize=20)
+plt.setp(plot2.spines.values(), linewidth=2)
+  
+# Plot for Square
+plot3.plot(energy1Mev, total_fp1, 'k-o', linewidth=3.0)
+plot3.plot(energy1Mev, ti_fp1, 'r-o',energy1Mev, ti_fp2, 'g-o',energy1Mev,ti_fp3, 'b-o',energy1Mev, ti_fp4, 'm-o',linewidth=1.5)
+plot3.legend(['event integrated', '0-10 hrs', '10-20 hrs', '20-30 hrs', '30-40 hrs'],fontsize=17)
+
+plot3.set_xlim([1e-1,2e3])
+plot3.set_ylim([1e2,1e11])
+plot3.set_title('Event-Integrated Spectrum', fontsize=25)
+plot3.set_xlabel('Energy[MeV]', fontsize=25)
+plot3.set_ylabel('fluence $[protons/(cm^2 MeV)]$', fontsize=22)
+plot3.set_xscale('log')
+plot3.set_yscale('log')
+plot3.tick_params(axis='both', which='major', labelsize=20)
+
+plt.setp(plot3.spines.values(), linewidth=2)
+
+# plt.gcf().text(0.02, 0.95, '(a)', fontsize=34, weight='bold')
+# plt.gcf().text(0.62, 0.95, '(b)', fontsize=34, weight='bold')
+# plt.gcf().text(0.62, 0.48, '(c)', fontsize=34, weight='bold')
+# Packing all the plots and displaying them
+plt.tight_layout()
+
+plt.savefig('./'+run_time+'_plot.png')
+
+#plt.show()
