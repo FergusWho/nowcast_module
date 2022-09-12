@@ -15,6 +15,8 @@ import sys
 import os
 import argparse
 
+import helioweb_locations
+
 # some parameters 
 AU  = 1.5e11        
 eo  = 1.6e-19
