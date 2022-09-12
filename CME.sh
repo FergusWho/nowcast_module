@@ -45,53 +45,53 @@ echo $bgsw_folder_name
 
 if [ -z "$bgsw_folder_name" ]
 then
-	echo "There is no CME"
+    echo "There is no CME"
 
 else
-	#-----------------------------------------------
-	# CME setup and acceleration:
-	$python_bin $iPATH_dir/prepare_PATH.py --root_dir $root_dir/$bgsw_folder_name --path_dir $iPATH_dir --run_mode 0 --input $root_dir/$bgsw_folder_name/${CME_dir}_input.json
-	cd $root_dir/$bgsw_folder_name
-	csh -v ./iPATH_zeus.s
-	if [ $if_local -eq 1 ]
-	then
-		./xdzeus36 <input
-	else
-		cd $root_dir
+    #-----------------------------------------------
+    # CME setup and acceleration:
+    $python_bin $iPATH_dir/prepare_PATH.py --root_dir $root_dir/$bgsw_folder_name --path_dir $iPATH_dir --run_mode 0 --input $root_dir/$bgsw_folder_name/${CME_dir}_input.json
+    cd $root_dir/$bgsw_folder_name
+    csh -v ./iPATH_zeus.s
+    if [ $if_local -eq 1 ]
+    then
+        ./xdzeus36 <input
+    else
+        cd $root_dir
         /opt/slurm/bin/sbatch -W run_zeus2.sh -r $root_dir/$bgsw_folder_name
-		wait
-	fi
-	cd $root_dir
+        wait
+    fi
+    cd $root_dir
 
-	$python_bin $iPATH_dir/prepare_PATH.py --root_dir $root_dir/$bgsw_folder_name --path_dir $iPATH_dir --run_mode 2 --ranks $thread_count --input $root_dir/$bgsw_folder_name/${CME_dir}_input.json
-	
-	$MPI_comp -O3 $iPATH_dir/Transport/parallel_wrapper.f $iPATH_dir/Transport/transport_2.05.f -o trspt.out
-	$FCOMP $iPATH_dir/Transport/combine.f -o combine.out
+    $python_bin $iPATH_dir/prepare_PATH.py --root_dir $root_dir/$bgsw_folder_name --path_dir $iPATH_dir --run_mode 2 --ranks $thread_count --input $root_dir/$bgsw_folder_name/${CME_dir}_input.json
+    
+    $MPI_comp -O3 $iPATH_dir/Transport/parallel_wrapper.f $iPATH_dir/Transport/transport_2.05.f -o trspt.out
+    $FCOMP $iPATH_dir/Transport/combine.f -o combine.out
 
-	mkdir $root_dir/$bgsw_folder_name/path_output/$trspt_dir
-	mv ./trspt.out $root_dir/$bgsw_folder_name/path_output/$trspt_dir
-	mv ./combine.out $root_dir/$bgsw_folder_name/path_output/$trspt_dir
-	cp $iPATH_dir/Transport/trspt_input $root_dir/$bgsw_folder_name/path_output/$trspt_dir
-	cp $root_dir/plot_iPATH_nowcast.py $root_dir/$bgsw_folder_name/path_output/$trspt_dir
-	cp $root_dir/$bgsw_folder_name/${CME_dir}_input.json $root_dir/$bgsw_folder_name/path_output/$trspt_dir
-	mv $root_dir/$bgsw_folder_name/${CME_dir}_output.json $root_dir/$bgsw_folder_name/path_output/$trspt_dir/output.json
+    mkdir $root_dir/$bgsw_folder_name/path_output/$trspt_dir
+    mv ./trspt.out $root_dir/$bgsw_folder_name/path_output/$trspt_dir
+    mv ./combine.out $root_dir/$bgsw_folder_name/path_output/$trspt_dir
+    cp $iPATH_dir/Transport/trspt_input $root_dir/$bgsw_folder_name/path_output/$trspt_dir
+    cp $root_dir/plot_iPATH_nowcast.py $root_dir/$bgsw_folder_name/path_output/$trspt_dir
+    cp $root_dir/$bgsw_folder_name/${CME_dir}_input.json $root_dir/$bgsw_folder_name/path_output/$trspt_dir
+    mv $root_dir/$bgsw_folder_name/${CME_dir}_output.json $root_dir/$bgsw_folder_name/path_output/$trspt_dir/output.json
 
-	if [ $if_local -eq 1 ]
-	then
-		cd $root_dir/$bgsw_folder_name/path_output/$trspt_dir
-		mpirun -np $thread_count trspt.out
-	else
-		/opt/slurm/bin/sbatch -W run_transport.sh -r $root_dir/$bgsw_folder_name/path_output/$trspt_dir	
-		wait
-		cd $root_dir/$bgsw_folder_name/path_output/$trspt_dir
-	fi
-		
-	./combine.out
-	# clean up some unused output
-	rm RawData*
-	rm $root_dir/$bgsw_folder_name/path_output/dist_all_shl.dat
-	
-	# Plot result:
-	$python_bin $root_dir/$bgsw_folder_name/path_output/$trspt_dir/plot_iPATH_nowcast.py
+    if [ $if_local -eq 1 ]
+    then
+        cd $root_dir/$bgsw_folder_name/path_output/$trspt_dir
+        mpirun -np $thread_count trspt.out
+    else
+        /opt/slurm/bin/sbatch -W run_transport.sh -r $root_dir/$bgsw_folder_name/path_output/$trspt_dir    
+        wait
+        cd $root_dir/$bgsw_folder_name/path_output/$trspt_dir
+    fi
+        
+    ./combine.out
+    # clean up some unused output
+    rm RawData*
+    rm $root_dir/$bgsw_folder_name/path_output/dist_all_shl.dat
+    
+    # Plot result:
+    $python_bin $root_dir/$bgsw_folder_name/path_output/$trspt_dir/plot_iPATH_nowcast.py
 fi
 
