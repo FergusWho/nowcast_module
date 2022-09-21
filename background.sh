@@ -38,6 +38,9 @@ rm $root_dir/temp.txt
 
 mkdir $root_dir/$run_dir
 cp -r $iPATH_dir/Acceleration/zeus3.6/* $root_dir/$run_dir
+# use the modified dzeus36 version for nowcasting
+cp $root_dir/dzeus36_alt $root_dir/$run_dir/dzeus36
+
 cp $root_dir/${run_dir}_input.json $root_dir/$run_dir/input.json
 
 
@@ -54,3 +57,9 @@ else
     cd $root_dir
     /opt/slurm/bin/sbatch $root_dir/run_zeus.sh -r $root_dir/$run_dir
 fi
+
+#clean up some files
+rm $root_dir/zr001JH
+rm $root_dir/zr002JH
+rm $root_dir/zr003JH
+rm $root_dir/zr004JH

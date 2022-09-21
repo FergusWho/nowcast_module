@@ -10,6 +10,9 @@ FCOMP='gfortran'
 run_time=$(date +'%Y-%m-%d_%H:%M' -u)
 if_local=0
 
+echo "-----------------------------------------"
+echo $run_time
+
 # testing for specific event:
 # example: bash CME.sh -t '2022-01-20_08:30'
 while getopts 't:L' flag
@@ -28,8 +31,10 @@ then
     python_bin='/usr/bin/python3'
     thread_count=12
 else
+    source /etc/profile.d/modules.sh
     module load gcc-4.8.5
     module load python-3.8.9-gcc-10.2.0-dtvwd3q
+    MPI_comp='/opt/amazon/openmpi/bin/mpif90'
     thread_count=128
 fi
 
@@ -50,6 +55,10 @@ then
 else
     #-----------------------------------------------
     # CME setup and acceleration:
+    
+    # use the modified dzeus36 version for nowcasting
+    cp $root_dir/dzeus36_alt $root_dir/$bgsw_folder_name/dzeus36
+
     $python_bin $iPATH_dir/prepare_PATH.py --root_dir $root_dir/$bgsw_folder_name --path_dir $iPATH_dir --run_mode 0 --input $root_dir/$bgsw_folder_name/${CME_dir}_input.json
     cd $root_dir/$bgsw_folder_name
     csh -v ./iPATH_zeus.s
@@ -65,17 +74,16 @@ else
 
     $python_bin $iPATH_dir/prepare_PATH.py --root_dir $root_dir/$bgsw_folder_name --path_dir $iPATH_dir --run_mode 2 --ranks $thread_count --input $root_dir/$bgsw_folder_name/${CME_dir}_input.json
     
-    $MPI_comp -O3 $iPATH_dir/Transport/parallel_wrapper.f $iPATH_dir/Transport/transport_2.05.f -o trspt.out
-    $FCOMP $iPATH_dir/Transport/combine.f -o combine.out
-
     mkdir $root_dir/$bgsw_folder_name/path_output/$trspt_dir
-    mv ./trspt.out $root_dir/$bgsw_folder_name/path_output/$trspt_dir
-    mv ./combine.out $root_dir/$bgsw_folder_name/path_output/$trspt_dir
+    
+    $MPI_comp -O3 $iPATH_dir/Transport/parallel_wrapper.f $iPATH_dir/Transport/transport_2.05.f -o $root_dir/$bgsw_folder_name/path_output/$trspt_dir/trspt.out
+    $FCOMP $iPATH_dir/Transport/combine.f -o $root_dir/$bgsw_folder_name/path_output/$trspt_dir/combine.out
+
     cp $iPATH_dir/Transport/trspt_input $root_dir/$bgsw_folder_name/path_output/$trspt_dir
     cp $root_dir/plot_iPATH_nowcast.py $root_dir/$bgsw_folder_name/path_output/$trspt_dir
     cp $root_dir/$bgsw_folder_name/${CME_dir}_input.json $root_dir/$bgsw_folder_name/path_output/$trspt_dir
     mv $root_dir/$bgsw_folder_name/${CME_dir}_output.json $root_dir/$bgsw_folder_name/path_output/$trspt_dir/output.json
-
+    
     if [ $if_local -eq 1 ]
     then
         cd $root_dir/$bgsw_folder_name/path_output/$trspt_dir
