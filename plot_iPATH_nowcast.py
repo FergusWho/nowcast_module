@@ -309,11 +309,19 @@ print (count1, count2, count3, count4)
 
 with open('./output.json', 'r') as read_file:
         json_data = json.load(read_file)
+if "cme" in json_data["sep_forecast_submission"]["triggers"][0]:
+        print('triggered by CME')
+        cme_start_time = datetime.strptime(json_data["sep_forecast_submission"]["triggers"][0]["cme"]["start_time"], '%Y-%m-%dT%H:%M:%S')
+        time21_5 = datetime.strptime(json_data["sep_forecast_submission"]["triggers"][0]["cme"]["time_at_height"]["time"],'%Y-%m-%dT%H:%MZ')
+        simulation_zero_time = cme_start_time + (time21_5 - cme_start_time)/3.
 
-cme_start_time = datetime.strptime(json_data["sep_forecast_submission"]["triggers"][0]["cme"]["start_time"], '%Y-%m-%dT%H:%M:%S')
-time21_5 = datetime.strptime(json_data["sep_forecast_submission"]["triggers"][0]["cme"]["time_at_height"]["time"],'%Y-%m-%dT%H:%MZ')
+if "flare" in json_data["sep_forecast_submission"]["triggers"][0]:
+        print('triggered by flare')
+        flare_start_time = datetime.strptime(json_data["sep_forecast_submission"]["triggers"][0]["flare"]["start_time"], '%Y-%m-%dT%H:%M:%S')
+        time_to_inner = 0.05*AU/(json_data["sep_forecast_submission"]["triggers"][0]["flare"]["speed"]*1000.)/3600.*2/3.
+        print(time_to_inner)
+        simulation_zero_time = flare_start_time + timedelta(hours=time_to_inner)
 
-simulation_zero_time = cme_start_time + (time21_5 - cme_start_time)/3.
 simulation_end_time = simulation_zero_time + timedelta(hours=xtime[t_num-1])
 start_time = simulation_zero_time.strftime('%Y-%m-%dT%H:%M:%SZ')
 end_time = simulation_end_time.strftime('%Y-%m-%dT%H:%M:%SZ')
@@ -408,7 +416,6 @@ json_data["sep_forecast_submission"]["forecasts"].append(channel100MeV)
 with open('./'+run_time+'_output.json', 'w') as write_file:
        json.dump(json_data, write_file, indent=4)
 
-
 #=======================================================================       
 # save flux to file  
 
@@ -446,7 +453,7 @@ f31.close()
 #f21.close()
 
 
-f41 = open('./'+run_time+'event_integrated_fluence.txt','w')
+f41 = open('./'+run_time+'_event_integrated_fluence.txt','w')
 f41.write('Energy [MeV],     Fluence [cm^{-2} MeV^{-1}]\n')
 for j in range(0, p_num_trsp):
        f41.write('{:<#18.8g}{:<10.6e}\n'.format(energy1Mev[j], total_fp1[j]))

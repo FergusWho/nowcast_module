@@ -3,8 +3,9 @@ import datetime
 from datetime import timedelta
 from datetime import datetime
 
+root_dir1 = '/data/iPATH/nowcast_module'
 def find_mars(date_time):
-    f1 = open('./helioweb/planets/mars.lst', 'r')
+    f1 = open(root_dir1+'/helioweb/planets/mars.lst', 'r')
     line_no = 0
     year    = []
     day     = []
@@ -44,7 +45,7 @@ def find_mars(date_time):
     return mars_r, mars_lat, mars_lon
 
 def find_earth(date_time):
-    f1 = open('./helioweb/planets/earth.lst', 'r')
+    f1 = open(root_dir1+'/helioweb/planets/earth.lst', 'r')
     line_no = 0
     year    = []
     day     = []
@@ -84,7 +85,7 @@ def find_earth(date_time):
     return earth_r, earth_lat, earth_lon
 
 def find_psp(date_time):
-    f1 = open('./helioweb/spacecraft/psp.lst', 'r')
+    f1 = open(root_dir1+'/helioweb/spacecraft/psp.lst', 'r')
     line_no = 0
     year    = []
     day     = []

@@ -14,6 +14,7 @@ import json
 import sys
 import os
 import argparse
+from helioweb_locations import *
 
 # some parameters 
 AU  = 1.5e11        
@@ -166,7 +167,7 @@ if len(flare_index) != 0:
 
 
     #### modify input.json for the flare run
-    f2 = open(root_dir+'/'+bgsw_folder_name+'/input.json', 'r')
+    f2 = open(root_dir+'/Background/'+bgsw_folder_name+'/input.json', 'r')
     input_data = json.load(f2)
     f2.close()
 
@@ -208,21 +209,67 @@ if len(flare_index) != 0:
     if Vcme >= 1500:
         n_multi = 4.0
     else:
-        n_multi = data[flare_index[ii]].get('speed')*2e-3 + 1.
+        n_multi = Vcme*2e-3 + 1.
 
     input_data['n_multi'] = n_multi
     
-    f3 = open(root_dir+'/'+bgsw_folder_name+'/'+run_time+'_input.json', 'w')
+    f3 = open(root_dir+'/Background/'+bgsw_folder_name+'/'+run_time+'_flare_input.json', 'w')
     json.dump(input_data, f3, indent=4)
     f3.close()
 
+    #### Generating Output JSON 
+
+    json_data={"sep_forecast_submission":{
+           "model": { "short_name": "iPATH", "spase_id": "spase://CCMC/SimulationModel/MODEL_NAME/VERSION" },
+           "issue_time": utc_time_json,       
+           "mode": "forecast",
+           "triggers": [],
+           "inputs": [],
+           "forecasts": []
+    }}
+
+    flare = {
+           "flare":{
+           "start_time":flare_start_time,
+           "sourceLocation": data[flare_index[ii]].get('sourceLocation'),         
+           "half_width": 50,
+           "speed": Vcme,
+           "coordinates": "HEEQ",
+           "classType": data[flare_index[ii]].get('classType'),
+           "catalog_id": data[flare_index[ii]].get('flrID'),
+           "urls": [ data[flare_index[ii]].get('link') ]
+           }
+    }
+
+    json_data["sep_forecast_submission"]["triggers"].append(flare)
+
+    inputs = {
+        "magnetic_connectivity":{
+        "method": "Parker Spiral",
+        "lat": 0.0,
+        "lon": 0.0,
+        "solar_wind":{
+            "observatory":"DSCOVR",
+            "speed":input_data['glv'],
+            "proton_density":input_data['gln'],
+            "magnetic_field":input_data['glb']
+        }
+        }
+    }
+    
+    json_data["sep_forecast_submission"]["inputs"].append(inputs)
+
+    with open(root_dir+'/Background/'+bgsw_folder_name+'/'+run_time+'_flare_output.json', 'w') as write_file:
+        json.dump(json_data, write_file, indent=4)
+    flare_id = data[flare_index[ii]].get('flrID')
 else:
     bgsw_folder_name=''
+    flare_id = ''
     if len(data) > 0:
         f4.write('Checking Time:{} | No new flare found, last flare in 7 days: {}\n'.format(utc_time, data[len(data)-1].get('flrID') ))
     else:
         f4.write('Checking Time:{} | No new flare found, no flare in past 7 days.\n'.format(utc_time))
 f4.close()
-print (bgsw_folder_name)
+print (bgsw_folder_name, flare_id)
 
 

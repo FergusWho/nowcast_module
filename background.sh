@@ -36,17 +36,17 @@ run_dir=`cat $root_dir/temp.txt`
 rm $root_dir/temp.txt
 
 
-mkdir $root_dir/$run_dir
-cp -r $iPATH_dir/Acceleration/zeus3.6/* $root_dir/$run_dir
+mkdir $root_dir/Background/$run_dir
+cp -r $iPATH_dir/Acceleration/zeus3.6/* $root_dir/Background/$run_dir
 # use the modified dzeus36 version for nowcasting
-cp $root_dir/dzeus36_alt $root_dir/$run_dir/dzeus36
+cp $root_dir/dzeus36_alt $root_dir/Background/$run_dir/dzeus36
 
-cp $root_dir/${run_dir}_input.json $root_dir/$run_dir/input.json
+cp $root_dir/${run_dir}_input.json $root_dir/Background/$run_dir/input.json
 
 
-$python_bin $iPATH_dir/prepare_PATH.py --root_dir $root_dir/$run_dir --path_dir $iPATH_dir --run_mode 1 --input $root_dir/${run_dir}_input.json
+$python_bin $iPATH_dir/prepare_PATH.py --root_dir $root_dir/Background/$run_dir --path_dir $iPATH_dir --run_mode 1 --input $root_dir/${run_dir}_input.json
 
-cd $root_dir/$run_dir
+cd $root_dir/Background/$run_dir
 csh -v ./iPATH_zeus.s
 
 if [ $if_local -eq 1 ]
@@ -55,11 +55,12 @@ then
     cd ..
 else
     cd $root_dir
-    /opt/slurm/bin/sbatch $root_dir/run_zeus.sh -r $root_dir/$run_dir
+    /opt/slurm/bin/sbatch -W $root_dir/run_zeus.sh -r $root_dir/Background/$run_dir
 fi
 
+wait
 #clean up some files
-rm $root_dir/zr001JH
-rm $root_dir/zr002JH
-rm $root_dir/zr003JH
-rm $root_dir/zr004JH
+rm $root_dir/Background/$run_dir/zr001JH
+rm $root_dir/Background/$run_dir/zr002JH
+rm $root_dir/Background/$run_dir/zr003JH
+rm $root_dir/Background/$run_dir/zr004JH

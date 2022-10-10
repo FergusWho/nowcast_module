@@ -14,8 +14,7 @@ import json
 import sys
 import os
 import argparse
-
-import helioweb_locations
+from helioweb_locations import *
 
 # some parameters 
 AU  = 1.5e11        
@@ -177,7 +176,7 @@ if len(CME_index) != 0:
 
 
     #### modify input.json for the CME run
-    f2 = open(root_dir+'/'+bgsw_folder_name+'/input.json', 'r')
+    f2 = open(root_dir+'/Background/'+bgsw_folder_name+'/input.json', 'r')
     input_data = json.load(f2)
     f2.close()
 
@@ -193,7 +192,17 @@ if len(CME_index) != 0:
 
     input_data['n_multi'] = n_multi
     
-    f3 = open(root_dir+'/'+bgsw_folder_name+'/'+run_time+'_input.json', 'w')
+    f3 = open(root_dir+'/Background/'+bgsw_folder_name+'/'+run_time+'_input.json', 'w')
+    json.dump(input_data, f3, indent=4)
+    f3.close()
+
+    # setup input file for Mars
+    mars_r, mars_lat, mars_lon = find_mars(datetime_CME)
+    earth_r, earth_lat, earth_lon = find_earth(datetime_CME)
+    input_data['phi_e'] = 100.0-data[CME_index[ii]].get('longitude') + mars_lon - earth_lon
+    input_data['r0_e'] = mars_r
+
+    f3 = open(root_dir+'/Background/'+bgsw_folder_name+'/'+run_time+'_mars_input.json', 'w')
     json.dump(input_data, f3, indent=4)
     f3.close()
     #### Generating Output JSON 
@@ -242,15 +251,17 @@ if len(CME_index) != 0:
     
     json_data["sep_forecast_submission"]["inputs"].append(inputs)
 
-    with open(root_dir+'/'+bgsw_folder_name+'/'+run_time+'_output.json', 'w') as write_file:
+    with open(root_dir+'/Background/'+bgsw_folder_name+'/'+run_time+'_output.json', 'w') as write_file:
         json.dump(json_data, write_file, indent=4)
+    CME_id = data[CME_index[ii]].get('associatedCMEID')
 else:
     bgsw_folder_name=''
+    CME_id = ''
     if len(data) > 0:
         f4.write('Checking Time:{} | No new CME found, last CME in 7 days: {}\n'.format(utc_time, data[len(data)-1].get('associatedCMEID') ))
     else:
         f4.write('Checking Time:{} | No new CME found, no CME in past 7 days.\n'.format(utc_time))
 f4.close()
-print (bgsw_folder_name)
+print (bgsw_folder_name, CME_id)
 
 

@@ -1,6 +1,7 @@
 #!/bin/bash
 iPATH_dir='/data/iPATH/iPATH2.0'
 root_dir='/data/iPATH/nowcast_module'
+opsep_dir='/data/iPATH/operational-sep'
 python_bin='/data/spack/opt/spack/linux-centos7-skylake_avx512/gcc-10.2.0/python-3.8.9-dtvwd3qomfzkcimvlwvw5ilvr4eb5dvg/bin/python3'
 # default for CCMC AWS
 
@@ -14,7 +15,7 @@ echo "-----------------------------------------"
 echo $run_time
 
 # testing for specific event:
-# example: bash CME.sh -t '2022-01-20_08:30'
+# example: bash CME.sh -t 2022-01-20_08:30
 while getopts 't:L' flag
 do
     case "${flag}" in
@@ -35,7 +36,7 @@ else
     module load gcc-4.8.5
     module load python-3.8.9-gcc-10.2.0-dtvwd3q
     MPI_comp='/opt/amazon/openmpi/bin/mpif90'
-    thread_count=128
+    thread_count=64
 fi
 
 CME_dir=$run_time
@@ -43,8 +44,16 @@ CME_dir=$run_time
 trspt_dir='transport'
 
 
-# save last line of output to bgsw_folder_name
-bgsw_folder_name=`$python_bin $root_dir/check_CME.py --root_dir $root_dir --run_time $run_time | tail -n 1`
+# read last line of output from check_CME.py
+last_line=`$python_bin $root_dir/check_CME.py --root_dir $root_dir --run_time $run_time | tail -n 1`
+IFS=' '
+read -a strarr <<<$last_line
+bgsw_folder_name=${strarr[0]}
+CME_id=${strarr[1]}
+
+# get the start and end date for Opsep
+startdate=(${bgsw_folder_name//_/ })
+enddate=$(date -d "$startdate + 2 days" +'%Y-%m-%d')
 
 echo $bgsw_folder_name
 
@@ -55,51 +64,104 @@ then
 else
     #-----------------------------------------------
     # CME setup and acceleration:
-    
-    # use the modified dzeus36 version for nowcasting
-    cp $root_dir/dzeus36_alt $root_dir/$bgsw_folder_name/dzeus36
+    cp -r $root_dir/Background/$bgsw_folder_name $root_dir/CME/$CME_id
+    echo "CME found! Checking Time: "$run_time >$root_dir/CME/${CME_id}_log.txt
+    echo "CME id: "$CME_id >>$root_dir/CME/${CME_id}_log.txt
+    echo "current time: "$(date +'%Y-%m-%d_%H:%M' -u) >>$root_dir/CME/${CME_id}_log.txt
 
-    $python_bin $iPATH_dir/prepare_PATH.py --root_dir $root_dir/$bgsw_folder_name --path_dir $iPATH_dir --run_mode 0 --input $root_dir/$bgsw_folder_name/${CME_dir}_input.json
-    cd $root_dir/$bgsw_folder_name
+    # use the modified dzeus36 version for nowcasting
+    cp $root_dir/dzeus36_alt $root_dir/CME/$CME_id/dzeus36
+
+    $python_bin $iPATH_dir/prepare_PATH.py --root_dir $root_dir/CME/$CME_id --path_dir $iPATH_dir --run_mode 0 --input $root_dir/CME/$CME_id/${CME_dir}_input.json >>$root_dir/CME/${CME_id}_log.txt 2>&1
+    cd $root_dir/CME/$CME_id
     csh -v ./iPATH_zeus.s
     if [ $if_local -eq 1 ]
     then
         ./xdzeus36 <input
     else
         cd $root_dir
-        /opt/slurm/bin/sbatch -W run_zeus2.sh -r $root_dir/$bgsw_folder_name
-        wait
+        /opt/slurm/bin/sbatch -W run_zeus2.sh -r $root_dir/CME/$CME_id
     fi
+    wait
+    echo "CME setup and acceleration done. Time: "$(date +'%Y-%m-%d_%H:%M' -u) >>$root_dir/CME/${CME_id}_log.txt 
     cd $root_dir
 
-    $python_bin $iPATH_dir/prepare_PATH.py --root_dir $root_dir/$bgsw_folder_name --path_dir $iPATH_dir --run_mode 2 --ranks $thread_count --input $root_dir/$bgsw_folder_name/${CME_dir}_input.json
-    
-    mkdir $root_dir/$bgsw_folder_name/path_output/$trspt_dir
-    
-    $MPI_comp -O3 $iPATH_dir/Transport/parallel_wrapper.f $iPATH_dir/Transport/transport_2.05.f -o $root_dir/$bgsw_folder_name/path_output/$trspt_dir/trspt.out
-    $FCOMP $iPATH_dir/Transport/combine.f -o $root_dir/$bgsw_folder_name/path_output/$trspt_dir/combine.out
+    #-----------------------------------------------------------------------------------------
+    # setup and compile for the transport module
 
-    cp $iPATH_dir/Transport/trspt_input $root_dir/$bgsw_folder_name/path_output/$trspt_dir
-    cp $root_dir/plot_iPATH_nowcast.py $root_dir/$bgsw_folder_name/path_output/$trspt_dir
-    cp $root_dir/$bgsw_folder_name/${CME_dir}_input.json $root_dir/$bgsw_folder_name/path_output/$trspt_dir
-    mv $root_dir/$bgsw_folder_name/${CME_dir}_output.json $root_dir/$bgsw_folder_name/path_output/$trspt_dir/output.json
+    $python_bin $iPATH_dir/prepare_PATH.py --root_dir $root_dir/CME/$CME_id --path_dir $iPATH_dir --run_mode 2 --ranks $thread_count --input $root_dir/CME/$CME_id/${CME_dir}_input.json >>$root_dir/CME/${CME_id}_log.txt 2>&1
     
+    mkdir $root_dir/CME/$CME_id/path_output/$trspt_dir
+    
+    $MPI_comp -O3 $iPATH_dir/Transport/parallel_wrapper.f $iPATH_dir/Transport/transport_2.05.f -o $root_dir/CME/$CME_id/path_output/$trspt_dir/trspt.out
+    $FCOMP $iPATH_dir/Transport/combine.f -o $root_dir/CME/$CME_id/path_output/$trspt_dir/combine.out
+
+    cp $iPATH_dir/Transport/trspt_input $root_dir/CME/$CME_id/path_output/$trspt_dir
+    cp $root_dir/plot_iPATH_nowcast.py $root_dir/CME/$CME_id/path_output/$trspt_dir
+    cp $root_dir/CME/$CME_id/${CME_dir}_input.json $root_dir/CME/$CME_id/path_output/$trspt_dir
+    mv $root_dir/CME/$CME_id/${CME_dir}_output.json $root_dir/CME/$CME_id/path_output/$trspt_dir/output.json
+   
+ 
+    mkdir $root_dir/CME/$CME_id/path_output/${trspt_dir}_mars
+    $python_bin $iPATH_dir/prepare_PATH.py --root_dir $root_dir/CME/$CME_id --path_dir $iPATH_dir --run_mode 2 --ranks $thread_count --input $root_dir/CME/$CME_id/${CME_dir}_mars_input.json >>$root_dir/CME/${CME_id}_log.txt 2>&1
+    
+    cp $iPATH_dir/Transport/trspt_input $root_dir/CME/$CME_id/path_output/${trspt_dir}_mars
+    cp $root_dir/plot_iPATH_nowcast.py $root_dir/CME/$CME_id/path_output/${trspt_dir}_mars
+    cp $root_dir/CME/$CME_id/${CME_dir}_mars_input.json $root_dir/CME/$CME_id/path_output/${trspt_dir}_mars
+    cp $root_dir/CME/$CME_id/path_output/$trspt_dir/combine.out $root_dir/CME/$CME_id/path_output/${trspt_dir}_mars
+    cp $root_dir/CME/$CME_id/path_output/$trspt_dir/trspt.out $root_dir/CME/$CME_id/path_output/${trspt_dir}_mars 
+    cp $root_dir/CME/$CME_id/path_output/$trspt_dir/output.json $root_dir/CME/$CME_id/path_output/${trspt_dir}_mars 
+ 
+    #-----------------------------------------------------------------------------------------
+    # Now run the transport module for Earth:
     if [ $if_local -eq 1 ]
     then
-        cd $root_dir/$bgsw_folder_name/path_output/$trspt_dir
+        cd $root_dir/CME/$CME_id/path_output/$trspt_dir
         mpirun -np $thread_count trspt.out
     else
-        /opt/slurm/bin/sbatch -W run_transport.sh -r $root_dir/$bgsw_folder_name/path_output/$trspt_dir    
+        /opt/slurm/bin/sbatch -W run_transport.sh -r $root_dir/CME/$CME_id/path_output/$trspt_dir    
         wait
-        cd $root_dir/$bgsw_folder_name/path_output/$trspt_dir
     fi
-        
+    wait
+
+    echo "Transport for Earth done. Time: "$(date +'%Y-%m-%d_%H:%M' -u) >>$root_dir/CME/${CME_id}_log.txt
+
+    cd $root_dir/CME/$CME_id/path_output/$trspt_dir
     ./combine.out
     # clean up some unused output
     rm RawData*
-    rm $root_dir/$bgsw_folder_name/path_output/dist_all_shl.dat
+    rm $root_dir/CME/$CME_id/path_output/dist_all_shl.dat
     
     # Plot result:
-    $python_bin $root_dir/$bgsw_folder_name/path_output/$trspt_dir/plot_iPATH_nowcast.py
+    $python_bin $root_dir/CME/$CME_id/path_output/$trspt_dir/plot_iPATH_nowcast.py
+
+    # Use OpSep to produce output for SEP scoreboard
+    echo "Now using OpSEP to generate output:" >>$root_dir/CME/${CME_id}_log.txt
+    cp $root_dir/CME/$CME_id/path_output/$trspt_dir/${startdate}_differential_flux.csv $opsep_dir/data
+    cd $opsep_dir
+    python3 operational_sep_quantities.py --StartDate $startdate --EndDate $enddate --Experiment user --ModelName iPATH --FluxType differential --UserFile ${startdate}_differential_flux.csv --Threshold "10,0.1" >>$root_dir/CME/${CME_id}_log.txt
+    cd $root_dir
+    
+    #-----------------------------------------------------------------------------------------
+    # Now run the transport for Mars:
+    # Currently we prioritize the transport calculation at Earth.
+    # Ideally we want to sbatch this run together with the Earth run. (can't use -W across two jobs atm)
+    
+    if [ $if_local -eq 1 ]
+    then
+        cd $root_dir/CME/$CME_id/path_output/${trspt_dir}_mars
+        mpirun -np $thread_count trspt.out
+    else
+        /opt/slurm/bin/sbatch -W run_transport.sh -r $root_dir/CME/$CME_id/path_output/${trspt_dir}_mars
+        wait
+    fi
+    wait
+   
+    echo "Transport for Mars done. Time: "$(date +'%Y-%m-%d_%H:%M' -u) >>$root_dir/CME/${CME_id}_log.txt
+
+    cd $root_dir/CME/$CME_id/path_output/${trspt_dir}_mars
+    ./combine.out
+    rm RawData*
+    $python_bin $root_dir/CME/$CME_id/path_output/${trspt_dir}_mars/plot_iPATH_nowcast.py
 fi
 
