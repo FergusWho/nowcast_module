@@ -206,7 +206,7 @@ if len(flare_index) != 0:
     print(loc_tokens[3], phi_e)
 
     input_data['cme_speed'] = Vcme
-    input_data['cme_width'] = width
+    input_data['cme_width'] = int(width)
     input_data['phi_e'] = phi_e
 
     # change density multiplier based on CME speed
