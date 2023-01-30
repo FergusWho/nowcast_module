@@ -197,8 +197,8 @@ if len(CME_index) != 0:
     f3.close()
 
     # setup input file for Mars
-    mars_r, mars_lat, mars_lon = find_mars(datetime_CME)
-    earth_r, earth_lat, earth_lon = find_earth(datetime_CME)
+    mars_r, mars_lat, mars_lon = find_mars(datetime_CME, root_dir)
+    earth_r, earth_lat, earth_lon = find_earth(datetime_CME, root_dir)
     input_data['phi_e'] = 100.0-data[CME_index[ii]].get('longitude') + mars_lon - earth_lon
     input_data['r0_e'] = mars_r
 

@@ -3,8 +3,8 @@ import datetime
 from datetime import timedelta
 from datetime import datetime
 
-root_dir1 = '/data/iPATH/nowcast_module'
-def find_mars(date_time):
+#root_dir1 = '/data/iPATH/nowcast_module'
+def find_mars(date_time, root_dir1):
     f1 = open(root_dir1+'/helioweb/planets/mars.lst', 'r')
     line_no = 0
     year    = []
@@ -44,7 +44,7 @@ def find_mars(date_time):
 
     return mars_r, mars_lat, mars_lon
 
-def find_earth(date_time):
+def find_earth(date_time, root_dir1):
     f1 = open(root_dir1+'/helioweb/planets/earth.lst', 'r')
     line_no = 0
     year    = []
@@ -84,7 +84,7 @@ def find_earth(date_time):
 
     return earth_r, earth_lat, earth_lon
 
-def find_psp(date_time):
+def find_psp(date_time, root_dir1):
     f1 = open(root_dir1+'/helioweb/spacecraft/psp.lst', 'r')
     line_no = 0
     year    = []
@@ -126,9 +126,12 @@ def find_psp(date_time):
 
 if __name__ =='__main__':
     now = datetime.now()
-
-    r, lat, lon = find_mars(now)
-    earth_r, earth_lat, earth_lon = find_earth(now)
+    
+    root_dir1 = '/data/iPATH/nowcast_module'
+    root_dir1 = './'
+    
+    r, lat, lon = find_mars(now,root_dir1)
+    earth_r, earth_lat, earth_lon = find_earth(now,root_dir1)
 
     print("mars location: r:", r, "latitude:", lat, "longitude:", lon)
     print("earth location: r:", earth_r, "latitude:", earth_lat, "longitude:", earth_lon)

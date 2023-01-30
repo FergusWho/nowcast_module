@@ -187,7 +187,11 @@ if len(flare_index) != 0:
     if class_tokens[0] == 'B':
         FSXR = class_num*1e-7
 
-    Vcme = 2.4e4*FSXR**0.3
+    Vcme = 2.4e4*FSXR**0.3 # km/s
+
+    width = Vcme/25.+60.
+    if width >= 140.:
+        width = 140.
 
     print('flare_class, Vcme', flare_class, Vcme)
 
@@ -202,7 +206,7 @@ if len(flare_index) != 0:
     print(loc_tokens[3], phi_e)
 
     input_data['cme_speed'] = Vcme
-    input_data['cme_width'] = 50.0 
+    input_data['cme_width'] = width
     input_data['phi_e'] = phi_e
 
     # change density multiplier based on CME speed
@@ -232,7 +236,7 @@ if len(flare_index) != 0:
            "flare":{
            "start_time":flare_start_time,
            "sourceLocation": data[flare_index[ii]].get('sourceLocation'),         
-           "half_width": 50,
+           "half_width": width/2.,
            "speed": Vcme,
            "coordinates": "HEEQ",
            "classType": data[flare_index[ii]].get('classType'),
