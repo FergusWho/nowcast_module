@@ -4,7 +4,9 @@ import matplotlib.pyplot as plt
 
 import json
 import argparse
-from osgeo import gdal
+#from osgeo import gdal
+
+from pyhdf.SD import SD, SDC
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--root_dir", type=str, default='./', \
@@ -29,7 +31,7 @@ co  = 3.0e8
 n_0 = 1.0e6
 
 # read phi_num
-with open(root_dir+'../input.json') as input_file:
+with open(root_dir+'../CME_input.json') as input_file:
     input_obj = json.load(input_file)
 
 print(input_obj)
@@ -150,21 +152,37 @@ maxt = 20000
 pi = 3.14159265359
 
 for ii in range(0, shell_num):
-       ifile = 26 + ii
+       ifile = 31 + ii
        file_no = root_dir + "../zhto{:03d}JH".format(ifile)
        # read the solar wind values from HDF files
-       print('HDF4_SDS:UNKNOWN:{:s}:3'.format(file_no))
-       v1_data = gdal.Open('HDF4_SDS:UNKNOWN:{:s}:3'.format(file_no))  # (360,1,x)
-       b1_data = gdal.Open('HDF4_SDS:UNKNOWN:{:s}:15'.format(file_no))
-       b3_data = gdal.Open('HDF4_SDS:UNKNOWN:{:s}:23'.format(file_no))
-       dens_data = gdal.Open('HDF4_SDS:UNKNOWN:{:s}:27'.format(file_no))
-       inter_energy_data= gdal.Open('HDF4_SDS:UNKNOWN:{:s}:31'.format(file_no))
+       hdf_in = SD(file_no, SDC.READ)
+       print('file name:'+file_no)
+       print('done reading')
+
+       # print(hdf_in.datasets())
        
-       v1 = v1_data.ReadAsArray()
-       b1 = b1_data.ReadAsArray()
-       b3 = b3_data.ReadAsArray()
-       dens = dens_data.ReadAsArray()
-       inter_energy = inter_energy_data.ReadAsArray()
+       v1 = hdf_in.select('Data-Set-2')
+       b1 = hdf_in.select('Data-Set-5')
+       b3 = hdf_in.select('Data-Set-7')
+       dens = hdf_in.select('Data-Set-8')
+       inter_energy = hdf_in.select('Data-Set-9')
+       # print(np.shape(v1))
+       # print(v1[150,0,200], b1[150,0,200], b3[150,0,200], dens[150,0,200])
+
+
+       # wait()
+       # print('HDF4_SDS:UNKNOWN:{:s}:3'.format(file_no))
+       # v1_data = gdal.Open('HDF4_SDS:UNKNOWN:{:s}:3'.format(file_no))  # (360,1,x)
+       # b1_data = gdal.Open('HDF4_SDS:UNKNOWN:{:s}:15'.format(file_no))
+       # b3_data = gdal.Open('HDF4_SDS:UNKNOWN:{:s}:23'.format(file_no))
+       # dens_data = gdal.Open('HDF4_SDS:UNKNOWN:{:s}:27'.format(file_no))
+       # inter_energy_data= gdal.Open('HDF4_SDS:UNKNOWN:{:s}:31'.format(file_no))
+       
+       # v1 = v1_data.ReadAsArray()
+       # b1 = b1_data.ReadAsArray()
+       # b3 = b3_data.ReadAsArray()
+       # dens = dens_data.ReadAsArray()
+       # inter_energy = inter_energy_data.ReadAsArray()
        
        dens_norm = np.ndarray((360, xdims))
 
@@ -174,7 +192,7 @@ for ii in range(0, shell_num):
 
        # plot field lines
 
-       print(b1.shape, np.ndim(b1))
+       # print(b1.shape, np.ndim(b1))
        fl0_r = []
        fl0_th = []
        for i in range(0,num):
@@ -271,6 +289,7 @@ for ii in range(0, shell_num):
        for i in range(0,6):
               ticks.append(i*max_n/5.)
 
+       print('done calculating')
        #---------------------------------------
        #   plotting
        #---------------------------------------

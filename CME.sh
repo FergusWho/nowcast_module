@@ -73,6 +73,9 @@ else
     cp $root_dir/dzeus36_alt $root_dir/CME/$CME_id/dzeus36
 
     $python_bin $iPATH_dir/prepare_PATH.py --root_dir $root_dir/CME/$CME_id --path_dir $iPATH_dir --run_mode 0 --input $root_dir/CME/$CME_id/${CME_dir}_input.json >>$root_dir/CME/${CME_id}_log.txt 2>&1
+    
+    cp $root_dir/CME/$CME_id/${CME_dir}_input.json $root_dir/CME/$CME_id/CME_input.json
+    
     cd $root_dir/CME/$CME_id
     csh -v ./iPATH_zeus.s
     if [ $if_local -eq 1 ]
@@ -96,6 +99,7 @@ else
     $MPI_comp -O3 $iPATH_dir/Transport/parallel_wrapper.f $iPATH_dir/Transport/transport_2.05.f -o $root_dir/CME/$CME_id/path_output/$trspt_dir/trspt.out
     $FCOMP $iPATH_dir/Transport/combine.f -o $root_dir/CME/$CME_id/path_output/$trspt_dir/combine.out
 
+    cp $root_dir/plot_CME_info.py $root_dir/CME/$CME_id/path_output
     cp $iPATH_dir/Transport/trspt_input $root_dir/CME/$CME_id/path_output/$trspt_dir
     cp $root_dir/plot_iPATH_nowcast.py $root_dir/CME/$CME_id/path_output/$trspt_dir
     cp $root_dir/CME/$CME_id/${CME_dir}_input.json $root_dir/CME/$CME_id/path_output/$trspt_dir
@@ -134,6 +138,11 @@ else
     
     # Plot result:
     $python_bin $root_dir/CME/$CME_id/path_output/$trspt_dir/plot_iPATH_nowcast.py
+    cd $root_dir/CME/$CME_id/path_output
+    $python_bin $root_dir/CME/$CME_id/path_output/plot_CME_info.py
+    wait
+
+
 
     # Use OpSep to produce output for SEP scoreboard
     echo "Now using OpSEP to generate output:" >>$root_dir/CME/${CME_id}_log.txt
@@ -141,6 +150,10 @@ else
     cd $opsep_dir
     python3 operational_sep_quantities.py --StartDate $startdate --EndDate $enddate --Experiment user --ModelName iPATH --FluxType differential --UserFile ${startdate}_differential_flux.csv --Threshold "10,0.1" >>$root_dir/CME/${CME_id}_log.txt
     cd $root_dir
+
+    # make CME movie
+    /usr/bin/convert -delay 5 $root_dir/CME/$CME_id/path_output/CME*.png $root_dir/CME/$CME_id/path_output/CME.gif
+    wait
     
     #-----------------------------------------------------------------------------------------
     # Now run the transport for Mars:
