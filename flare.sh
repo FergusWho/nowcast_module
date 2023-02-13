@@ -70,7 +70,7 @@ else
 
     $python_bin $iPATH_dir/prepare_PATH.py --root_dir $root_dir/Flare/$CME_id --path_dir $iPATH_dir --run_mode 0 --input $root_dir/Flare/$CME_id/${CME_dir}_flare_input.json >>$root_dir/Flare/${CME_id}_log.txt 2>&1
     
-    cp $root_dir/Flare/$CME_id/${CME_dir}_input.json $root_dir/Flare/$CME_id/CME_input.json
+    cp $root_dir/Flare/$CME_id/${CME_dir}_flare_input.json $root_dir/Flare/$CME_id/CME_input.json
 
     cd $root_dir/Flare/$CME_id
     csh -v ./iPATH_zeus.s
