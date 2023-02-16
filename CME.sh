@@ -148,13 +148,13 @@ else
     echo "Now using OpSEP to generate output:" >>$root_dir/CME/${CME_id}_log.txt
     cp $root_dir/CME/$CME_id/path_output/$trspt_dir/${startdate}_differential_flux.csv $opsep_dir/data
     cd $opsep_dir
-    python3 operational_sep_quantities.py --StartDate $startdate --EndDate $enddate --Experiment user --ModelName iPATH --FluxType differential --UserFile ${startdate}_differential_flux.csv --Threshold "10,0.1" >>$root_dir/CME/${CME_id}_log.txt
+    python3 operational_sep_quantities.py --StartDate $startdate --EndDate $enddate --Experiment user --ModelName iPATH_CME --FluxType differential --UserFile ${startdate}_differential_flux.csv --Threshold "10,0.1" >>$root_dir/CME/${CME_id}_log.txt
     cd $root_dir
 
     # make CME movie
     /usr/bin/convert -delay 5 $root_dir/CME/$CME_id/path_output/CME*.png $root_dir/CME/$CME_id/path_output/CME.gif
     wait
-    
+
     #-----------------------------------------------------------------------------------------
     # Now run the transport for Mars:
     # Currently we prioritize the transport calculation at Earth.

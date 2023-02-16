@@ -125,6 +125,15 @@ else
     $python_bin $root_dir/Flare/$CME_id/path_output/plot_CME_info.py
     wait
     /usr/bin/convert -delay 5 $root_dir/Flare/$CME_id/path_output/CME*.png $root_dir/Flare/$CME_id/path_output/CME.gif
+    wait
+
+    # Use OpSep to produce output for SEP scoreboard
+    echo "Now using OpSEP to generate output:" >>$root_dir/Flare/${CME_id}_log.txt
+    cp $root_dir/Flare/$CME_id/path_output/$trspt_dir/${startdate}_differential_flux.csv $opsep_dir/data/${startdate}_differential_flux_flare.csv
+    cd $opsep_dir
+    python3 operational_sep_quantities.py --StartDate $startdate --EndDate $enddate --Experiment user --ModelName iPATH_flare --FluxType differential --UserFile ${startdate}_differential_flux_flare.csv --Threshold "10,0.1" >>$root_dir/Flare/${CME_id}_log.txt
+    cd $root_dir
+
 
 fi
 
