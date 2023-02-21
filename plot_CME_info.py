@@ -319,7 +319,7 @@ for ii in range(0, shell_num):
 
 
        ax2 = plt.subplot(grid[:, 2:], projection='polar')
-       pcm = ax2.contourf(theta, r, dens_norm,  extend='max', fontsize=25,\
+       pcm = ax2.contourf(theta, r, dens_norm,  extend='max',\
           levels = np.linspace(0,max_n,150), cmap ='coolwarm', vmin=0.0, vmax=max_n, yunits ='AU')
     
        ax2.plot(phi_rad, shock_loc[ii*phi_num:(ii+1)*phi_num], 'k--', linewidth=2.0)
