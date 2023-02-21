@@ -147,8 +147,14 @@ else
     # Use OpSep to produce output for SEP scoreboard
     echo "Now using OpSEP to generate output:" >>$root_dir/CME/${CME_id}_log.txt
     cp $root_dir/CME/$CME_id/path_output/$trspt_dir/${startdate}_differential_flux.csv $opsep_dir/data
+    # copy output json that contains trigger info to OpSEP
+    cp $root_dir/CME/$CME_id/path_output/$trspt_dir/output.json $opsep_dir/library/model_template.json
     cd $opsep_dir
-    python3 operational_sep_quantities.py --StartDate $startdate --EndDate $enddate --Experiment user --ModelName iPATH_CME --FluxType differential --UserFile ${startdate}_differential_flux.csv --Threshold "10,0.1" >>$root_dir/CME/${CME_id}_log.txt
+    python3 operational_sep_quantities.py --StartDate $startdate --EndDate $enddate --Experiment user --ModelName ZEUS+iPATH_CME --FluxType differential --UserFile ${startdate}_differential_flux.csv --spase spase://CCMC/SimulationModel/iPATH/2 >>$root_dir/CME/${CME_id}_log.txt
+    wait
+    # return model template back to default
+    cp $opsep_dir/library/model_template.json.bk $opsep_dir/library/model_template.json
+    
     cd $root_dir
 
     # make CME movie

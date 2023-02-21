@@ -224,20 +224,21 @@ if len(flare_index) != 0:
     #### Generating Output JSON 
 
     json_data={"sep_forecast_submission":{
-           "model": { "short_name": "iPATH", "spase_id": "spase://CCMC/SimulationModel/MODEL_NAME/VERSION" },
-           "issue_time": utc_time_json,       
-           "mode": "forecast",
-           "triggers": [],
-           "inputs": [],
-           "forecasts": []
+        "contacts": [ { "name": "Junxiang Hu", "email": "junxianghu@gmail.com" } ],
+        "model": { "short_name": "", "spase_id": "" },
+        "options": "",
+        "issue_time": "",
+        "mode": "",
+        "triggers": [],
+        "forecasts": []
     }}
 
     flare = {
            "flare":{
            "start_time":flare_start_time,
            "sourceLocation": data[flare_index[ii]].get('sourceLocation'),         
-           "half_width": width/2.,
-           "speed": Vcme,
+           "CME_half_width": width/2.,
+           "CME_speed": Vcme,
            "coordinates": "HEEQ",
            "classType": data[flare_index[ii]].get('classType'),
            "catalog_id": data[flare_index[ii]].get('flrID'),
@@ -247,21 +248,21 @@ if len(flare_index) != 0:
 
     json_data["sep_forecast_submission"]["triggers"].append(flare)
 
-    inputs = {
-        "magnetic_connectivity":{
-        "method": "Parker Spiral",
-        "lat": 0.0,
-        "lon": 0.0,
-        "solar_wind":{
-            "observatory":"DSCOVR",
-            "speed":input_data['glv'],
-            "proton_density":input_data['gln'],
-            "magnetic_field":input_data['glb']
-        }
-        }
-    }
+    # inputs = {
+    #     "magnetic_connectivity":{
+    #     "method": "Parker Spiral",
+    #     "lat": 0.0,
+    #     "lon": 0.0,
+    #     "solar_wind":{
+    #         "observatory":"DSCOVR",
+    #         "speed":input_data['glv'],
+    #         "proton_density":input_data['gln'],
+    #         "magnetic_field":input_data['glb']
+    #     }
+    #     }
+    # }
     
-    json_data["sep_forecast_submission"]["inputs"].append(inputs)
+    # json_data["sep_forecast_submission"]["inputs"].append(inputs)
 
     with open(root_dir+'/Background/'+bgsw_folder_name+'/'+run_time+'_flare_output.json', 'w') as write_file:
         json.dump(json_data, write_file, indent=4)
