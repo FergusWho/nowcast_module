@@ -44,7 +44,7 @@ cp $root_dir/dzeus36_alt $root_dir/Background/$run_dir/dzeus36
 mv $root_dir/${run_dir}_input.json $root_dir/Background/$run_dir/input.json
 
 
-$python_bin $iPATH_dir/prepare_PATH.py --root_dir $root_dir/Background/$run_dir --path_dir $iPATH_dir --run_mode 1 --input $root_dir/${run_dir}_input.json
+$python_bin $iPATH_dir/prepare_PATH.py --root_dir $root_dir/Background/$run_dir --path_dir $iPATH_dir --run_mode 1 --input $root_dir/Background/$run_dir/input.json
 
 cd $root_dir/Background/$run_dir
 csh -v ./iPATH_zeus.s
