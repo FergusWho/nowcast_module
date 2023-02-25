@@ -76,7 +76,7 @@ else:
 
 print ("folder name:", run_name)
 
-f0 = open(root_dir+'/temp.txt','w')
+f0 = open(root_dir+'/temp.txt','w')       # this part is not robust
 f0.write(run_name)
 f0.close()
 

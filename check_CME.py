@@ -50,8 +50,11 @@ if (run_time == ""):
        utc_datetime = utc_datetime.replace(tzinfo=None) # remove the timezone info for consistency
        
        #print("Current Local Time =", local_time, '\nUTC Time =', utc_time)
+
+       model_mode = 'nowcast'
 else:
        utc_datetime = datetime.strptime(run_time, '%Y-%m-%d_%H:%M')
+       model_mode = 'historical'
 
 
 utc_time = utc_datetime.strftime("%Y-%m-%d %H:%M:%S")
@@ -208,11 +211,10 @@ if len(CME_index) != 0:
     #### Generating Output JSON 
 
     json_data={"sep_forecast_submission":{
-        "contacts": [ { "name": "Junxiang Hu", "email": "junxianghu@gmail.com" } ],
         "model": { "short_name": "", "spase_id": "" },
         "options": "",
         "issue_time": "",
-        "mode": "",
+        "mode": model_mode,
         "triggers": [],
         "forecasts": [           
             {
@@ -254,9 +256,10 @@ if len(CME_index) != 0:
         ]
     }}
 
+    cme_start_time_fixed = cme_start_time+"Z"
     cme = {
            "cme":{
-           "start_time":cme_start_time,
+           "start_time":cme_start_time_fixed,
            "lat": data[CME_index[ii]].get('latitude'),
            "lon": data[CME_index[ii]].get('longitude'),
 #           "pa": 261,          
@@ -265,7 +268,7 @@ if len(CME_index) != 0:
            "height": 21.5,
            "time_at_height": { "time":data[CME_index[ii]].get('time21_5'), "height": 21.5 },
            "coordinates": "HEEQ",
-           "catalog": data[CME_index[ii]].get('catalog'),
+           "catalog": "DONKI",
            "catalog_id": data[CME_index[ii]].get('associatedCMEID'),
            "urls": [ data[CME_index[ii]].get('link') ]
            }

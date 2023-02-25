@@ -305,20 +305,24 @@ print (count1, count2, count3, count4)
 
 ######################################################################################################
 #           modify the output.json file
+#              - now optional since we are using OpSEP for output
+#                but we still need to calculate start_time for differential flux output file
 ######################################################################################################
 
 with open('./output.json', 'r') as read_file:
         json_data = json.load(read_file)
 if "cme" in json_data["sep_forecast_submission"]["triggers"][0]:
         print('triggered by CME')
-        cme_start_time = datetime.strptime(json_data["sep_forecast_submission"]["triggers"][0]["cme"]["start_time"], '%Y-%m-%dT%H:%M:%S')
+        cme_start_time = datetime.strptime(json_data["sep_forecast_submission"]["triggers"][0]["cme"]["start_time"], '%Y-%m-%dT%H:%M:%SZ')
         time21_5 = datetime.strptime(json_data["sep_forecast_submission"]["triggers"][0]["cme"]["time_at_height"]["time"],'%Y-%m-%dT%H:%MZ')
         simulation_zero_time = cme_start_time + (time21_5 - cme_start_time)/3.
 
 if "flare" in json_data["sep_forecast_submission"]["triggers"][0]:
         print('triggered by flare')
-        flare_start_time = datetime.strptime(json_data["sep_forecast_submission"]["triggers"][0]["flare"]["start_time"], '%Y-%m-%dT%H:%M:%S')
-        time_to_inner = 0.05*AU/(json_data["sep_forecast_submission"]["triggers"][0]["flare"]["speed"]*1000.)/3600.*2/3.
+        flare_start_time = datetime.strptime(json_data["sep_forecast_submission"]["triggers"][0]["flare"]["start_time"], '%Y-%m-%dT%H:%MZ')
+        FSXR=json_data["sep_forecast_submission"]["triggers"][0]["flare"]["intensity"]
+        Vcme = 2.4e4*FSXR**0.3 # km/s
+        time_to_inner = 0.05*AU/(Vcme*1000.)/3600.*2/3.
         print(time_to_inner)
         simulation_zero_time = flare_start_time + timedelta(hours=time_to_inner)
 
@@ -392,7 +396,7 @@ channel10MeV ={
               "fluences": [{ "fluence": gt10_fluence, "units": "cm^-2*sr^-1"}],
               "threshold_crossings": [ { "crossing_time": cross_time_10, "threshold": 10.0, "threshold_units": "pfu" } ],
               "all_clear":{"all_clear_boolean": all_clear_10, "threshold": 10.0, "threshold_units": "pfu"},
-              "sep_profile": run_time+"_differential_flux.csv"
+              "sep_profile": ""
            }
 channel100MeV ={
               "energy_channel": { "min": 100, "max": -1, "units": "MeV"},
@@ -403,18 +407,18 @@ channel100MeV ={
               "fluences": [{ "fluence": gt100_fluence, "units": "cm^-2*sr^-1"}],             
               "threshold_crossings": [ { "crossing_time": cross_time_100, "threshold": 1.0, "threshold_units": "pfu" } ],
               "all_clear":{"all_clear_boolean": all_clear_100, "threshold": 1.0, "threshold_units": "pfu"},
-              "sep_profile": run_time+"_differential_flux.csv"
+              "sep_profile": ""
            }
 
 #print(type(json_data["sep_forecast_submission"]["forecasts"]))
 
-json_data["sep_forecast_submission"]["forecasts"].append(channel10MeV)
-json_data["sep_forecast_submission"]["forecasts"].append(channel100MeV)
+# json_data["sep_forecast_submission"]["forecasts"].append(channel10MeV)
+# json_data["sep_forecast_submission"]["forecasts"].append(channel100MeV)
 
 
 
-with open('./'+run_time+'_output.json', 'w') as write_file:
-       json.dump(json_data, write_file, indent=4)
+# with open('./'+run_time+'_output.json', 'w') as write_file:
+#        json.dump(json_data, write_file, indent=4)
 
 #=======================================================================       
 # save flux to file  

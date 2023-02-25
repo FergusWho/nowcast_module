@@ -50,9 +50,10 @@ if (run_time == ""):
        utc_datetime = utc_datetime.replace(tzinfo=None) # remove the timezone info for consistency
        
        #print("Current Local Time =", local_time, '\nUTC Time =', utc_time)
+       model_mode = "forecast"
 else:
        utc_datetime = datetime.strptime(run_time, '%Y-%m-%d_%H:%M')
-
+       model_mode = "historical"
 
 utc_time = utc_datetime.strftime("%Y-%m-%d %H:%M:%S")
 utc_time_json = utc_datetime.strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -224,11 +225,10 @@ if len(flare_index) != 0:
     #### Generating Output JSON 
 
     json_data={"sep_forecast_submission":{
-        "contacts": [ { "name": "Junxiang Hu", "email": "junxianghu@gmail.com" } ],
         "model": { "short_name": "", "spase_id": "" },
         "options": "",
         "issue_time": "",
-        "mode": "",
+        "mode": model_mode,
         "triggers": [],
         "forecasts": [           
             {
@@ -238,7 +238,7 @@ if len(flare_index) != 0:
                "prediction_window": { "start_time": "", "end_time": "" },
                "peak_intensity": { "intensity": "", "units": "", "time": ""},
                "peak_intensity_max": { "intensity": "", "units": "", "time": "" },
-               "event_lengths":[ { "start_time": "",  "end_time": "", "threshold": "", "threshold_units": ""  }],
+               "event_lengths":[ { "start_time": "",  "end_time": "", "threshold": "", "threshold_units": ""  }]:,
                "fluences": [{"fluence": "", "units": ""}],
                "fluence_spectra": [{"start_time": "", "end_time": "",
                    "threshold_start":"", "threshold_end":"",
@@ -272,13 +272,16 @@ if len(flare_index) != 0:
 
     flare = {
            "flare":{
-           "start_time":flare_start_time,
-           "sourceLocation": data[flare_index[ii]].get('sourceLocation'),         
-           "CME_half_width": width/2.,
-           "CME_speed": Vcme,
-           "coordinates": "HEEQ",
-           "classType": data[flare_index[ii]].get('classType'),
-           "catalog_id": data[flare_index[ii]].get('flrID'),
+           "last_data_time": data[flare_index[ii]].get('endTime'),
+           "start_time":data[flare_index[ii]].get('beginTime'),
+           "peak_time": data[flare_index[ii]].get('peakTime'),
+           "end_time": data[flare_index[ii]].get('endTime'),
+           "location": data[flare_index[ii]].get('sourceLocation'),         
+#           "CME_half_width": width/2.,
+#           "CME_speed": Vcme,
+#           "coordinates": "HEEQ",
+           "intensity": data[flare_index[ii]].get('FSXR'),
+#           "catalog_id": data[flare_index[ii]].get('flrID'),
            "urls": [ data[flare_index[ii]].get('link') ]
            }
     }

@@ -62,13 +62,13 @@ else
     # CME setup and acceleration:
     cp -r $root_dir/Background/$bgsw_folder_name $root_dir/Flare/$CME_id
     echo "CME found! Checking Time: "$run_time >$root_dir/Flare/${CME_id}_log.txt
-    echo "CME id: "$CME_id >>$root_dir/Flare/${CME_id}_log.txt
-    echo "current time: "$(date +'%Y-%m-%d_%H:%M' -u) >>$root_dir/Flare/${CME_id}_log.txt
+    echo "CME id: "$CME_id >>$root_dir/Flare/$CME_id/log.txt
+    echo "current time: "$(date +'%Y-%m-%d_%H:%M' -u) >>$root_dir/Flare/$CME_id/log.txt
 
     # use the modified dzeus36 version for nowcasting
     cp $root_dir/dzeus36_alt $root_dir/Flare/$CME_id/dzeus36
 
-    $python_bin $iPATH_dir/prepare_PATH.py --root_dir $root_dir/Flare/$CME_id --path_dir $iPATH_dir --run_mode 0 --input $root_dir/Flare/$CME_id/${CME_dir}_flare_input.json >>$root_dir/Flare/${CME_id}_log.txt 2>&1
+    $python_bin $iPATH_dir/prepare_PATH.py --root_dir $root_dir/Flare/$CME_id --path_dir $iPATH_dir --run_mode 0 --input $root_dir/Flare/$CME_id/${CME_dir}_flare_input.json >>$root_dir/Flare/$CME_id/log.txt 2>&1
     
     cp $root_dir/Flare/$CME_id/${CME_dir}_flare_input.json $root_dir/Flare/$CME_id/CME_input.json
 
@@ -82,13 +82,13 @@ else
         /opt/slurm/bin/sbatch -W run_zeus2.sh -r $root_dir/Flare/$CME_id
     fi
     wait
-    echo "CME setup and acceleration done. Time: "$(date +'%Y-%m-%d_%H:%M' -u) >>$root_dir/Flare/${CME_id}_log.txt 
+    echo "CME setup and acceleration done. Time: "$(date +'%Y-%m-%d_%H:%M' -u) >>$root_dir/Flare/$CME_id/log.txt 
     cd $root_dir
     
     #-----------------------------------------------------------------------------------------
     # setup and compile for the transport module
     
-    $python_bin $iPATH_dir/prepare_PATH.py --root_dir $root_dir/Flare/$CME_id --path_dir $iPATH_dir --run_mode 2 --ranks $thread_count --input $root_dir/Flare/$CME_id/${CME_dir}_flare_input.json >>$root_dir/Flare/${CME_id}_log.txt 2>&1
+    $python_bin $iPATH_dir/prepare_PATH.py --root_dir $root_dir/Flare/$CME_id --path_dir $iPATH_dir --run_mode 2 --ranks $thread_count --input $root_dir/Flare/$CME_id/${CME_dir}_flare_input.json >>$root_dir/Flare/$CME_id/log.txt 2>&1
     
     mkdir $root_dir/Flare/$CME_id/path_output/$trspt_dir
     
@@ -111,7 +111,7 @@ else
     fi
     wait
 
-    echo "Transport for Earth done. Time: "$(date +'%Y-%m-%d_%H:%M' -u) >>$root_dir/Flare/${CME_id}_log.txt
+    echo "Transport for Earth done. Time: "$(date +'%Y-%m-%d_%H:%M' -u) >>$root_dir/Flare/$CME_id/log.txt
 
     cd $root_dir/Flare/$CME_id/path_output/$trspt_dir
     ./combine.out
@@ -128,12 +128,12 @@ else
     wait
 
     # Use OpSep to produce output for SEP scoreboard
-    echo "Now using OpSEP to generate output:" >>$root_dir/Flare/${CME_id}_log.txt
+    echo "Now using OpSEP to generate output:" >>$root_dir/Flare/$CME_id/log.txt
     cp $root_dir/Flare/$CME_id/path_output/$trspt_dir/${startdate}_differential_flux.csv $opsep_dir/data/${startdate}_differential_flux_flare.csv
     # copy output json that contains trigger info to OpSEP
     cp $root_dir/Flare/$CME_id/path_output/$trspt_dir/output.json $opsep_dir/library/model_template.json
     cd $opsep_dir
-    python3 operational_sep_quantities.py --StartDate $startdate --EndDate $enddate --Experiment user --ModelName ZEUS+iPATH_flare --FluxType differential --UserFile ${startdate}_differential_flux_flare.csv --spase spase://CCMC/SimulationModel/iPATH/2 >>$root_dir/Flare/${CME_id}_log.txt
+    python3 operational_sep_quantities.py --StartDate $startdate --EndDate $enddate --Experiment user --ModelName ZEUS+iPATH_flare --FluxType differential --UserFile ${startdate}_differential_flux_flare.csv --spase spase://CCMC/SimulationModel/iPATH/2 >>$root_dir/Flare/$CME_id/log.txt
     wait
     # return model template back to default
     cp $opsep_dir/library/model_template.json.bk $opsep_dir/library/model_template.json
