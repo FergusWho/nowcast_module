@@ -280,9 +280,14 @@ if len(flare_index) != 0:
 #           "CME_half_width": width/2.,
 #           "CME_speed": Vcme,
 #           "coordinates": "HEEQ",
-           "intensity": data[flare_index[ii]].get('FSXR'),
+           "intensity": FSXR,
 #           "catalog_id": data[flare_index[ii]].get('flrID'),
            "urls": [ data[flare_index[ii]].get('link') ]
+           }
+           "cme":{
+           "half_width": width/2.,
+           "speed": Vcme,
+           "catalog": "hypothetical, derived from flare info"
            }
     }
 
