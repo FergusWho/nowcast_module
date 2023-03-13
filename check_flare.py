@@ -283,7 +283,7 @@ if len(flare_index) != 0:
            "intensity": FSXR,
 #           "catalog_id": data[flare_index[ii]].get('flrID'),
            "urls": [ data[flare_index[ii]].get('link') ]
-           }
+           },
            "cme":{
            "half_width": width/2.,
            "speed": Vcme,
