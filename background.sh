@@ -1,8 +1,8 @@
 #!/bin/bash
-iPATH_dir='/data/iPATH/iPATH2.0'
-root_dir='/data/iPATH/nowcast_module'
-python_bin='/data/spack/opt/spack/linux-centos7-skylake_avx512/gcc-10.2.0/python-3.8.9-dtvwd3qomfzkcimvlwvw5ilvr4eb5dvg/bin/python3'
-# default for CCMC AWS
+iPATH_dir='/shared/iPATH/ipath_v2'
+root_dir='/shared/iPATH/nowcast_module_v1'
+data_dir='/data/iPATH/nowcast_module_v1'
+# default for CCMC AWS on rt-hpc-prod
 
 run_time=$(date +'%Y-%m-%d_%H:%M' -u)
 if_local=0
@@ -22,31 +22,31 @@ then
     # change these accordingly if you want to run locally
     iPATH_dir=$HOME'/iPATH2.0'
     root_dir=$HOME'/nowcast_module'
-    python_bin='/usr/bin/python3'
 else
-    module load gcc-4.8.5
-    module load python-3.8.9-gcc-10.2.0-dtvwd3q 
+    source ~/setup_pkgs
 fi
+
+mkdir -p $data_dir
 
 cd $root_dir
 
-$python_bin $root_dir/grepSW.py --root_dir $root_dir --run_time $run_time
+python3 $root_dir/grepSW.py --root_dir $data_dir --run_time $run_time
 
-run_dir=`cat $root_dir/temp.txt`
-rm $root_dir/temp.txt
+run_dir=`cat $data_dir/temp.txt`
+rm $data_dir/temp.txt
 
 
-mkdir $root_dir/Background/$run_dir
-cp -r $iPATH_dir/Acceleration/zeus3.6/* $root_dir/Background/$run_dir
+mkdir -p $data_dir/Background/$run_dir
+cp -r $iPATH_dir/Acceleration/zeus3.6/* $data_dir/Background/$run_dir
 # use the modified dzeus36 version for nowcasting
-cp $root_dir/dzeus36_alt $root_dir/Background/$run_dir/dzeus36
+cp $root_dir/dzeus36_alt $data_dir/Background/$run_dir/dzeus36
 
-mv $root_dir/${run_dir}_input.json $root_dir/Background/$run_dir/input.json
+mv $data_dir/${run_dir}_input.json $data_dir/Background/$run_dir/input.json
 
 
-$python_bin $iPATH_dir/prepare_PATH.py --root_dir $root_dir/Background/$run_dir --path_dir $iPATH_dir --run_mode 1 --input $root_dir/Background/$run_dir/input.json
+python3 $iPATH_dir/prepare_PATH.py --root_dir $data_dir/Background/$run_dir --path_dir $iPATH_dir --run_mode 1 --input $data_dir/Background/$run_dir/input.json
 
-cd $root_dir/Background/$run_dir
+cd $data_dir/Background/$run_dir
 csh -v ./iPATH_zeus.s
 
 if [ $if_local -eq 1 ]
@@ -54,13 +54,13 @@ then
     ./xdzeus36
     cd ..
 else
-    cd $root_dir
-    /opt/slurm/bin/sbatch -W $root_dir/run_zeus.sh -r $root_dir/Background/$run_dir
+    cd $data_dir/Background/$run_dir
+    sbatch -W $root_dir/run_zeus.sh -r $data_dir/Background/$run_dir
 fi
 
 wait
 #clean up some files
-rm $root_dir/Background/$run_dir/zr001JH
-rm $root_dir/Background/$run_dir/zr002JH
-rm $root_dir/Background/$run_dir/zr003JH
-rm $root_dir/Background/$run_dir/zr004JH
+rm $data_dir/Background/$run_dir/zr001JH
+rm $data_dir/Background/$run_dir/zr002JH
+rm $data_dir/Background/$run_dir/zr003JH
+rm $data_dir/Background/$run_dir/zr004JH
