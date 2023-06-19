@@ -63,6 +63,12 @@ then
     echo "There is no flare"
 
 else
+    # abort if no background simulation exists
+    [[ ! -d $data_dir/Background/$bgsw_folder_name ]] && {
+      echo "Background simulation $bgsw_folder_name not found"
+      exit 1
+    }
+
     #-----------------------------------------------
     # CME setup and acceleration:
     cp -r $data_dir/Background/$bgsw_folder_name $data_dir/Flare/$CME_id
