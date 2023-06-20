@@ -2,7 +2,7 @@
 iPATH_dir='/shared/iPATH/ipath_v2'
 root_dir='/shared/iPATH/nowcast_module_v1'
 data_dir='/data/iPATH/nowcast_module_v1'
-opsep_dir='/shared/iPATH/operational-sep'
+opsep_dir='/shared/iPATH/operational_sep_v3'
 # default for CCMC AWS on rt-hpc-prod
 
 MPI_comp='mpif90'
