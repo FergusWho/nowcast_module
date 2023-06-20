@@ -43,7 +43,7 @@ CME_dir=$run_time
 trspt_dir='transport'
 
 # create already processed flare list, if not existent
-[[ ! -f $data_dir/pastflarejson ]] && echo "[]" >$data_dir/pastflare.json
+[[ ! -f $data_dir/pastflare.json ]] && echo "[]" >$data_dir/pastflare.json
 
 # read last line of output from check_CME.py
 last_line=`python3 $root_dir/check_flare.py --root_dir $data_dir --run_time $run_time | tail -n 1`
@@ -146,7 +146,7 @@ else
     cp output.json json/library/model_template.json
     cp ${startdate}_differential_flux.csv json/data/
     cd json
-    python3 $opsep_dir/operational_sep_quantities.py --StartDate $startdate --EndDate $enddate --Experiment user --ModelName ZEUS+iPATH_flare --FluxType differential --UserFile ${startdate}_differential_flux.csv --spase spase://CCMC/SimulationModel/iPATH/2 >>$root_dir/Flare/$CME_id/log.txt
+    python3 $opsep_dir/operational_sep_quantities.py --StartDate $startdate --EndDate $enddate --Experiment user --ModelName ZEUS+iPATH_flare --FluxType differential --UserFile ${startdate}_differential_flux.csv --spase spase://CCMC/SimulationModel/iPATH/2 >>$data_dir/Flare/$CME_id/log.txt
     find -type d -empty -delete # remove empty folders created by opsep
 
     cd $root_dir
