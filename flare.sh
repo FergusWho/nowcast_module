@@ -146,7 +146,7 @@ else
     cp output.json json/library/model_template.json
     cp ${startdate}_differential_flux.csv json/data/
     cd json
-    python3 $opsep_dir/operational_sep_quantities.py --StartDate $startdate --EndDate $enddate --Experiment user --ModelName ZEUS+iPATH_flare --FluxType differential --UserFile ${startdate}_differential_flux.csv --spase spase://CCMC/SimulationModel/iPATH/2 >>$data_dir/Flare/$CME_id/log.txt
+    python3 $opsep_dir/operational_sep_quantities.py --StartDate $startdate --EndDate $enddate --Experiment user --ModelName ZEUS+iPATH_flare --FluxType differential --UserFile ${startdate}_differential_flux.csv --spase spase://CCMC/SimulationModel/iPATH/2 >>$data_dir/Flare/$CME_id/log.txt 2>&1
     find -type d -empty -delete # remove empty folders created by opsep
 
     cd $root_dir
