@@ -72,10 +72,13 @@ else
     #-----------------------------------------------
     # CME setup and acceleration:
     cp -r $data_dir/Background/$bgsw_folder_name $data_dir/Flare/$CME_id
-    rm $data_dir/CME/$CME_id/*.json $data_dir/CME/$CME_id/slurm*.out # delete residual files from other simulations
     echo "CME found! Checking Time: "$run_time >$data_dir/Flare/${CME_id}/log.txt
     echo "CME id: "$CME_id >>$data_dir/Flare/$CME_id/log.txt
     echo "current time: "$(date +'%Y-%m-%d_%H:%M' -u) >>$data_dir/Flare/$CME_id/log.txt
+
+    # delete residual files from other simulations
+    rm $data_dir/Flare/$CME_id/slurm*.out # slurm log from Background simulation
+    find $data_dir/Flare/$CME_id -type f -name '*.json' | grep -v ${CME_dir}_flare | xargs rm # json files from other CME/Flare simulations
 
     # use the modified dzeus36 version for nowcasting
     cp $root_dir/dzeus36_alt $data_dir/Flare/$CME_id/dzeus36
