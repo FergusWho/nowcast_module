@@ -96,7 +96,7 @@ else
         cd $data_dir/Flare/$CME_id
         sbatch -W $root_dir/run_zeus2.sh -r $data_dir/Flare/$CME_id
     fi
-    wait
+
     echo "CME setup and acceleration done. Time: "$(date +'%Y-%m-%d_%H:%M' -u) >>$data_dir/Flare/$CME_id/log.txt 
     cd $root_dir
     
@@ -123,9 +123,7 @@ else
     else
         cd $data_dir/Flare/$CME_id
         sbatch -W $root_dir/run_transport.sh -r $data_dir/Flare/$CME_id/path_output/$trspt_dir    
-        wait
     fi
-    wait
 
     echo "Transport for Earth done. Time: "$(date +'%Y-%m-%d_%H:%M' -u) >>$data_dir/Flare/$CME_id/log.txt
 
@@ -139,9 +137,23 @@ else
     python3 $data_dir/Flare/$CME_id/path_output/$trspt_dir/plot_iPATH_nowcast.py
     cd $data_dir/Flare/$CME_id/path_output
     python3 $data_dir/Flare/$CME_id/path_output/plot_CME_info.py
-    wait
+
+    # compress transport files
+    tar --remove-files -zcf $data_dir/Flare/$CME_id/path_output/$trspt_dir/fp.tar.gz $data_dir/Flare/$CME_id/path_output/$trspt_dir/fp_*
+
     convert -delay 5 $data_dir/Flare/$CME_id/path_output/CME*.png $data_dir/Flare/$CME_id/path_output/CME.gif
-    wait
+
+    # remove source pngs if the animation exists and contains the right number of frames
+    if [[ -f $data_dir/Flare/$CME_id/path_output/CME.gif ]]; then
+      npngs=$(ls $data_dir/Flare/$CME_id/path_output/CME*.png | wc -l)
+      nframes=$(identify $data_dir/Flare/$CME_id/path_output/CME.gif | wc -l)
+      (( npngs == nframes )) && rm $data_dir/Flare/$CME_id/path_output/CME*.png
+    fi
+
+    # compress intermediate acceleration files
+    for f in $data_dir/Flare/$CME_id/path_output/{observer_pov.dat,kappa-par-perp.dat,all_shell_bndy.dat,dist_at_shock.dat,esc_distr*,momenta-hi.dat,solar_wind_profile.dat}; do
+      gzip $f
+    done
 
     # Use OpSep to produce output for SEP scoreboard
     echo "Now using OpSEP to generate output:" >>$data_dir/Flare/$CME_id/log.txt
@@ -155,6 +167,10 @@ else
 
     cd $root_dir
 
+    # compress Slurm logs
+    for f in $data_dir/Flare/$CME_id/slurm*.out; do
+      gzip $f
+    done
 
 fi
 

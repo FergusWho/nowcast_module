@@ -274,7 +274,7 @@ if inj_rate < 0.0004:
 
 #### Create Input files for the iPATH
 
-f3 = open(root_dir+'/cronlog.txt', 'a')
+f3 = open(root_dir+'/backgroundlog.txt', 'a')
 f3.write('{}  {:5.2f}  {:5.2f}  {:6.1f}  {:9.1f}  {:5.2f}\n'.format(utc_time, B_mean, n_mean, v_mean, T_mean, flux_mean))
 f3.close()
 

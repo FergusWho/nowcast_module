@@ -58,9 +58,12 @@ else
     sbatch -W $root_dir/run_zeus.sh -r $data_dir/Background/$run_dir
 fi
 
-wait
 #clean up some files
 rm $data_dir/Background/$run_dir/zr001JH
 rm $data_dir/Background/$run_dir/zr002JH
 rm $data_dir/Background/$run_dir/zr003JH
 rm $data_dir/Background/$run_dir/zr004JH
+rm $data_dir/Background/$run_dir/zhto00*JH
+rm $data_dir/Background/$run_dir/zhto01*JH
+rm $data_dir/Background/$run_dir/zhto02*JH
+rm -r $data_dir/Background/$run_dir/releases
