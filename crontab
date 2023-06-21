@@ -1,10 +1,10 @@
 SHELL=/bin/bash                                                                 
                                                                                 
 # Background sub-module                                                         
-0 */8 * * * /shared/iPATH/nowcast_module_v1/background.sh >/data/iPATH/nowcast_module_v1/cron/Background/$(date -u +\%F_\%H-\%M).log 2>&1
+0 */8 * * * /shared/iPATH/nowcast_module_v1/background.sh >/data/iPATH/nowcast_module_v1/cron/Background/$(date -u +\%Y\%m\%d_\%H%\%M).log 2>&1
                                                                                 
 # CME sub-module                                                                
-*/15 * * * * /shared/iPATH/nowcast_module_v1/CME.sh >/data/iPATH/nowcast_module_v1/cron/CME/$(date -u +\%F_\%H-\%M).log 2>&1
+*/15 * * * * /shared/iPATH/nowcast_module_v1/CME.sh >/data/iPATH/nowcast_module_v1/cron/CME/$(date -u +\%Y\%m\%d_\%H%\%M).log 2>&1
                                                                                 
 # Flare sub-module                                                              
-*/15 * * * * /shared/iPATH/nowcast_module_v1/flare.sh >/data/iPATH/nowcast_module_v1/cron/Flare/$(date -u +\%F_\%H-\%M).log 2>&1
+*/15 * * * * /shared/iPATH/nowcast_module_v1/flare.sh >/data/iPATH/nowcast_module_v1/cron/Flare/$(date -u +\%Y\%m\%d_\%H%\%M).log 2>&1

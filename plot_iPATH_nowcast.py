@@ -390,7 +390,7 @@ gt10_fluence = total_func_numerical(energy1Mev, time_intensity1, xtime, 10.)/4./
 gt100_fluence = total_func_numerical(energy1Mev, time_intensity1, xtime, 100.)/4./pi
 
 #utc_time = datetime.strptime(json_data["sep_forecast_submission"]["issue_time"], "%Y-%m-%dT%H:%M:%SZ")
-run_time = simulation_zero_time.strftime('%Y-%m-%d')
+run_time = simulation_zero_time.strftime('%Y%m%d')
 
 channel10MeV ={
               "energy_channel": { "min": 10, "max": -1, "units": "MeV"},

@@ -8,14 +8,14 @@ opsep_dir='/shared/iPATH/operational_sep_v3'
 MPI_comp='mpif90'
 FCOMP='gfortran'
 
-run_time=$(date +'%Y-%m-%d_%H:%M' -u)
+run_time=$(date +'%Y%m%d_%H%M' -u)
 if_local=0
 
 echo "-----------------------------------------"
 echo $run_time
 
 # testing for specific event:
-# example: bash CME.sh -t '2022-01-20_08:30'
+# example: bash CME.sh -t '20220120_0830'
 while getopts 't:L' flag
 do
     case "${flag}" in
@@ -162,7 +162,7 @@ else
     cp output.json json/library/model_template.json
     cp ${startdate}_differential_flux.csv json/data/
     cd json
-    python3 $opsep_dir/operational_sep_quantities.py --StartDate $startdate --EndDate $enddate --Experiment user --ModelName ZEUS+iPATH_flare --FluxType differential --UserFile ${startdate}_differential_flux.csv --spase spase://CCMC/SimulationModel/iPATH/2 >>$data_dir/Flare/$CME_id/log.txt 2>&1
+    python3 $opsep_dir/operational_sep_quantities.py --StartDate ${startdate:0:4}-${startdate:4:2}-${startdate:6:2} --EndDate $enddate --Experiment user --ModelName ZEUS+iPATH_flare --FluxType differential --UserFile ${startdate}_differential_flux.csv --spase spase://CCMC/SimulationModel/iPATH/2 >>$data_dir/Flare/$CME_id/log.txt 2>&1
     find -type d -empty -delete # remove empty folders created by opsep
 
     cd $root_dir

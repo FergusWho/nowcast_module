@@ -53,7 +53,7 @@ if (run_time == ""):
 
        model_mode = 'nowcast'
 else:
-       utc_datetime = datetime.strptime(run_time, '%Y-%m-%d_%H:%M')
+       utc_datetime = datetime.strptime(run_time, '%Y%m%d_%H%M')
        model_mode = 'historical'
 
 
@@ -170,11 +170,11 @@ if len(CME_index) != 0:
 
     # assuming the background solar wind setup can finish in 15 mins
     if datetime_CME < t2: 
-        bgsw_folder_name =t1.strftime('%Y-%m-%d_%H:%M')
+        bgsw_folder_name =t1.strftime('%Y%m%d_%H%M')
     elif datetime_CME < t3:
-        bgsw_folder_name =t2.strftime('%Y-%m-%d_%H:%M')
+        bgsw_folder_name =t2.strftime('%Y%m%d_%H%M')
     else:
-        bgsw_folder_name =t3.strftime('%Y-%m-%d_%H:%M')
+        bgsw_folder_name =t3.strftime('%Y%m%d_%H%M')
 
 
 
@@ -294,7 +294,7 @@ if len(CME_index) != 0:
 
     with open(root_dir+'/Background/'+bgsw_folder_name+'/'+run_time+'_output.json', 'w') as write_file:
         json.dump(json_data, write_file, indent=4)
-    CME_id = data[CME_index[ii]].get('associatedCMEID')
+    CME_id = data[CME_index[ii]].get('associatedCMEID').replace('-', '', 2).replace(':', '', 2)
 else:
     bgsw_folder_name=''
     CME_id = ''

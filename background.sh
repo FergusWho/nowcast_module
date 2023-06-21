@@ -4,11 +4,11 @@ root_dir='/shared/iPATH/nowcast_module_v1'
 data_dir='/data/iPATH/nowcast_module_v1'
 # default for CCMC AWS on rt-hpc-prod
 
-run_time=$(date +'%Y-%m-%d_%H:%M' -u)
+run_time=$(date +'%Y%m%d_%H%M' -u)
 if_local=0
 
 # testing for specific event:
-# example: bash background.sh -t '2022-01-20_08:30'
+# example: bash background.sh -t '20220120_0830'
 while getopts 't:L' flag
 do
     case "${flag}" in

@@ -52,7 +52,7 @@ if (run_time == ""):
        #print("Current Local Time =", local_time, '\nUTC Time =', utc_time)
        model_mode = "forecast"
 else:
-       utc_datetime = datetime.strptime(run_time, '%Y-%m-%d_%H:%M')
+       utc_datetime = datetime.strptime(run_time, '%Y%m%d_%H%M')
        model_mode = "historical"
 
 utc_time = utc_datetime.strftime("%Y-%m-%d %H:%M:%S")
@@ -159,11 +159,11 @@ if len(flare_index) != 0:
 
     # assuming the background solar wind setup can finish in 15 mins
     if datetime_flare < t2: 
-        bgsw_folder_name =t1.strftime('%Y-%m-%d_%H:%M')
+        bgsw_folder_name =t1.strftime('%Y%m%d_%H%M')
     elif datetime_flare < t3:
-        bgsw_folder_name =t2.strftime('%Y-%m-%d_%H:%M')
+        bgsw_folder_name =t2.strftime('%Y%m%d_%H%M')
     else:
-        bgsw_folder_name =t3.strftime('%Y-%m-%d_%H:%M')
+        bgsw_folder_name =t3.strftime('%Y%m%d_%H%M')
 
 
 
@@ -311,7 +311,7 @@ if len(flare_index) != 0:
 
     with open(root_dir+'/Background/'+bgsw_folder_name+'/'+run_time+'_flare_output.json', 'w') as write_file:
         json.dump(json_data, write_file, indent=4)
-    flare_id = data[flare_index[ii]].get('flrID')
+    flare_id = data[flare_index[ii]].get('flrID').replace('-', '', 2).replace(':', '', 2)
 else:
     bgsw_folder_name=''
     flare_id = ''

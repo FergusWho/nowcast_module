@@ -30,7 +30,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--root_dir", type=str, default='/data/iPATH/nowcast_module', \
        help=("Root directory"))
 parser.add_argument("--run_time", type=str, default='', \
-       help=("timestamp for the run, in %Y-%m-%d_%H:%M"))
+       help=("timestamp for the run, in %Y%m%d_%H%M"))
 args = parser.parse_args()
 
 
@@ -51,7 +51,7 @@ if (run_time == ""):
        
        #print("Current Local Time =", local_time, '\nUTC Time =', utc_time)
 else:
-       utc_datetime = datetime.strptime(run_time, '%Y-%m-%d_%H:%M')
+       utc_datetime = datetime.strptime(run_time, '%Y%m%d_%H%M')
 
 
 utc_time = utc_datetime.strftime("%Y-%m-%d %H:%M:%S")
@@ -59,20 +59,20 @@ print ("test timestamp:", utc_time)
 
 ### define folder name
 # separate date and %H:%M:%S
-date_str= utc_datetime.strftime("%Y-%m-%d")
+date_str= utc_datetime.strftime("%Y%m%d")
 time_str= utc_datetime.strftime("%H:%M:%S")
 
 print("time is", time_str)
-date = datetime.strptime(date_str, '%Y-%m-%d')
+date = datetime.strptime(date_str, '%Y%m%d')
 
 seconds = (utc_datetime - date).total_seconds()
 
 if (seconds < 8*3600):
-       run_name = date_str+'_00:00'
+       run_name = date_str+'_0000'
 elif (seconds < 16*3600):
-       run_name = date_str+'_08:00'
+       run_name = date_str+'_0800'
 else:
-       run_name = date_str+'_16:00' 
+       run_name = date_str+'_1600'
 
 print ("folder name:", run_name)
 
@@ -89,7 +89,7 @@ f0.close()
 # See https://ccmc.gsfc.nasa.gov/support/iswa/iswa-webservices.php for source
 #encoded_endtime = urllib.parse.urlencode({'end-time':utc_time})
 endtime = utc_datetime.strftime("%Y-%m-%d %H:%M:%S")
-encoded_endtime = date_str+'%20'+time_str
+encoded_endtime = utc_datetime.strftime("%Y-%m-%d%%20%H:%M:%S")
 
 # starttime = (utc_datetime - timedelta(days=5) ).strftime("%Y-%m-%d %H:%M:%S")
 # print (endtime)
