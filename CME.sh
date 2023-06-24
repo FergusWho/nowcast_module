@@ -33,18 +33,11 @@ then
     code_dir=$HOME'/nowcast_module'
     thread_count=12
 else
-    source ~/setup_pkgs
+    source $code_dir/set_environment.sh
     thread_count=64
 fi
 echo "-----------------------------------------"
 echo
-
-# create/copy necessary output folders
-mkdir -p $data_dir/CME
-[[ ! -d $data_dir/helioweb ]] && cp -r $code_dir/helioweb $data_dir/
-
-# create processed CME list, if not existent
-[[ ! -f $data_dir/pastCME.json ]] && echo "[]" >$data_dir/pastCME.json
 
 # look for new CMEs from DONKI
 # create the input parameters files for Earth and Mars: $bgsw_folder_name/${run_time}_input.json and $bgsw_folder_name/${run_time}_mars_input.json

@@ -28,13 +28,10 @@ then
     iPATH_dir=$HOME'/iPATH2.0'
     code_dir=$HOME'/nowcast_module'
 else
-    source ~/setup_pkgs
+    source $code_dir/set_environment.sh
 fi
 echo "-----------------------------------------"
 echo
-
-# create output folder
-mkdir -p $data_dir
 
 # download solar wind quantities from iSWA
 # write the run folder name in temp.txt

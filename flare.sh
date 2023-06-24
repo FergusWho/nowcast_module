@@ -33,18 +33,11 @@ then
     code_dir=$HOME'/nowcast_module'
     thread_count=12
 else
-    source ~/setup_pkgs
+    source $code_dir/set_environment.sh
     thread_count=64
 fi
 echo "-----------------------------------------"
 echo
-
-# create/copy necessary output folders
-mkdir -p $data_dir/Flare
-[[ ! -d $data_dir/helioweb ]] && cp -r $code_dir/helioweb $data_dir/
-
-# create processed flare list, if not existent
-[[ ! -f $data_dir/pastflare.json ]] && echo "[]" >$data_dir/pastflare.json
 
 # look for new flares from DONKI
 # create the input parameters files for Earth: $bgsw_folder_name/${run_time}_flare_input.json
