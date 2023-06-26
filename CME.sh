@@ -95,7 +95,7 @@ else
     find -type f -name '*.json' | grep -v $run_time | xargs rm -f # json files from CME/Flare simulations with different runtime
     find -type f -name '*.json' | grep ${run_time}_flare | xargs rm -f # json files from other Flare simulations with the same runtime
     echo "[$(date -u +'%F %T')] Done" >>$logfile
-    echo
+    echo >>$logfile
 
     # modify ZEUS source code according to the input json file
     echo "[$(date -u +'%F %T')] Setting up acceleration module ..." >>$logfile
@@ -149,7 +149,7 @@ else
 
     echo "[$(date -u +'%F %T')] Copying files to $trspt_dir ..." >>$logfile
     cp $iPATH_dir/Transport/trspt_input $trspt_dir
-    cp ${run_time}_input.json $trspt_dir
+    mv ${run_time}_input.json $trspt_dir
     mv ${run_time}_output.json $trspt_dir/output.json
     echo "[$(date -u +'%F %T')] Done" >>$logfile
     echo >>$logfile
@@ -163,7 +163,7 @@ else
 
     echo "[$(date -u +'%F %T')] Copying files to ${trspt_dir}_mars ..." >>$logfile
     cp $iPATH_dir/Transport/trspt_input ${trspt_dir}_mars
-    cp ${run_time}_mars_input.json ${trspt_dir}_mars
+    mv ${run_time}_mars_input.json ${trspt_dir}_mars
     cp $trspt_dir/combine.out ${trspt_dir}_mars
     cp $trspt_dir/trspt.out ${trspt_dir}_mars
     cp $trspt_dir/output.json ${trspt_dir}_mars
@@ -201,8 +201,10 @@ else
     cd json
     python3 $opsep_dir/operational_sep_quantities.py --StartDate $startdate_opsep --EndDate $enddate --Experiment user --ModelName ZEUS+iPATH_CME --FluxType differential --UserFile ${startdate}_differential_flux.csv --spase spase://CCMC/SimulationModel/iPATH/2 >>$logfile 2>&1
 
-    # remove empty folders created by opsep
-    find -type d -empty -delete
+    # move opsep output to transport dir and cleanup
+    cd $trspt_dir
+    mv json/output/* .
+    rm -r json
     echo "[$(date -u +'%F %T')] Done" >>$logfile
     echo >>$logfile
     #-----------------------------------------------------------------------------------------

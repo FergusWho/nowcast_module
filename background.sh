@@ -104,4 +104,7 @@ rm zhto02*JH
 
 # unused ZEUS source files
 rm -r releases
+
+# unused iPATH output files
+rm -r path_output
 echo "[$(date -u +'%F %T')] Done" >>$logfile

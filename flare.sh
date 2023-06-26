@@ -148,7 +148,7 @@ else
 
     echo "[$(date -u +'%F %T')] Copying files to $trspt_dir ..." >>$logfile
     cp $iPATH_dir/Transport/trspt_input $trspt_dir
-    cp ${run_time}_flare_input.json $trspt_dir
+    mv ${run_time}_flare_input.json $trspt_dir
     mv ${run_time}_flare_output.json $trspt_dir/output.json
     echo "[$(date -u +'%F %T')] Done" >>$logfile
     echo >>$logfile
@@ -184,8 +184,10 @@ else
     cd json
     python3 $opsep_dir/operational_sep_quantities.py --StartDate $startdate_opsep --EndDate $enddate --Experiment user --ModelName ZEUS+iPATH_Flare --FluxType differential --UserFile ${startdate}_differential_flux.csv --spase spase://CCMC/SimulationModel/iPATH/2 >>$logfile 2>&1
 
-    # remove empty folders created by opsep
-    find -type d -empty -delete
+    # move opsep output to transport dir and cleanup
+    cd $trspt_dir
+    mv json/output/* .
+    rm -r json
     echo "[$(date -u +'%F %T')] Done" >>$logfile
     echo >>$logfile
     #-----------------------------------------------------------------------------------------
