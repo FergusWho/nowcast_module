@@ -40,7 +40,7 @@ echo "-----------------------------------------"
 echo
 
 # look for new CMEs from DONKI
-# create the input parameters files for Earth and Mars: $bgsw_folder_name/${run_time}_input.json and $bgsw_folder_name/${run_time}_mars_input.json
+# create the input parameters files for Earth and Mars: $bgsw_folder_name/${run_time}_CME_earth_input.json and $bgsw_folder_name/${run_time}_CME_mars_input.json
 # last line is: bgsw_folder_name CME_id
 # read last line of output from check_CME.py
 echo "[$(date -u +'%F %T')] Checking for new CMEs ..."
@@ -65,7 +65,7 @@ then
     echo "[$(date -u +'%F %T')] There is no CME: exit"
 else
     # abort if no background simulation exists
-    [[ ! -d $data_dir/Background/$bgsw_folder_name ]] && {
+    [[ ! -f $data_dir/Background/$bgsw_folder_name/zr005JH ]] && {
       echo "[$(date -u +'%F %T')] Background simulation not found: exit"
       exit 1
     }
@@ -80,6 +80,9 @@ else
 
     # use the modified dzeus36 version for nowcasting
     cp $code_dir/dzeus36_alt $CME_dir/dzeus36
+
+    # remove backgroun simulation log
+    rm $CME_dir/log.txt
     echo "[$(date -u +'%F %T')] Done"
     echo
     echo "[$(date -u +'%F %T')] Switching to $logfile"
@@ -92,19 +95,18 @@ else
     # delete residual files created by other CME/Flare simulations in the copied Background folder
     echo "[$(date -u +'%F %T')] Deleting residual files ..." >>$logfile
     rm -f slurm* # Slurm logfiles from Background simulation
-    find -type f -name '*.json' | grep -v $run_time | xargs rm -f # json files from CME/Flare simulations with different runtime
-    find -type f -name '*.json' | grep ${run_time}_flare | xargs rm -f # json files from other Flare simulations with the same runtime
+    find -type f -name '*.json' | grep -v ${run_time}_CME | xargs rm -f # json files from CME/Flare simulations
     echo "[$(date -u +'%F %T')] Done" >>$logfile
     echo >>$logfile
 
     # modify ZEUS source code according to the input json file
     echo "[$(date -u +'%F %T')] Setting up acceleration module ..." >>$logfile
-    python3 $iPATH_dir/prepare_PATH.py --root_dir $CME_dir --path_dir $iPATH_dir --run_mode 0 --input ${run_time}_input.json >>$logfile 2>&1
+    python3 $iPATH_dir/prepare_PATH.py --root_dir $CME_dir --path_dir $iPATH_dir --run_mode 0 --input ${run_time}_CME_earth_input.json >>$logfile 2>&1
     echo "[$(date -u +'%F %T')] Done" >>$logfile
     echo >>$logfile
 
     # CME_input.json used by plot_CME_info.py
-    cp ${run_time}_input.json CME_input.json
+    cp ${run_time}_CME_earth_input.json CME_input.json
 
     echo "[$(date -u +'%F %T')] Compiling ZEUS ..." >>$logfile
     csh -v ./iPATH_zeus.s >>$logfile 2>&1
@@ -131,11 +133,11 @@ else
 
     # modify iPATH source code according to the input json file
     echo "[$(date -u +'%F %T')] Setting up transport module for Earth ..." >>$logfile
-    python3 $iPATH_dir/prepare_PATH.py --root_dir $CME_dir --path_dir $iPATH_dir --run_mode 2 --ranks $thread_count --input ${run_time}_input.json >>$logfile 2>&1
+    python3 $iPATH_dir/prepare_PATH.py --root_dir $CME_dir --path_dir $iPATH_dir --run_mode 2 --ranks $thread_count --input ${run_time}_CME_earth_input.json >>$logfile 2>&1
     echo "[$(date -u +'%F %T')] Done" >>$logfile
     echo >>$logfile
 
-    trspt_dir=$CME_dir/path_output/transport
+    trspt_dir=$CME_dir/path_output/transport_earth
     mkdir $trspt_dir
     cd $trspt_dir
 
@@ -149,24 +151,25 @@ else
 
     echo "[$(date -u +'%F %T')] Copying files to $trspt_dir ..." >>$logfile
     cp $iPATH_dir/Transport/trspt_input $trspt_dir
-    mv ${run_time}_input.json $trspt_dir
-    mv ${run_time}_output.json $trspt_dir/output.json
+    mv ${run_time}_CME_earth_input.json $trspt_dir/input.json
+    mv ${run_time}_CME_earth_output.json $trspt_dir/output.json
     echo "[$(date -u +'%F %T')] Done" >>$logfile
     echo >>$logfile
 
     echo "[$(date -u +'%F %T')] Setting up transport module for Mars ..." >>$logfile
-    python3 $iPATH_dir/prepare_PATH.py --root_dir $CME_dir --path_dir $iPATH_dir --run_mode 2 --ranks $thread_count --input ${run_time}_mars_input.json >>$logfile 2>&1
+    python3 $iPATH_dir/prepare_PATH.py --root_dir $CME_dir --path_dir $iPATH_dir --run_mode 2 --ranks $thread_count --input ${run_time}_CME_mars_input.json >>$logfile 2>&1
     echo "[$(date -u +'%F %T')] Done" >>$logfile
     echo >>$logfile
 
-    mkdir ${trspt_dir}_mars
+    trspt_dir_mars=${trspt_dir/earth/mars}
+    mkdir $trspt_dir_mars
 
-    echo "[$(date -u +'%F %T')] Copying files to ${trspt_dir}_mars ..." >>$logfile
-    cp $iPATH_dir/Transport/trspt_input ${trspt_dir}_mars
-    mv ${run_time}_mars_input.json ${trspt_dir}_mars
-    cp $trspt_dir/combine.out ${trspt_dir}_mars
-    cp $trspt_dir/trspt.out ${trspt_dir}_mars
-    cp $trspt_dir/output.json ${trspt_dir}_mars
+    echo "[$(date -u +'%F %T')] Copying files to $trspt_dir_mars ..." >>$logfile
+    cp $iPATH_dir/Transport/trspt_input $trspt_dir_mars
+    mv ${run_time}_CME_mars_input.json $trspt_dir_mars/input.json
+    cp $trspt_dir/combine.out $trspt_dir_mars
+    cp $trspt_dir/trspt.out $trspt_dir_mars
+    cp $trspt_dir/output.json $trspt_dir_mars
     echo "[$(date -u +'%F %T')] Done" >>$logfile
     echo >>$logfile
 
@@ -240,12 +243,12 @@ else
     # Ideally we want to sbatch this run together with the Earth run. (can't use -W across two jobs atm)
 
     echo "[$(date -u +'%F %T')] Running transport module for Mars ..." >>$logfile
-    cd ${trspt_dir}_mars
+    cd $trspt_dir_mars
     if [ $if_local -eq 1 ]
     then
         mpirun -np $thread_count trspt.out >>$logfile 2>&1
     else
-        sbatch -W $code_dir/run_transport.sh -r ${trspt_dir}_mars >>$logfile 2>&1
+        sbatch -W $code_dir/run_transport.sh -r $trspt_dir_mars >>$logfile 2>&1
 
         # compress Slurm logfile
         for f in slurm*.out; do

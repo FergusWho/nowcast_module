@@ -218,7 +218,7 @@ if len(flare_index) != 0:
 
     input_data['n_multi'] = n_multi
     
-    f3 = open(root_dir+'/Background/'+bgsw_folder_name+'/'+run_time+'_flare_input.json', 'w')
+    f3 = open(root_dir+'/Background/'+bgsw_folder_name+'/'+run_time+'_flare_earth_input.json', 'w')
     json.dump(input_data, f3, indent=4)
     f3.close()
 
@@ -309,7 +309,7 @@ if len(flare_index) != 0:
     
     # json_data["sep_forecast_submission"]["inputs"].append(inputs)
 
-    with open(root_dir+'/Background/'+bgsw_folder_name+'/'+run_time+'_flare_output.json', 'w') as write_file:
+    with open(root_dir+'/Background/'+bgsw_folder_name+'/'+run_time+'_flare_earth_output.json', 'w') as write_file:
         json.dump(json_data, write_file, indent=4)
     flare_id = data[flare_index[ii]].get('flrID').replace('-', '', 2).replace(':', '', 2)
 else:

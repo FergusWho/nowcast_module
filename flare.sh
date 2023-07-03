@@ -40,7 +40,7 @@ echo "-----------------------------------------"
 echo
 
 # look for new flares from DONKI
-# create the input parameters files for Earth: $bgsw_folder_name/${run_time}_flare_input.json
+# create the input parameters files for Earth: $bgsw_folder_name/${run_time}_flare_earth_input.json
 # last line is: bgsw_folder_name flare_id
 # read last line of output from check_flare.py
 echo "[$(date -u +'%F %T')] Checking for new flares ..."
@@ -65,7 +65,7 @@ then
     echo "[$(date -u +'%F %T')] There is no flare: exit"
 else
     # abort if no background simulation exists
-    [[ ! -d $data_dir/Background/$bgsw_folder_name ]] && {
+    [[ ! -f $data_dir/Background/$bgsw_folder_name/zr005JH ]] && {
       echo "[$(date -u +'%F %T')] Background simulation not found: exit"
       exit 1
     }
@@ -80,6 +80,9 @@ else
 
     # use the modified dzeus36 version for nowcasting
     cp $code_dir/dzeus36_alt $CME_dir/dzeus36
+
+    # remove backgroun simulation log
+    rm $CME_dir/log.txt
     echo "[$(date -u +'%F %T')] Done"
     echo
     echo "[$(date -u +'%F %T')] Switching to $logfile"
@@ -98,12 +101,12 @@ else
 
     # modify ZEUS source code according to the input json file
     echo "[$(date -u +'%F %T')] Setting up acceleration module ..." >>$logfile
-    python3 $iPATH_dir/prepare_PATH.py --root_dir $CME_dir --path_dir $iPATH_dir --run_mode 0 --input ${run_time}_flare_input.json >>$logfile 2>&1
+    python3 $iPATH_dir/prepare_PATH.py --root_dir $CME_dir --path_dir $iPATH_dir --run_mode 0 --input ${run_time}_flare_earth_input.json >>$logfile 2>&1
     echo "[$(date -u +'%F %T')] Done" >>$logfile
     echo >>$logfile
 
     # CME_input.json used by plot_CME_info.py
-    cp ${run_time}_flare_input.json CME_input.json
+    cp ${run_time}_flare_earth_input.json CME_input.json
 
     echo "[$(date -u +'%F %T')] Compiling ZEUS ..." >>$logfile
     csh -v ./iPATH_zeus.s >>$logfile 2>&1
@@ -130,11 +133,11 @@ else
 
     # modify iPATH source code according to the input json file
     echo "[$(date -u +'%F %T')] Setting up transport module for Earth ..." >>$logfile
-    python3 $iPATH_dir/prepare_PATH.py --root_dir $CME_dir --path_dir $iPATH_dir --run_mode 2 --ranks $thread_count --input ${run_time}_flare_input.json >>$logfile 2>&1
+    python3 $iPATH_dir/prepare_PATH.py --root_dir $CME_dir --path_dir $iPATH_dir --run_mode 2 --ranks $thread_count --input ${run_time}_flare_earth_input.json >>$logfile 2>&1
     echo "[$(date -u +'%F %T')] Done" >>$logfile
     echo >>$logfile
 
-    trspt_dir=$CME_dir/path_output/transport
+    trspt_dir=$CME_dir/path_output/transport_earth
     mkdir $trspt_dir
     cd $trspt_dir
 
@@ -148,8 +151,8 @@ else
 
     echo "[$(date -u +'%F %T')] Copying files to $trspt_dir ..." >>$logfile
     cp $iPATH_dir/Transport/trspt_input $trspt_dir
-    mv ${run_time}_flare_input.json $trspt_dir
-    mv ${run_time}_flare_output.json $trspt_dir/output.json
+    mv ${run_time}_flare_earth_input.json $trspt_dir/input.json
+    mv ${run_time}_flare_earth_output.json $trspt_dir/output.json
     echo "[$(date -u +'%F %T')] Done" >>$logfile
     echo >>$logfile
 
@@ -223,5 +226,4 @@ else
     # compress transport files
     tar --remove-files -zcf fp.tar.gz fp_* >>$logfile 2>&1
     echo "[$(date -u +'%F %T')] Done" >>$logfile
-    echo >>$logfile
 fi
