@@ -57,7 +57,7 @@ else:
 
 utc_time = utc_datetime.strftime("%Y-%m-%d %H:%M:%S")
 utc_time_json = utc_datetime.strftime("%Y-%m-%dT%H:%M:%SZ")
-print ("test timestamp:", utc_time)
+print ("test timestamp:", utc_time, file=sys.stderr)
 
 ### define folder name
 # separate date and %H:%M:%S
@@ -96,14 +96,14 @@ url_flare = "https://kauai.ccmc.gsfc.nasa.gov/DONKI/WS/get/FLR?startDate="+start
 
 
 
-print (url_flare)
+print (url_flare, file=sys.stderr)
 
 
 f1 = urllib.request.urlopen(url_flare)
 data = json.load(f1)
 
 
-print (len(data))
+print (len(data), file=sys.stderr)
 #print (data[0].get('speed'))
 #print (data[1])
 
@@ -121,7 +121,7 @@ for i in range(0, len(data)):
 
     datetime_flare = datetime.strptime(flare_start_time, '%Y-%m-%dT%H:%M:%S')
 
-    print (datetime_flare, dt_start, utc_datetime)
+    print (datetime_flare, dt_start, utc_datetime, file=sys.stderr)
 
     if datetime_flare > dt_start and datetime_flare <= utc_datetime:        
         # check whether this flare has been simulated before
@@ -131,16 +131,16 @@ for i in range(0, len(data)):
         # no run found for this flare, new flare detected:
             flare_index.append(i)
         else:
-            print ('Previous simulation run found:', result)
+            print ('Previous simulation run found:', result, file=sys.stderr)
 
-print ('total NEW flare counts in the last 48 hours:', len(flare_index))
+print ('total NEW flare counts in the last 48 hours:', len(flare_index), file=sys.stderr)
 ii = len(flare_index)-1 # index number for the latest flare
 
 f4 = open(root_dir+'/flarelog.txt', 'a')
 
 #### check if there is a background solar wind setup in the most recent 8-hour window
 # now assuming there can be only at most 1 flare in the 15 mins time window
-print ('flare_index', len(flare_index))
+print ('flare_index', len(flare_index), file=sys.stderr)
 
 if len(flare_index) != 0:
     list_obj.append({"flrID":data[flare_index[ii]].get('flrID')})
@@ -194,7 +194,7 @@ if len(flare_index) != 0:
     if width >= 140.:
         width = 140.
 
-    print('flare_class, Vcme', flare_class, Vcme)
+    print('flare_class, Vcme', flare_class, Vcme, file=sys.stderr)
 
     location = data[flare_index[ii]].get('sourceLocation')
     loc_tokens = list(location)
@@ -204,7 +204,7 @@ if len(flare_index) != 0:
     if loc_tokens[3]=='E':
         phi_e = 100 + angle
 
-    print(loc_tokens[3], phi_e)
+    print(loc_tokens[3], phi_e, file=sys.stderr)
 
     input_data['cme_speed'] = Vcme
     input_data['cme_width'] = int(width)

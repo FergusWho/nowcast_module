@@ -59,7 +59,7 @@ else:
 
 utc_time = utc_datetime.strftime("%Y-%m-%d %H:%M:%S")
 utc_time_json = utc_datetime.strftime("%Y-%m-%dT%H:%M:%SZ")
-print ("test timestamp:", utc_time)
+print ("test timestamp:", utc_time, file=sys.stderr)
 
 ### define folder name
 # separate date and %H:%M:%S
@@ -101,7 +101,7 @@ startdate = (utc_datetime - timedelta(days=7) ).strftime("%Y-%m-%d")
 url_cme = "https://kauai.ccmc.gsfc.nasa.gov/DONKI/WS/get/CMEAnalysis?startDate="+startdate+"&endDate="+enddate+"&mostAccurateOnly=true&speed=450&halfAngle=27"
 
 
-print (url_cme)
+print (url_cme, file=sys.stderr)
 
 
 f1 = urllib.request.urlopen(url_cme)
@@ -110,7 +110,7 @@ data = json.load(f1)
 
 
 
-print (len(data))
+print (len(data), file=sys.stderr)
 
 #print (data[0].get('speed'))
 #print (data[1])
@@ -132,7 +132,7 @@ for i in range(0, len(data)):
 
     datetime_CME = datetime.strptime(cme_start_time, '%Y-%m-%dT%H:%M:%S')
     #datetime_CME = datetime_CME.replace(tzinfo=utc) # make it an aware datetime object
-    print (datetime_CME, dt_start, utc_datetime)
+    print (datetime_CME, dt_start, utc_datetime, file=sys.stderr)
 
     if datetime_CME > dt_start and datetime_CME <= utc_datetime:        
         # check whether this CME has been simulated before
@@ -142,16 +142,16 @@ for i in range(0, len(data)):
         # no run found for this CME, new CME detected:
             CME_index.append(i)
         else:
-            print ('Previous simulation run found:', result)
+            print ('Previous simulation run found:', result, file=sys.stderr)
 
-print ('total NEW CME counts in the last 48 hours:', len(CME_index))
+print ('total NEW CME counts in the last 48 hours:', len(CME_index), file=sys.stderr)
 ii = len(CME_index)-1 # index number for the latest CME
 
 f4 = open(root_dir+'/CMElog.txt', 'a')
 
 #### check if there is a background solar wind setup in the most recent 8-hour window
 # now assuming there can be only at most 1 CME in the 15 mins time window
-print ('CME_index', len(CME_index))
+print ('CME_index', len(CME_index), file=sys.stderr)
 
 if len(CME_index) != 0:
     list_obj.append({"associatedCMEID":data[CME_index[ii]].get('associatedCMEID')})
