@@ -226,4 +226,10 @@ else
     # compress transport files
     tar --remove-files -zcf fp.tar.gz fp_* >>$logfile 2>&1
     echo "[$(date -u +'%F %T')] Done" >>$logfile
+    echo >>$logfile
+
+    echo "[$(date -u +'%F %T')] Copying output files to the staging area" >>$logfile
+    cd $CME_dir/path_output
+    $code_dir/cp2staging.sh >>$logfile 2>&1
+    echo "[$(date -u +'%F %T')] Done" >>$logfile
 fi

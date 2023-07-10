@@ -281,4 +281,9 @@ else
     # clean up unneeded intermediate acceleration files
     rm dist_all_shl.dat
     echo "[$(date -u +'%F %T')] Done" >>$logfile
+    echo >>$logfile
+
+    echo "[$(date -u +'%F %T')] Copying output files to the staging area" >>$logfile
+    $code_dir/cp2staging.sh >>$logfile 2>&1
+    echo "[$(date -u +'%F %T')] Done" >>$logfile
 fi
