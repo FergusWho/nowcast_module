@@ -4,7 +4,6 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 
-
 while getopts 'r:' flag
 do
     case "${flag}" in

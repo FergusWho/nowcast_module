@@ -34,7 +34,7 @@ then
     thread_count=12
 else
     source $code_dir/set_environment.sh
-    thread_count=64
+    thread_count=128
 fi
 echo "-----------------------------------------"
 echo
