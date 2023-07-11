@@ -7,6 +7,7 @@ This is a version customized for the CCMC production server, with the following 
 - ZEUS jobs use the `ondemand-m5n` queue, while iPATH jobs use the `ondemand-c6i` queue and 128 cores.
 - Date and time formats used for folder and file names were changed: `yyyy-mm-dd_HH:MM` → `yyyymmdd_HHMM`, `yyyy-mm-dd` → `yyyymmdd`, and `yyyy-mm-ddTHH:MM:SS` → `yyyymmddTHHMMSS`.
 - Simulation type (`CME` or `Flare`) and observer (`earth`, `mars`, etc) are always added to file and folder names.
+- Fixed mode in output json files: __nowcast__ for CME, __forecast__ for Flare.
 - Unused Python and Bash scripts were removed.
 - Added `setup.sh` script to install the `crontab` file and create the hierarchy of simulation output folders. Similar setup scripts were added to the `ipath_v2` and `operational-sep_v3` repos, in their `rt-hpc-prod` branch.
 - Added the scrit `cp2staging.sh` to copy relevant output files to the staging areas for iSWA and the SEP Scoreboard.

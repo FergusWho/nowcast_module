@@ -31,11 +31,14 @@ parser.add_argument("--root_dir", type=str, default='/data/iPATH/nowcast_module'
        help=("Root directory"))
 parser.add_argument("--run_time", type=str, default='', \
        help=("folder name for the run"))
+parser.add_argument("--model_mode", type=str, default='', \
+       help=("historical, nowcast, or forecast"))
 args = parser.parse_args()
 
 
 root_dir = args.root_dir
 run_time = args.run_time
+model_mode = args.model_mode
 
 ######################################################################################################
 
@@ -50,14 +53,17 @@ if (run_time == ""):
        utc_datetime = utc_datetime.replace(tzinfo=None) # remove the timezone info for consistency
        
        #print("Current Local Time =", local_time, '\nUTC Time =', utc_time)
-       model_mode = "forecast"
+       if (model_mode == ""):
+             model_mode = "forecast"
 else:
        utc_datetime = datetime.strptime(run_time, '%Y%m%d_%H%M')
-       model_mode = "historical"
+       if (model_mode == ""):
+             model_mode = "historical"
 
 utc_time = utc_datetime.strftime("%Y-%m-%d %H:%M:%S")
 utc_time_json = utc_datetime.strftime("%Y-%m-%dT%H:%M:%SZ")
 print ("test timestamp:", utc_time, file=sys.stderr)
+print ("model mode:", model_mode, file=sys.stderr)
 
 ### define folder name
 # separate date and %H:%M:%S

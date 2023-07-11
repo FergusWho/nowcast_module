@@ -44,7 +44,7 @@ echo
 # last line is: bgsw_folder_name flare_id
 # read last line of output from check_flare.py
 echo "[$(date -u +'%F %T')] Checking for new flares ..."
-last_line=$(python3 $code_dir/check_flare.py --root_dir $data_dir --run_time $run_time | tail -n 1)
+last_line=$(python3 $code_dir/check_flare.py --root_dir $data_dir --run_time $run_time --model_mode forecast | tail -n 1)
 echo "[$(date -u +'%F %T')] Done"
 echo
 
