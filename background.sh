@@ -46,6 +46,11 @@ rm $data_dir/temp.txt
 
 echo "[$(date -u +'%F %T')] Background simulation: $run_dir"
 
+[[ ! -s $data_dir/${run_dir}_input.json ]] && {
+   echo "[$(date -u +'%F %T')] Missing input.json: exit"
+   exit 1
+}
+
 bkg_dir=$data_dir/Background/$run_dir
 logfile=$bkg_dir/log.txt
 
