@@ -62,7 +62,9 @@ find -type d -name 'transport_*' -printf '%P\n' \
 
    # SEP scoreboard
    if [[ $obs == earth ]]; then
-      cp -p ZEUS+iPATH_* $StagingDir/sep_scoreboard/
+      for f in ZEUS+iPATH_*; do
+         cp -p $f $StagingDir/sep_scoreboard/${f/_differential/}
+      done
    fi
 
    # iSWA
