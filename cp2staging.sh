@@ -48,7 +48,7 @@ pfx=ZEUS+iPATH_${Type}_$StartDate
 
 {
    echo "Claudio Corti"
-   echo $HOSTNAME
+   echo "rt-hpc-prod"
    echo $PWD
    echo $0
 } >staging.info
