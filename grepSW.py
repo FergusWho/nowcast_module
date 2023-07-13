@@ -305,7 +305,7 @@ data ={
 # Transport Setup
        'p_num': 25,
        't_num': 50,
-       'seed_num': 25,
+       'seed_num': 13,
        'if_arrival': 0,
        'r0_e': 1.0,
        'phi_e': 80.0,
