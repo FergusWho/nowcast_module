@@ -1,6 +1,6 @@
 #!/bin/bash
 iPATH_dir='/data/iPATH/iPATH2.0'
-root_dir='/data/iPATH/nowcast_module'
+root_dir='/data/iPATH/test'
 opsep_dir='/data/iPATH/operational-sep'
 python_bin='/data/spack/opt/spack/linux-centos7-skylake_avx512/gcc-10.2.0/python-3.8.9-dtvwd3qomfzkcimvlwvw5ilvr4eb5dvg/bin/python3'
 # default for CCMC AWS

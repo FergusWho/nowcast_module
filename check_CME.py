@@ -208,6 +208,27 @@ if len(CME_index) != 0:
     f3 = open(root_dir+'/Background/'+bgsw_folder_name+'/'+run_time+'_mars_input.json', 'w')
     json.dump(input_data, f3, indent=4)
     f3.close()
+
+    # setup input file for Venus
+    venus_r, venus_lat, venus_lon = find_venus(datetime_CME, root_dir)
+    #earth_r, earth_lat, earth_lon = find_earth(datetime_CME, root_dir)
+    input_data['phi_e'] = 100.0-data[CME_index[ii]].get('longitude') + venus_lon - earth_lon
+    input_data['r0_e'] = venus_r
+
+    f3 = open(root_dir+'/Background/'+bgsw_folder_name+'/'+run_time+'_venus_input.json', 'w')
+    json.dump(input_data, f3, indent=4)
+    f3.close()
+
+    # setup input file for STA
+    STA_r, STA_lat, STA_lon = find_STA(datetime_CME, root_dir)
+    #earth_r, earth_lat, earth_lon = find_earth(datetime_CME, root_dir)
+    input_data['phi_e'] = 100.0-data[CME_index[ii]].get('longitude') + STA_lon - earth_lon
+    input_data['r0_e'] = STA_r
+
+    f3 = open(root_dir+'/Background/'+bgsw_folder_name+'/'+run_time+'_STA_input.json', 'w')
+    json.dump(input_data, f3, indent=4)
+    f3.close()
+
     #### Generating Output JSON 
 
     json_data={"sep_forecast_submission":{

@@ -1,6 +1,6 @@
 #!/bin/bash
 iPATH_dir='/data/iPATH/iPATH2.0'
-root_dir='/data/iPATH/nowcast_module'
+root_dir='/data/iPATH/test'
 python_bin='/data/spack/opt/spack/linux-centos7-skylake_avx512/gcc-10.2.0/python-3.8.9-dtvwd3qomfzkcimvlwvw5ilvr4eb5dvg/bin/python3'
 # default for CCMC AWS
 
@@ -44,7 +44,7 @@ cp $root_dir/dzeus36_alt $root_dir/Background/$run_dir/dzeus36
 mv $root_dir/${run_dir}_input.json $root_dir/Background/$run_dir/input.json
 
 
-$python_bin $iPATH_dir/prepare_PATH.py --root_dir $root_dir/Background/$run_dir --path_dir $iPATH_dir --run_mode 1 --input $root_dir/Background/$run_dir/input.json
+$python_bin $root_dir/prepare_PATH.py --root_dir $root_dir/Background/$run_dir --path_dir $iPATH_dir --run_mode 1 --input $root_dir/Background/$run_dir/input.json
 
 cd $root_dir/Background/$run_dir
 csh -v ./iPATH_zeus.s
@@ -64,3 +64,7 @@ rm $root_dir/Background/$run_dir/zr001JH
 rm $root_dir/Background/$run_dir/zr002JH
 rm $root_dir/Background/$run_dir/zr003JH
 rm $root_dir/Background/$run_dir/zr004JH
+
+rm $root_dir/Background/$run_dir/zhto00*JH
+rm $root_dir/Background/$run_dir/zhto01*JH
+rm $root_dir/Background/$run_dir/zhto02*JH

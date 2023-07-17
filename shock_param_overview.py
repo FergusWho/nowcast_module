@@ -34,7 +34,7 @@ with open(root_dir+'../input.json') as input_file:
 
 print(input_obj)
 
-phi_num = int(input_obj.get('cme_width')/5+1)
+phi_num = int(input_obj.get('cme_width')/5+5)
 
 print(input_obj.get('cme_width'), phi_num)
 
