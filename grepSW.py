@@ -98,10 +98,10 @@ encoded_endtime = date_str+'%20'+time_str
 dscovr_start_time = datetime.strptime('2016-07-25_08:00', '%Y-%m-%d_%H:%M')
 # DSCOVR data only available after this time
 if utc_datetime > dscovr_start_time:
-       url_mag =  "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/DatabaseDataStreamServlet?format=TEXT&resource=DSCOVR&quantity=B_t&duration=1&end-time="+encoded_endtime
+       url_mag =  "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/DatabaseDataStreamServlet?format=TEXT&resource=DSCOVR,DSCOVR,DSCOVR,DSCOVR&quantity=B_t,B_x,B_y,B_z&duration=1&end-time="+encoded_endtime
        url_pla =  "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/DatabaseDataStreamServlet?format=TEXT&resource=DSCOVR,DSCOVR,DSCOVR&quantity=BulkSpeed,ProtonDensity,IonTemperature&duration=1&end-time="+encoded_endtime
 else:
-       url_mag =  "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/DatabaseDataStreamServlet?format=TEXT&resource=ACE&quantity=B_t&duration=1&end-time="+encoded_endtime
+       url_mag =  "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/DatabaseDataStreamServlet?format=TEXT&resource=ACE,ACE,ACE,ACE&quantity=B_t,B_x,B_y,B_z&duration=1&end-time="+encoded_endtime
        url_pla =  "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/DatabaseDataStreamServlet?format=TEXT&resource=ACE,ACE,ACE&quantity=BulkSpeed,ProtonDensity,IonTemperature&duration=1&end-time="+encoded_endtime
 
 url_seed = "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/DatabaseDataStreamServlet?format=TEXT&resource=ACE&quantity=ProtonFlux_47_68&duration=1&end-time="+encoded_endtime
@@ -112,7 +112,7 @@ url_cme = "https://kauai.ccmc.gsfc.nasa.gov/DONKI/WS/get/CMEAnalysis.txt?mostAcc
 print(url_mag)
 print(url_pla)
 print(url_seed)
-print(url_cme)
+#print(url_cme)
 ##### Read data from the URL
 
 line_no1 = 0
@@ -131,16 +131,43 @@ flux_data = [] #
 
 
 
+while True:
+       try:
+              f1 = urllib.request.urlopen(url_mag)
+              if f1.getcode() == 200:
+                     print('request magnetic field data succeeded')
+                     break
 
-f1 = urllib.request.urlopen(url_mag)
-f2 = urllib.request.urlopen(url_pla)
-f4 = urllib.request.urlopen(url_seed)
+       except Exception as inst:
+              print (inst)
+              print('request failed, trying again')
 
-#--- if it fails to open then set to default
-      #add this later 
-#---
+while True:
+       try:
+              f2 = urllib.request.urlopen(url_pla)
+              if f2.getcode() == 200:
+                     print('request plasma data succeeded')
+                     break
+              
+       except Exception as inst:
+              print (inst)
+              print('request failed, trying again')
 
-       
+while True:
+       try:
+              f4 = urllib.request.urlopen(url_seed)
+              if f4.getcode() == 200:
+                     print('request seed population data succeeded')
+                     break
+              
+       except Exception as inst:
+              print (inst)
+              print('request failed, trying again')
+
+bx_data = []
+by_data = []
+bz_data = []
+
 for line in f1:
        line = line.decode("utf-8")
        line = line.strip()
@@ -148,7 +175,10 @@ for line in f1:
        if line_no1 >0 and line != '':
               columns = line.split()
               time1.append(str(columns[0]) + ' '+ str(columns[1]))
-              B_data.append(float(columns[2])) 
+              B_data.append(float(columns[2]))
+              bx_data.append(float(columns[3]))
+              by_data.append(float(columns[4]))
+              bz_data.append(float(columns[5]))
        line_no1 +=1
 
 # print(time1[0], B_data[0])
@@ -194,6 +224,7 @@ f4.close()
 #### average the observation values during the 8 hours prior to the current time
 
 B_mean = 0.0
+B_sqr_mean = 0.0
 count = 0
 end_time1 = datetime.strptime(time1[len(time1)-1], "%Y-%m-%d %H:%M:%S.%f")
 #print (end_time1)
@@ -203,9 +234,83 @@ for i in range(0, len(time1)):
        diff = end_time1-tobj
        if diff.seconds/3600 < 8 and B_data[i] > 0:
               B_mean += B_data[i]
+              B_sqr_mean += B_data[i]**2.0
               count += 1
 
 B_mean = B_mean/count
+B_sqr_mean = B_sqr_mean / count
+
+print(B_mean, np.sqrt(B_sqr_mean))
+
+### Calculate turbulence power ################################
+
+window_count = 8
+B_mean_n = []
+bx_mean_n = []
+by_mean_n = []
+bz_mean_n = []
+
+for j in range(0, window_count):
+       B_mean_temp = 0.0
+       bx_mean_temp = 0.0
+       by_mean_temp = 0.0
+       bz_mean_temp = 0.0
+       count = 0
+       for i in range(0, len(time1)):
+              tobj = datetime.strptime(time1[i], "%Y-%m-%d %H:%M:%S.%f")
+              diff = end_time1-tobj
+
+              if diff.seconds/3600 < j+1 and diff.seconds/3600 >= j and B_data[i] > 0:
+                     B_mean_temp += B_data[i]
+                     bx_mean_temp += bx_data[i]
+                     by_mean_temp += by_data[i]
+                     bz_mean_temp += bz_data[i]
+                     count += 1
+       
+       if count != 0:   # normal case    
+              B_mean_temp = B_mean_temp / count
+              bx_mean_temp = bx_mean_temp / count
+              by_mean_temp = by_mean_temp / count
+              bz_mean_temp = bz_mean_temp / count
+              
+
+              B_mean_n.append(B_mean_temp)
+              bx_mean_n.append(bx_mean_temp)
+              by_mean_n.append(by_mean_temp)
+              bz_mean_n.append(bz_mean_temp)
+       else:  # all data are bad data in this period:
+              B_mean_n.append(-999)
+              bx_mean_n.append(-999)
+              by_mean_n.append(-999)
+              bz_mean_n.append(-999)
+
+       
+print (B_mean_n)
+print ("total average", np.mean(B_mean_n), B_mean)
+
+db_sqr = 0.0
+db_sqr_count =0
+
+for i in range(0, len(time1)):
+       tobj = datetime.strptime(time1[i], "%Y-%m-%d %H:%M:%S.%f")
+       diff = end_time1-tobj
+       if diff.seconds/3600 < 8 and B_data[i] > 0:
+              n_count = int(np.floor(diff.seconds/3600))
+              if B_mean_n[n_count] != -999:
+                     db_sqr = db_sqr + (bx_data[i] - bx_mean_n[n_count])**2. + \
+                            (by_data[i] - by_mean_n[n_count])**2.+(bz_data[i] - bz_mean_n[n_count])**2.                     
+                     db_sqr_count += 1
+
+              #db_data.append(db)
+
+db_sqr = db_sqr/db_sqr_count
+
+turb_power = db_sqr/B_sqr_mean
+
+print ("db_sqr, B_sqr_mean", db_sqr, B_sqr_mean)
+
+print ("turbulence power:", turb_power)
+
 
 #print (B_mean, count)
 
@@ -309,7 +414,7 @@ data ={
        'if_arrival': 0,
        'r0_e': 1.0,
        'phi_e': 80.0,
-       'cturb_au': 0.5,
+       'cturb_au': turb_power,
        'MPI_compiler': 'mpif90'
 }
 
