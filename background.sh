@@ -32,8 +32,8 @@ cd $root_dir
 
 $python_bin $root_dir/grepSW.py --root_dir $root_dir --run_time $run_time
 
-run_dir=`cat $root_dir/temp.txt`
-rm $root_dir/temp.txt
+run_dir=`cat $root_dir/temp_{$run_time}.txt`
+rm $root_dir/temp_{$run_time}.txt
 
 
 mkdir $root_dir/Background/$run_dir

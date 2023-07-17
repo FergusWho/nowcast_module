@@ -76,9 +76,17 @@ else:
 
 print ("folder name:", run_name)
 
-f0 = open(root_dir+'/temp.txt','w')       # this part is not robust
+f0 = open(root_dir+'/temp_'+run_time+'.txt','w')       # this part is not robust
 f0.write(run_name)
 f0.close()
+
+
+print (run_time, run_name)
+
+# end time is now the fixed times (00:00, 08:00, or 16:00)
+utc_datetime = datetime.strptime(run_name, '%Y-%m-%d_%H:%M')
+utc_time = utc_datetime.strftime("%Y-%m-%d %H:%M:%S")
+
 
 ######################################################################################################
 
