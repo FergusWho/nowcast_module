@@ -60,9 +60,9 @@ print ("test timestamp:", utc_time)
 ### define folder name
 # separate date and %H:%M:%S
 date_str= utc_datetime.strftime("%Y-%m-%d")
-time_str= utc_datetime.strftime("%H:%M:%S")
+#time_str= utc_datetime.strftime("%H:%M:%S")
 
-print("time is", time_str)
+#print("time is", time_str)
 date = datetime.strptime(date_str, '%Y-%m-%d')
 
 seconds = (utc_datetime - date).total_seconds()
@@ -87,7 +87,7 @@ print (run_time, run_name)
 utc_datetime = datetime.strptime(run_name, '%Y-%m-%d_%H:%M')
 utc_time = utc_datetime.strftime("%Y-%m-%d %H:%M:%S")
 
-
+time_str= utc_datetime.strftime("%H:%M:%S")
 ######################################################################################################
 
 
