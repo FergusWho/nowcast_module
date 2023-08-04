@@ -252,7 +252,7 @@ print(B_mean, np.sqrt(B_sqr_mean))
 
 ### Calculate turbulence power ################################
 
-window_count = 8
+window_count = 1
 B_mean_n = []
 bx_mean_n = []
 by_mean_n = []
@@ -268,7 +268,7 @@ for j in range(0, window_count):
               tobj = datetime.strptime(time1[i], "%Y-%m-%d %H:%M:%S.%f")
               diff = end_time1-tobj
 
-              if diff.seconds/3600 < j+1 and diff.seconds/3600 >= j and B_data[i] > 0:
+              if diff.seconds/3600 < (j+1)*8/window_count and diff.seconds/3600 >= j*8/window_count and B_data[i] > 0:
                      B_mean_temp += B_data[i]
                      bx_mean_temp += bx_data[i]
                      by_mean_temp += by_data[i]
@@ -293,8 +293,9 @@ for j in range(0, window_count):
               bz_mean_n.append(-999)
 
        
-print (B_mean_n)
-print ("total average", np.mean(B_mean_n), B_mean)
+# print (B_mean_n)
+# print ("total average", np.mean(B_mean_n), B_mean)
+# print (bx_mean_n, by_mean_n, bz_mean_n)
 
 db_sqr = 0.0
 db_sqr_count =0
@@ -303,7 +304,7 @@ for i in range(0, len(time1)):
        tobj = datetime.strptime(time1[i], "%Y-%m-%d %H:%M:%S.%f")
        diff = end_time1-tobj
        if diff.seconds/3600 < 8 and B_data[i] > 0:
-              n_count = int(np.floor(diff.seconds/3600))
+              n_count = 0
               if B_mean_n[n_count] != -999:
                      db_sqr = db_sqr + (bx_data[i] - bx_mean_n[n_count])**2. + \
                             (by_data[i] - by_mean_n[n_count])**2.+(bz_data[i] - bz_mean_n[n_count])**2.                     
@@ -319,6 +320,9 @@ print ("db_sqr, B_sqr_mean", db_sqr, B_sqr_mean)
 
 print ("turbulence power:", turb_power)
 
+if turb_power < 0.1:
+       turb_power = 0.1
+       print('turb_power too small, changing it to 0.1')
 
 #print (B_mean, count)
 
