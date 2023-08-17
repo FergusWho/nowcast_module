@@ -1,21 +1,22 @@
 #=================================================================================
 # Python script to get real time Solar wind parameters from API
-import math
-import numpy as np
-import matplotlib.pyplot as plt
+import math # unused
+import numpy as np # unused
+import matplotlib.pyplot as plt # unsued
 
-import urllib.parse
+import urllib.parse # unused
 import urllib.request
 import datetime
 from datetime import timedelta
 from datetime import datetime
 import pytz
 import json
-import sys
-import os
+import sys # unused
+import os # unused
 import argparse
 
 # some parameters 
+# all unused
 AU  = 1.5e11        
 eo  = 1.6e-19
 pi  = 3.141592653589793116
@@ -26,6 +27,7 @@ co  = 3.0e8
 n_0 = 1.0e6
 
 
+# command-line arguments
 parser = argparse.ArgumentParser()
 parser.add_argument("--root_dir", type=str, default='/data/iPATH/nowcast_module', \
        help=("Root directory"))
@@ -38,7 +40,13 @@ root_dir = args.root_dir
 run_time = args.run_time
 
 ######################################################################################################
+# derive run folder name, based on the current or provided run time
+# the run folder name is in the format yyyy-mm-dd_HH:00, where HH can be 00, 08, or 16
+# this is because each background solar wind simulation has a validity of 8 hours
+# the run folder name is written to temp.txt, so that background.sh can read it
 
+# get current time, or parse the one provided by command-line
+# resulting time is in UTC
 if (run_time == ""):
        # get current time
        now = datetime.now()
@@ -88,7 +96,7 @@ f0.close()
 # the output files contains magnetic field and plasma data during the last 24 hours
 # See https://ccmc.gsfc.nasa.gov/support/iswa/iswa-webservices.php for source
 #encoded_endtime = urllib.parse.urlencode({'end-time':utc_time})
-endtime = utc_datetime.strftime("%Y-%m-%d %H:%M:%S")
+endtime = utc_datetime.strftime("%Y-%m-%d %H:%M:%S") # unused
 encoded_endtime = utc_datetime.strftime("%Y-%m-%d%%20%H:%M:%S")
 
 # starttime = (utc_datetime - timedelta(days=5) ).strftime("%Y-%m-%d %H:%M:%S")
@@ -106,13 +114,13 @@ else:
 
 url_seed = "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/DatabaseDataStreamServlet?format=TEXT&resource=ACE&quantity=ProtonFlux_47_68&duration=1&end-time="+encoded_endtime
 
-url_cme = "https://kauai.ccmc.gsfc.nasa.gov/DONKI/WS/get/CMEAnalysis.txt?mostAccurateOnly=true&speed=500&halfAngle=35"
+url_cme = "https://kauai.ccmc.gsfc.nasa.gov/DONKI/WS/get/CMEAnalysis.txt?mostAccurateOnly=true&speed=500&halfAngle=35" # unused
 # most accurate only, speed lower limit: 500km/s, half width lower limit 35 degrees.
 
 print(url_mag)
 print(url_pla)
 print(url_seed)
-print(url_cme)
+print(url_cme) # not needed
 ##### Read data from the URL
 
 line_no1 = 0
@@ -137,10 +145,11 @@ f2 = urllib.request.urlopen(url_pla)
 f4 = urllib.request.urlopen(url_seed)
 
 #--- if it fails to open then set to default
-      #add this later 
+      #TODO add this later 
 #---
 
        
+# load magnetic field data
 for line in f1:
        line = line.decode("utf-8")
        line = line.strip()
@@ -156,6 +165,7 @@ for line in f1:
 # print(time1[len(time1)-1], B_data[len(time1)-1])
 
 
+# load solar wind plasma data
 for line in f2:
        line = line.decode("utf-8")
        line = line.strip()
@@ -192,6 +202,9 @@ f4.close()
 
 
 #### average the observation values during the 8 hours prior to the current time
+# it actually uses the last time point from each data stream, not run_time
+# this means that if the data stream ends well before run_time, then the average does not refer to the 8 hours preceding the current time
+# for proton flux data, there is a check that there must be data points in the last 8 hours, while no such check is performed for magnetic field and solar wind plasma data
 
 B_mean = 0.0
 count = 0

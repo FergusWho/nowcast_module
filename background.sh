@@ -85,6 +85,7 @@ if [ $if_local -eq 1 ]
 then
     ./xdzeus36 >>$logfile 2>&1
 else
+    # wait for job to finish before returning
     sbatch -W $code_dir/run_zeus.sh -r $bkg_dir >>$logfile 2>&1
 
     # compress Slurm logfile

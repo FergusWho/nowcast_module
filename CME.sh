@@ -118,6 +118,7 @@ else
     then
         ./xdzeus36 <input >>$logfile 2>&1
     else
+        # wait for job to finish before returning
         sbatch -W $code_dir/run_zeus2.sh -r $CME_dir >>$logfile 2>&1
 
         # compress Slurm logfile
@@ -180,6 +181,7 @@ else
     then
         mpirun -np $thread_count trspt.out >>$logfile 2>&1
     else
+        # wait for job to finish before returning
         sbatch -W $code_dir/run_transport.sh -r $trspt_dir >>$logfile 2>&1
 
         # compress Slurm logfile

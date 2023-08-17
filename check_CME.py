@@ -1,9 +1,9 @@
 #=================================================================================
 # Python script to grep real time Solar wind parameters from API
 
-import math
-import numpy as np
-import matplotlib.pyplot as plt
+import math # unused
+import numpy as np # unused
+import matplotlib.pyplot as plt # unused
 
 import urllib.request
 import datetime
@@ -12,11 +12,12 @@ from datetime import datetime
 import pytz
 import json
 import sys
-import os
+import os # unused
 import argparse
 from helioweb_locations import *
 
 # some parameters 
+# all unusued
 AU  = 1.5e11        
 eo  = 1.6e-19
 pi  = 3.141592653589793116
@@ -26,6 +27,7 @@ vo  = 52483.25
 co  = 3.0e8
 n_0 = 1.0e6
 
+# command line arguments
 parser = argparse.ArgumentParser()
 parser.add_argument("--root_dir", type=str, default='/data/iPATH/nowcast_module', \
        help=("Root directory"))
@@ -42,6 +44,8 @@ model_mode = args.model_mode
 
 ######################################################################################################
 
+# get current time, or parse the one provided by the command line
+# resulting time is in UTC
 if (run_time == ""):
        # get current time
        now = datetime.now()
@@ -90,6 +94,7 @@ seconds = (utc_datetime - date).total_seconds()
 ######################################################################################################
 
 
+# start date for CME search: last 7 days
 enddate = utc_datetime.strftime("%Y-%m-%d")
 startdate = (utc_datetime - timedelta(days=7) ).strftime("%Y-%m-%d")
 
@@ -130,6 +135,7 @@ CME_index=[]
 
 dt_start = utc_datetime - timedelta(minutes=2879)
 
+# load list of CMEs already simulated
 with open(root_dir+'/pastCME.json') as cme_list:
     list_obj = json.load(cme_list)
 

@@ -1,4 +1,4 @@
-import numpy as np
+import numpy as np # unused
 import datetime
 from datetime import timedelta
 from datetime import datetime
@@ -31,11 +31,13 @@ def find_mars(date_time, root_dir1):
     for i in range(1, line_no-1):
         time = datetime.strptime(year[i]+"-"+day[i],"%Y-%j")
 
+        # find first point for which time[i-1] < t <= time[i]
         if time >= date_time and prev_time < date_time:
             x1 = time - date_time
             x2 = date_time - prev_time
             h  = time-prev_time
 
+            # linear interpolation of coordinates: s*rad[i] + (1-s)*rad[i-1], s = (t - t[i-1])/(t[i] - t[i-1])
             mars_r = rad[i]*x2/h + rad[i-1]*x1/h 
             mars_lat = lat[i]*x2/h + lat[i-1]*x1/h 
             mars_lon = lon[i]*x2/h + lon[i-1]*x1/h 
@@ -71,11 +73,13 @@ def find_earth(date_time, root_dir1):
     for i in range(1, line_no-1):
         time = datetime.strptime(year[i]+"-"+day[i],"%Y-%j")
 
+        # find first point for which time[i-1] < t <= time[i]
         if time >= date_time and prev_time < date_time:
             x1 = time - date_time
             x2 = date_time - prev_time
             h  = time-prev_time
 
+            # linear interpolation of coordinates: s*rad[i] + (1-s)*rad[i-1], s = (t - t[i-1])/(t[i] - t[i-1])
             earth_r = rad[i]*x2/h + rad[i-1]*x1/h 
             earth_lat = lat[i]*x2/h + lat[i-1]*x1/h 
             earth_lon = lon[i]*x2/h + lon[i-1]*x1/h 
@@ -111,11 +115,13 @@ def find_psp(date_time, root_dir1):
     for i in range(1, line_no-1):
         time = datetime.strptime(year[i]+"-"+day[i],"%Y-%j")
 
+        # find first point for which time[i-1] < t <= time[i]
         if time >= date_time and prev_time < date_time:
             x1 = time - date_time
             x2 = date_time - prev_time
             h  = time-prev_time
 
+            # linear interpolation of coordinates: s*rad[i] + (1-s)*rad[i-1], s = (t - t[i-1])/(t[i] - t[i-1])
             psp_r = rad[i]*x2/h + rad[i-1]*x1/h 
             psp_lat = lat[i]*x2/h + lat[i-1]*x1/h 
             psp_lon = lon[i]*x2/h + lon[i-1]*x1/h 
