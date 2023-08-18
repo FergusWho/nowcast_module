@@ -72,7 +72,7 @@ else
     # use the modified dzeus36 version for nowcasting
     cp $root_dir/dzeus36_alt $root_dir/Flare/$CME_id/dzeus36
 
-    $python_bin $iPATH_dir/prepare_PATH.py --root_dir $root_dir/Flare/$CME_id --path_dir $iPATH_dir --run_mode 0 --input $root_dir/Flare/$CME_id/${CME_dir}_flare_input.json >>$root_dir/Flare/$CME_id/log.txt 2>&1
+    $python_bin $root_dir/prepare_PATH.py --root_dir $root_dir/Flare/$CME_id --path_dir $iPATH_dir --run_mode 0 --input $root_dir/Flare/$CME_id/${CME_dir}_flare_input.json >>$root_dir/Flare/$CME_id/log.txt 2>&1
     
     cp $root_dir/Flare/$CME_id/${CME_dir}_flare_input.json $root_dir/Flare/$CME_id/CME_input.json
 
@@ -92,7 +92,7 @@ else
     #-----------------------------------------------------------------------------------------
     # setup and compile for the transport module
     
-    $python_bin $iPATH_dir/prepare_PATH.py --root_dir $root_dir/Flare/$CME_id --path_dir $iPATH_dir --run_mode 2 --ranks $thread_count --input $root_dir/Flare/$CME_id/${CME_dir}_flare_input.json >>$root_dir/Flare/$CME_id/log.txt 2>&1
+    $python_bin $root_dir/prepare_PATH.py --root_dir $root_dir/Flare/$CME_id --path_dir $iPATH_dir --run_mode 2 --ranks $thread_count --input $root_dir/Flare/$CME_id/${CME_dir}_flare_input.json >>$root_dir/Flare/$CME_id/log.txt 2>&1
     
     mkdir $root_dir/Flare/$CME_id/path_output/$trspt_dir
     

@@ -9,6 +9,7 @@ from datetime import timedelta
 from datetime import datetime
 import json
 
+import pickle
 
 def total_func_numerical(energy0, time_intensity0, time, lower_energy):
        # calculate the > lower_energy fluence integrated over time
@@ -468,6 +469,8 @@ for j in range(0, p_num_trsp):
        f41.write('{:<#18.8g}{:<10.6e}\n'.format(energy1Mev[j], total_fp1[j]))
 f41.close()
 
+with open('./'+run_time+'_save.pkl', 'wb') as f51:
+       pickle.dump([xtime, time_intensity1, energy_index, simulation_zero_time, int_flux, energy1Mev],f51)
 
 #############################################################################################################################
 #             PLOTTING

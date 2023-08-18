@@ -128,22 +128,22 @@ else
     cp $root_dir/CME/$CME_id/path_output/$trspt_dir/output.json $root_dir/CME/$CME_id/path_output/${trspt_dir}_STA
  
     # now for PSP
-    mkdir $root_dir/CME/$CME_id/path_output/${trspt_dir}_psp
-    $python_bin $root_dir/prepare_PATH.py --root_dir $root_dir/CME/$CME_id --path_dir $iPATH_dir --run_mode 2 --ranks $thread_count --input $root_dir/CME/$CME_id/${CME_dir}_psp_input.json >>$root_dir/CME/$CME_id/log.txt 2>&1
+#    mkdir $root_dir/CME/$CME_id/path_output/${trspt_dir}_psp
+#    $python_bin $root_dir/prepare_PATH.py --root_dir $root_dir/CME/$CME_id --path_dir $iPATH_dir --run_mode 2 --ranks $thread_count --input $root_dir/CME/$CME_id/${CME_dir}_psp_input.json >>$root_dir/CME/$CME_id/log.txt 2>&1
 
-    cp $iPATH_dir/Transport/trspt_input $root_dir/CME/$CME_id/path_output/${trspt_dir}_psp
-    cp $root_dir/plot_iPATH_nowcast.py $root_dir/CME/$CME_id/path_output/${trspt_dir}_psp
-    cp $root_dir/CME/$CME_id/${CME_dir}_psp_input.json $root_dir/CME/$CME_id/path_output/${trspt_dir}_psp
-    cp $root_dir/CME/$CME_id/path_output/$trspt_dir/combine.out $root_dir/CME/$CME_id/path_output/${trspt_dir}_psp
-    cp $root_dir/CME/$CME_id/path_output/$trspt_dir/trspt.out $root_dir/CME/$CME_id/path_output/${trspt_dir}_psp
-    cp $root_dir/CME/$CME_id/path_output/$trspt_dir/output.json $root_dir/CME/$CME_id/path_output/${trspt_dir}_psp
+#    cp $iPATH_dir/Transport/trspt_input $root_dir/CME/$CME_id/path_output/${trspt_dir}_psp
+#    cp $root_dir/plot_iPATH_nowcast.py $root_dir/CME/$CME_id/path_output/${trspt_dir}_psp
+#    cp $root_dir/CME/$CME_id/${CME_dir}_psp_input.json $root_dir/CME/$CME_id/path_output/${trspt_dir}_psp
+#    cp $root_dir/CME/$CME_id/path_output/$trspt_dir/combine.out $root_dir/CME/$CME_id/path_output/${trspt_dir}_psp
+#    cp $root_dir/CME/$CME_id/path_output/$trspt_dir/trspt.out $root_dir/CME/$CME_id/path_output/${trspt_dir}_psp
+#    cp $root_dir/CME/$CME_id/path_output/$trspt_dir/output.json $root_dir/CME/$CME_id/path_output/${trspt_dir}_psp
 #-----------------------------------------------------------------------------------------
     # Now run the transport modules:
 
     /usr/bin/bash transport_module.sh -r $root_dir -i $CME_id -s $startdate -e $enddate -p earth &
     /usr/bin/bash transport_module.sh -r $root_dir -i $CME_id -s $startdate -e $enddate -p mars &
     /usr/bin/bash transport_module.sh -r $root_dir -i $CME_id -s $startdate -e $enddate -p STA &  
-    /usr/bin/bash transport_module.sh -r $root_dir -i $CME_id -s $startdate -e $enddate -p psp &
+    #/usr/bin/bash transport_module.sh -r $root_dir -i $CME_id -s $startdate -e $enddate -p psp &
 
 fi
 
