@@ -67,36 +67,39 @@ echo "[$(date -u +'%F %T')] Done"
 echo
 echo "[$(date -u +'%F %T')] Switching to $logfile"
 
+# redirect everything to the logfile
+{
+
 cd $bkg_dir
 
 # modify ZEUS source code according to the input json file
-echo "[$(date -u +'%F %T')] Setting up background module ..." >>$logfile
-python3 $iPATH_dir/prepare_PATH.py --root_dir $bkg_dir --path_dir $iPATH_dir --run_mode 1 --input $bkg_dir/input.json >>$logfile 2>&1
-echo "[$(date -u +'%F %T')] Done" >>$logfile
-echo >>$logfile
+echo "[$(date -u +'%F %T')] Setting up background module ..."
+python3 $iPATH_dir/prepare_PATH.py --root_dir $bkg_dir --path_dir $iPATH_dir --run_mode 1 --input $bkg_dir/input.json
+echo "[$(date -u +'%F %T')] Done"
+echo
 
-echo "[$(date -u +'%F %T')] Compiling ZEUS ..." >>$logfile
-csh -v ./iPATH_zeus.s >>$logfile 2>&1
-echo "[$(date -u +'%F %T')] Done" >>$logfile
-echo >>$logfile
+echo "[$(date -u +'%F %T')] Compiling ZEUS ..."
+csh -v ./iPATH_zeus.s
+echo "[$(date -u +'%F %T')] Done"
+echo
 
-echo "[$(date -u +'%F %T')] Running background module ..." >>$logfile
+echo "[$(date -u +'%F %T')] Running background module ..."
 if [ $if_local -eq 1 ]
 then
-    ./xdzeus36 >>$logfile 2>&1
+    ./xdzeus36
 else
     # wait for job to finish before returning
-    sbatch -W $code_dir/run_zeus.sh -r $bkg_dir >>$logfile 2>&1
+    sbatch -W $code_dir/run_zeus.sh -r $bkg_dir
 
     # compress Slurm logfile
     for f in slurm*.out; do
         gzip $f
     done
 fi
-echo "[$(date -u +'%F %T')] Done" >>$logfile
-echo >>$logfile
+echo "[$(date -u +'%F %T')] Done"
+echo
 
-echo "[$(date -u +'%F %T')] Cleaning up ..." >>$logfile
+echo "[$(date -u +'%F %T')] Cleaning up ..."
 # ZEUS restart files before steady-state solution
 rm zr001JH
 rm zr002JH
@@ -113,4 +116,6 @@ rm -r releases
 
 # unused iPATH output files
 rm -r path_output
-echo "[$(date -u +'%F %T')] Done" >>$logfile
+echo "[$(date -u +'%F %T')] Done"
+
+} >>$logfile 2>&1
