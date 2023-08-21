@@ -38,13 +38,12 @@ if "flare" in json_data["sep_forecast_submission"]["triggers"][0]:
    Vcme = 2.4e4*FSXR**0.3 # [km/s]
    time_to_inner = 0.05*AU/(Vcme*1000.)/3600.*2/3.
    simulation_zero_time = flare_start_time + timedelta(hours=time_to_inner)
+elif "cme" in json_data["sep_forecast_submission"]["triggers"][0]:
+   cme_start_time = datetime.strptime(json_data["sep_forecast_submission"]["triggers"][0]["cme"]["start_time"], '%Y-%m-%dT%H:%M:%SZ')
+   time21_5 = datetime.strptime(json_data["sep_forecast_submission"]["triggers"][0]["cme"]["time_at_height"]["time"],'%Y-%m-%dT%H:%MZ')
+   simulation_zero_time = cme_start_time + (time21_5 - cme_start_time)/3.
 else:
-   if "cme" in json_data["sep_forecast_submission"]["triggers"][0]:
-      cme_start_time = datetime.strptime(json_data["sep_forecast_submission"]["triggers"][0]["cme"]["start_time"], '%Y-%m-%dT%H:%M:%SZ')
-      time21_5 = datetime.strptime(json_data["sep_forecast_submission"]["triggers"][0]["cme"]["time_at_height"]["time"],'%Y-%m-%dT%H:%MZ')
-      simulation_zero_time = cme_start_time + (time21_5 - cme_start_time)/3.
-   else:
-      print('ERROR - No trigger info in output.json')
+   print('ERROR - No trigger info in output.json')
 
 simulation_end_time = simulation_zero_time + timedelta(hours=xtime[t_num-1])
 start_time = simulation_zero_time.strftime('%Y%m%d_%H%M%S')
