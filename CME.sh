@@ -1,5 +1,17 @@
 #!/bin/bash
 
+cleanup_acceleration_files() {
+   cd $CME_dir/path_output
+
+   # compress intermediate acceleration files
+   for f in observer_pov.dat kappa-par-perp.dat all_shell_bndy.dat dist_at_shock.dat esc_distr* momenta-hi.dat solar_wind_profile.dat; do
+      [[ -s $f ]] && gzip $f
+   done
+
+   # remove unneeded intermediate acceleration files
+   rm -f dist_all_shl.dat
+}
+
 # default values for CCMC AWS on rt-hpc-prod
 iPATH_dir='/shared/iPATH/ipath_v2'
 code_dir='/shared/iPATH/nowcast_module_v1'
@@ -145,11 +157,35 @@ enddate=$(date -d "$startdate + 2 days" +'%Y-%m-%d')
 
         # compress Slurm logfile
         for f in slurm*.out; do
-           gzip $f
+           [[ -s $f ]] && gzip $f
         done
     fi
     echo "[$(date -u +'%F %T')] Done"
     echo
+
+    # check if CME ZEUS simulation was successful
+    [[ ! -s $CME_dir/zl002JH ]] && {
+      echo "[$(date -u +'%F %T')] ZEUS log file missing: simulation job probably terminated before completion"
+      echo "[$(date -u +'%F %T')] Cleanup and exit"
+      cleanup_acceleration_files
+      exit 1
+    }
+
+    shock_files=(all_shell_bndy dist_all_shl dist_at_shock
+      esc_distr_dn esc_distr-hi esc_distr_up
+      kappa-par-perp momenta-hi shock_momenta shock_posn_comp)
+    bad_shock_files=()
+    for f in ${shock_files[@]}; do
+      [[ ! -s $CME_dir/path_output/$f.dat ]] && bad_shock_files+=($f)
+    done
+    (( ${#bad_shock_files[@]} )) && {
+      echo "[$(date -u +'%F %T')] One or more shock-related files missing or empty: shock detection failed"
+      printf "%s " ${bad_shock_files[@]}
+      printf "\n"
+      echo "[$(date -u +'%F %T')] Cleanup and exit"
+      cleanup_acceleration_files
+      exit 1
+    }
 
     #-----------------------------------------------------------------------------------------
     # setup and compile for the transport module
@@ -208,7 +244,7 @@ enddate=$(date -d "$startdate + 2 days" +'%Y-%m-%d')
 
         # compress Slurm logfile
         for f in slurm*.out; do
-           gzip $f
+           [[ -s $f ]] && gzip $f
         done
     fi
     ./combine.out
@@ -245,7 +281,7 @@ enddate=$(date -d "$startdate + 2 days" +'%Y-%m-%d')
 
     echo "[$(date -u +'%F %T')] Cleaning up ..."
     # remove source pngs if the animation exists and contains the right number of frames
-    if [[ -f CME.gif ]]; then
+    if [[ -s CME.gif ]]; then
       npngs=$(ls CME*.png | wc -l)
       nframes=$(identify CME.gif | wc -l)
       (( npngs == nframes )) && rm CME*.png
@@ -254,7 +290,7 @@ enddate=$(date -d "$startdate + 2 days" +'%Y-%m-%d')
     cd $trspt_dir
 
     # clean up some unused output
-    rm RawData*
+    rm -f RawData*
 
     # compress transport files
     tar --remove-files -zcf fp.tar.gz fp_*
@@ -276,7 +312,7 @@ enddate=$(date -d "$startdate + 2 days" +'%Y-%m-%d')
 
         # compress Slurm logfile
         for f in slurm*.out; do
-           gzip $f
+           [[ -s $f ]] && gzip $f
         done
     fi
     ./combine.out
@@ -290,20 +326,13 @@ enddate=$(date -d "$startdate + 2 days" +'%Y-%m-%d')
 
     echo "[$(date -u +'%F %T')] Cleaning up ..."
     # clean up some unused output
-    rm RawData*
+    rm -f RawData*
 
     # compress transport files
     tar --remove-files -zcf fp.tar.gz fp_*
 
-    cd $CME_dir/path_output
+    cleanup_acceleration_files
 
-    # compress intermediate acceleration files
-    for f in observer_pov.dat kappa-par-perp.dat all_shell_bndy.dat dist_at_shock.dat esc_distr* momenta-hi.dat solar_wind_profile.dat; do
-      gzip $f
-    done
-
-    # clean up unneeded intermediate acceleration files
-    rm dist_all_shl.dat
     echo "[$(date -u +'%F %T')] Done"
     echo
 
