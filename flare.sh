@@ -17,11 +17,14 @@ if_local=0
 
 # testing for specific event:
 # example: bash CME.sh -t 20220120_0830
-while getopts 't:L' flag
+# rerun already processed event:
+# example: bash CME.sh -t 20230819_1715 -i 20230818T220000-CME-001
+while getopts 't:i:L' flag
 do
     case "${flag}" in
         t) run_time=${OPTARG};;
         L) if_local=1;;
+        i) CME_id=${OPTARG};;
     esac
 done
 echo "[$(date -u +'%F %T')] Run time: $run_time"
@@ -39,6 +42,7 @@ fi
 echo "-----------------------------------------"
 echo
 
+if [[ -z $CME_id ]]; then
 # look for new flares from DONKI
 # create the input parameters files for Earth: $bgsw_folder_name/${run_time}_flare_earth_input.json
 # last line is: bgsw_folder_name flare_id
@@ -53,22 +57,36 @@ read -a strarr <<<$last_line
 bgsw_folder_name=${strarr[0]}
 CME_id=${strarr[1]}     # this is actually flare_id
 
+echo "[$(date -u +'%F %T')] Background simulation: $bgsw_folder_name"
+
+# abort if no flare or if no background simulation exists
+if [[ -z $bgsw_folder_name ]]; then
+   echo "[$(date -u +'%F %T')] There is no flare: exit"
+   exit 1
+elif [[ ! -f $data_dir/Background/$bgsw_folder_name/zr005JH ]]; then
+   echo "[$(date -u +'%F %T')] Background simulation not found: exit"
+   exit 1
+fi
+else
+   hour=${CME_id:9:2}
+
+   # remove leading zero, otherwise Bash interprets it as hex number
+   [[ ${hour:0:1} == 0 ]] && hour=${hour:1}
+
+   if (( hour < 8 )); then
+      hour=00
+   elif (( hour < 16 )); then
+      hour=08
+   else
+      hour=16
+   fi
+   bgsw_folder_name=${CME_id%%T*}_${hour}00
+fi
+
 # get the start and end date for Opsep
 startdate=(${bgsw_folder_name//_/ })
 startdate_opsep=${startdate:0:4}-${startdate:4:2}-${startdate:6:2}
 enddate=$(date -d "$startdate + 2 days" +'%Y-%m-%d')
-
-echo "[$(date -u +'%F %T')] Background simulation: $bgsw_folder_name"
-
-if [ -z "$bgsw_folder_name" ]
-then
-    echo "[$(date -u +'%F %T')] There is no flare: exit"
-else
-    # abort if no background simulation exists
-    [[ ! -f $data_dir/Background/$bgsw_folder_name/zr005JH ]] && {
-      echo "[$(date -u +'%F %T')] Background simulation not found: exit"
-      exit 1
-    }
 
     #-----------------------------------------------
     # CME setup and acceleration:
@@ -76,12 +94,13 @@ else
     logfile=$CME_dir/log.txt
 
     echo "[$(date -u +'%F %T')] Copying background simulation to $CME_dir ..."
+    [[ -d $CME_dir ]] && mv $CME_dir $CME_dir.bak # rename already existing simulation folder, just in case
     cp -r $data_dir/Background/$bgsw_folder_name $CME_dir
 
     # use the modified dzeus36 version for nowcasting
     cp $code_dir/dzeus36_alt $CME_dir/dzeus36
 
-    # remove backgroun simulation log
+    # remove background simulation log
     rm $CME_dir/log.txt
     echo "[$(date -u +'%F %T')] Done"
     echo
@@ -98,7 +117,7 @@ else
     # delete residual files created by other CME/Flare simulations in the copied Background folder
     echo "[$(date -u +'%F %T')] Deleting residual files ..."
     rm -f slurm* # Slurm logfiles from Background simulation
-    find -type f -name '*.json' | grep -v ${run_time}_flare | xargs rm -f # json files from other CME/Flare simulations
+    find -type f -name '*.json' | grep -v ${run_time}_flare | xargs rm -f # json files from CME/Flare simulations
     echo "[$(date -u +'%F %T')] Done"
     echo
 
@@ -239,4 +258,3 @@ else
     echo "[$(date -u +'%F %T')] Done"
 
     } >>$logfile 2>&1
-fi
