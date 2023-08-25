@@ -124,7 +124,7 @@ flare_index=[]
 
 dt_start = utc_datetime - timedelta(minutes=2879)
 
-with open(root_dir+'/pastflare.json') as flare_list:
+with open(root_dir+'/Flare/past.json') as flare_list:
     list_obj = json.load(flare_list)
 
 for i in range(0, len(data)):
@@ -147,7 +147,7 @@ for i in range(0, len(data)):
 print ('total NEW flare counts in the last 48 hours:', len(flare_index), file=sys.stderr)
 ii = len(flare_index)-1 # index number for the latest flare
 
-f4 = open(root_dir+'/flarelog.txt', 'a')
+f4 = open(root_dir+'/Flare/log.txt', 'a')
 
 #### check if there is a background solar wind setup in the most recent 8-hour window
 # now assuming there can be only at most 1 flare in the 15 mins time window
@@ -155,7 +155,7 @@ print ('flare_index', len(flare_index), file=sys.stderr)
 
 if len(flare_index) != 0:
     list_obj.append({"flrID":data[flare_index[ii]].get('flrID')})
-    with open(root_dir+'/pastflare.json', 'w') as write_file:
+    with open(root_dir+'/Flare/past.json', 'w') as write_file:
        json.dump(list_obj, write_file, indent=4)
 
     flare_start_time = data[flare_index[ii]].get('flrID').split("-FLR-")[0]

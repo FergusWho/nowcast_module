@@ -136,7 +136,7 @@ CME_index=[]
 dt_start = utc_datetime - timedelta(minutes=2879)
 
 # load list of CMEs already simulated
-with open(root_dir+'/pastCME.json') as cme_list:
+with open(root_dir+'/CME/past.json') as cme_list:
     list_obj = json.load(cme_list)
 
 for i in range(0, len(data)):
@@ -159,7 +159,7 @@ for i in range(0, len(data)):
 print ('total NEW CME counts in the last 48 hours:', len(CME_index), file=sys.stderr)
 ii = len(CME_index)-1 # index number for the latest CME
 
-f4 = open(root_dir+'/CMElog.txt', 'a')
+f4 = open(root_dir+'/CME/log.txt', 'a')
 
 #### check if there is a background solar wind setup in the most recent 8-hour window
 # now assuming there can be only at most 1 CME in the 15 mins time window
@@ -167,7 +167,7 @@ print ('CME_index', len(CME_index), file=sys.stderr)
 
 if len(CME_index) != 0:
     list_obj.append({"associatedCMEID":data[CME_index[ii]].get('associatedCMEID')})
-    with open(root_dir+'/pastCME.json', 'w') as write_file:
+    with open(root_dir+'/CME/past.json', 'w') as write_file:
         json.dump(list_obj, write_file, indent=4)
 
     cme_start_time = data[CME_index[ii]].get('associatedCMEID').split("-CME-")[0]

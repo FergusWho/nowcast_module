@@ -16,8 +16,8 @@ mkdir -p $DataDir/staging/{iswa,sep_scoreboard}
 cp -r $CodeDir/helioweb $DataDir/
 
 # create processed CME and Flare lists
-echo "[]" >$DataDir/pastCME.json
-echo "[]" >$DataDir/pastflare.json
+echo "[]" >$DataDir/CME/past.json
+echo "[]" >$DataDir/Flare/past.json
 
 # install crontab file
 crontab crontab
