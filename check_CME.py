@@ -98,7 +98,7 @@ startdate = (utc_datetime - timedelta(days=7) ).strftime("%Y-%m-%d")
 # url_cme = "https://kauai.ccmc.gsfc.nasa.gov/DONKI/WS/get/CMEAnalysis?&mostAccurateOnly=true&speed=500&halfAngle=35&catalog=ALL"
 
 #------ get the list for target date -----
-url_cme = "https://kauai.ccmc.gsfc.nasa.gov/DONKI/WS/get/CMEAnalysis?startDate="+startdate+"&endDate="+enddate+"&mostAccurateOnly=true&speed=450&halfAngle=27"
+url_cme = "https://kauai.ccmc.gsfc.nasa.gov/DONKI/WS/get/CMEAnalysis?startDate="+startdate+"&endDate="+enddate+"&mostAccurateOnly=true&speed=450&halfAngle=15"
 
 
 print (url_cme)
@@ -183,7 +183,7 @@ if len(CME_index) != 0:
     input_data = json.load(f2)
     f2.close()
 
-    input_data['cme_speed'] = data[CME_index[ii]].get('speed') 
+    input_data['cme_speed'] = data[CME_index[ii]].get('speed') * np.cos(data[CME_index[ii]].get('latitude')*pi/180.0)
     input_data['cme_width'] = data[CME_index[ii]].get('halfAngle')*2 
     input_data['phi_e'] = 100.0-data[CME_index[ii]].get('longitude') 
 

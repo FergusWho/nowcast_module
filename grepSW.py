@@ -350,6 +350,11 @@ n_mean = n_mean/count
 v_mean = v_mean/count
 T_mean = T_mean/count
 
+# avoid cases with n_mean too small
+if n_mean < 1.0:
+       n_mean = 1.0
+
+
 if len(time3) != 0:
        flux_mean = 0.0
        count = 0
@@ -392,7 +397,7 @@ if inj_rate < 0.0004:
 #### Create Input files for the iPATH
 
 f3 = open(root_dir+'/cronlog.txt', 'a')
-f3.write('{}  {:5.2f}  {:5.2f}  {:6.1f}  {:9.1f}  {:5.2f}\n'.format(utc_time, B_mean, n_mean, v_mean, T_mean, flux_mean))
+f3.write('{}  {:5.2f}  {:5.2f}  {:6.1f}  {:9.1f}  {:5.2f} {:5.2f}\n'.format(utc_time, B_mean, n_mean, v_mean, T_mean, flux_mean, turb_power))
 f3.close()
 
 print('Time:{}  B:{:5.2f}  n:{:5.2f}  v:{:6.1f}  T:{:9.1f}  flux:{:5.2f}\n'.format(utc_time, B_mean, n_mean, v_mean, T_mean, flux_mean))

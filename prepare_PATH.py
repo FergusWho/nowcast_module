@@ -405,7 +405,7 @@ C---------------     END OF COMMON BLOCK DECLARATION     ---------------
 {} {}
 # energy resolution, phi_no
 {} {}""".format(data.get('r0_e'), data.get('phi_e'), data.get('cturb_au'),
-                data.get('t_num'), data.get('if_arrival'), data.get('p_num'), int(math.floor(data.get('cme_width')/5.)+5))    )
+                72, data.get('if_arrival'), data.get('p_num'), int(math.floor(data.get('cme_width')/5.)+5))    )
         f10.close()
 
         f11 = open(path_dir+"/Transport/combine.f", "w")
@@ -444,7 +444,7 @@ c          write(21, "(I2, 3ES14.7)") int(fe_total(1,j)),
        close(21)
 1000   format(I4, ES25.14E3, ES25.14E3, ES25.14E3)
       end
-""".format(ranks, data.get('p_num'), data.get('t_num') ) )
+""".format(ranks, data.get('p_num'), 72 ) )
 
         f11.close()
 

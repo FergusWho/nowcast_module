@@ -141,8 +141,8 @@ else
     # Now run the transport modules:
 
     /usr/bin/bash transport_module.sh -r $root_dir -i $CME_id -s $startdate -e $enddate -p earth &
-    /usr/bin/bash transport_module.sh -r $root_dir -i $CME_id -s $startdate -e $enddate -p mars &
-    /usr/bin/bash transport_module.sh -r $root_dir -i $CME_id -s $startdate -e $enddate -p STA &  
+    #/usr/bin/bash transport_module.sh -r $root_dir -i $CME_id -s $startdate -e $enddate -p mars &
+    #/usr/bin/bash transport_module.sh -r $root_dir -i $CME_id -s $startdate -e $enddate -p STA &  
     #/usr/bin/bash transport_module.sh -r $root_dir -i $CME_id -s $startdate -e $enddate -p psp &
 
 fi
