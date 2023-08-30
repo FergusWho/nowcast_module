@@ -64,7 +64,7 @@ find -type d -name 'transport_*' -printf '%P\n' \
    if [[ $obs == earth ]]; then
       ls ZEUS+iPATH_* \
       | while read f; do
-         ln -s $(pwd)/$f $StagingDir/sep_scoreboard/${f/_differential/}
+         cp -p $f $StagingDir/sep_scoreboard/${f/_differential/}
       done
    fi
 
@@ -81,14 +81,14 @@ find -type d -name 'transport_*' -printf '%P\n' \
       name=${f%.*}
       name=${name#*_} # remove startdate, if present
       ext=${f##*.}
-      ln -s $(pwd)/$f $StagingDir/iswa/${pfx}_${IssueDate}_${obs}_${alias[$name]}.$ext
+      cp -p $f $StagingDir/iswa/${pfx}_${IssueDate}_${obs}_${alias[$name]}.$ext
    done
 
    cd ..
 done
 
 # CME & shock files for iSWA
-ln -sf $(pwd)/staging.info $StagingDir/iswa/info
+cp -p staging.info $StagingDir/iswa/info
 IssueDate=$(date -ud@$(stat -c %Y shock_momenta.dat) '+%Y%m%d_%H%M%S')
 declare -A alias=(
    [CME]=CME-shock-parameters
@@ -98,5 +98,5 @@ declare -A alias=(
 for f in CME.gif shock_momenta.dat shock_posn_comp.dat; do
    name=${f%.*}
    ext=${f##*.}
-   ln -s $(pwd)/$f $StagingDir/iswa/${pfx}_${IssueDate}_${alias[$name]}.$ext
+   cp -p $f $StagingDir/iswa/${pfx}_${IssueDate}_${alias[$name]}.$ext
 done
