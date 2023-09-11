@@ -36,6 +36,10 @@ if [[ -z $StartDate ]]; then
          exit 1
       }
       tar -xf fp.tar.gz fp_total
+      (( $? )) && {
+         echo " !!! Missing fp_total in fp.tar.gz or corrupted archive: cannot extract simulate start date"
+         exit 1
+      }
    fi
    StartDate=$(python3 $CodeDir/get_simulation_start_time.py)
    rm fp_total
