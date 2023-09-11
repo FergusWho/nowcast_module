@@ -64,7 +64,15 @@ find -type d -name 'transport_*' -printf '%P\n' \
    if [[ $obs == earth ]]; then
       ls ZEUS+iPATH_* \
       | while read f; do
+         # strip '_differenial' from file names, including files pointed to inside the json file.
+         # 'differential' is added by Katie's OpSEP code to differentiate the source files used to create the output files.
+         # Since we use the option --FluxType differential when invoking opsep_dir/operational_sep_quantities.py,
+         # this is carried over to the output files.
+         # However, the time profiles (.txt files) correspond to integral fluxes, so '_differential' is removed to avoid confusion.
          cp -p $f $StagingDir/sep_scoreboard/${f/_differential/}
+         [[ $f == *.json ]] && {
+            sed -Ei 's/_differential//g' $StagingDir/sep_scoreboard/${f/_differential/}
+         }
       done
    fi
 
