@@ -234,6 +234,11 @@ enddate=$(date -d "$startdate + 2 days" +'%Y-%m-%d')
     echo "[$(date -u +'%F %T')] Done"
     echo
 
+    if [[ -s fp_total ]]; then
+      echo "[$(date -u +'%F %T')] iPATH fp_total missing: transport job or combine step probably failed"
+      echo "[$(date -u +'%F %T')] Skipping plotting and OpSEP"
+    else
+
     echo "[$(date -u +'%F %T')] Plotting transport results ..."
     python3 $code_dir/plot_iPATH_nowcast.py
     echo "[$(date -u +'%F %T')]  Done"
@@ -281,6 +286,8 @@ enddate=$(date -d "$startdate + 2 days" +'%Y-%m-%d')
     tar --remove-files -zcf fp.tar.gz fp_*
     echo "[$(date -u +'%F %T')] Done"
     echo
+
+    fi
 
     echo "[$(date -u +'%F %T')] Copying output files to the staging area"
     cd $CME_dir/path_output
