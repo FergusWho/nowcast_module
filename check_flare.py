@@ -281,12 +281,16 @@ if len(flare_index) != 0:
         ]
     }}
 
+    flare_end_time = data[flare_index[ii]].get('endTime')
+    if flare_end_time is None:
+       flare_end_time = data[flare_index[ii]].get('peakTime')
+
     flare = {
            "flare":{
-           "last_data_time": data[flare_index[ii]].get('endTime'),
+           "last_data_time": flare_end_time,
            "start_time":data[flare_index[ii]].get('beginTime'),
            "peak_time": data[flare_index[ii]].get('peakTime'),
-           "end_time": data[flare_index[ii]].get('endTime'),
+           "end_time": flare_end_time,
            "location": data[flare_index[ii]].get('sourceLocation'),         
 #           "CME_half_width": width/2.,
 #           "CME_speed": Vcme,
