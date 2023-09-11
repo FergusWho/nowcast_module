@@ -298,7 +298,7 @@ if len(flare_index) != 0:
            "cme":{
            "half_width": width/2.,
            "speed": Vcme,
-           "catalog": "hypothetical, derived from flare info"
+#           "catalog": "hypothetical, derived from flare info"
            }
     }
 
