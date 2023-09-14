@@ -28,6 +28,10 @@ done
 MinStartDate=$(date -ud"${From:-20230101}" +%s)
 MaxStartDate=$(date -ud"${To:-now}" +%s)
 
+# build modification time tests for find command
+[[ ! -z $From ]] && from_test="-newermt $From"
+[[ ! -z $To ]] && to_test="! -newermt $To"
+
 echo "Simulations with problems between $(date -ud@$MinStartDate +'%F %T') and $(date -ud@$MaxStartDate +'%F %T')"
 
 cd $DataDir
@@ -37,14 +41,16 @@ for type in ${Types//,/ }; do
    (( Recreate )) && rm -rf $type/status
    touch $type/status
 
-   ntot=$(find cron/$type -name '*.log' | wc -l)
+   logs=($(find cron/$type -name '*.log' $from_test $to_test | sort -V | paste -sd' '))
+
+   ntot=${#logs[@]}
    len=${#ntot}
    (( del = 2*len + 3 ))
 
    printf '[%*d/%*d]' $len 0 $len $ntot
 
    (( n = 0 ))
-   while read cron_log; do
+   for cron_log in ${logs[@]}; do
       (( ++n ))
       printf '\033[%dD[%*d/%*d]' $del $len $n $len $ntot
 
@@ -146,7 +152,7 @@ for type in ${Types//,/ }; do
          status="$status$log_status"
       fi
       echo $run_time $dir $status >>$type/status
-   done < <(find cron/$type -name '*.log' | sort -V)
+   done
 
    printf "\n"
 
@@ -155,7 +161,9 @@ for type in ${Types//,/ }; do
          y = substr($1, 1, 4)
          m = substr($1, 5, 2)
          d = substr($1, 7, 2)
-         ut = mktime(y" "m" "d" 00 00 00")
+         H = substr($1, 10, 2)
+         M = substr($1, 12, 2)
+         ut = mktime(y" "m" "d" "H" "M" 00")
          if (MinStartDate <= ut && ut < MaxStartDate) print
       }
    ' $type/status | sort -V
