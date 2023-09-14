@@ -234,7 +234,7 @@ enddate=$(date -d "$startdate + 2 days" +'%Y-%m-%d')
     echo "[$(date -u +'%F %T')] Done"
     echo
 
-    if [[ -s fp_total ]]; then
+    if [[ ! -s fp_total ]]; then
       echo "[$(date -u +'%F %T')] iPATH fp_total missing: transport job or combine step probably failed"
       echo "[$(date -u +'%F %T')] Skipping plotting and OpSEP"
     else
