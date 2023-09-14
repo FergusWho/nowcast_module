@@ -295,6 +295,7 @@ for ii in range(0, shell_num):
        #---------------------------------------
        fig = plt.figure(0, figsize=(18,11))
        grid = plt.GridSpec(2,4, left = 0.06, right=0.96, bottom =0.08, wspace=0.28, hspace =0.25  )
+       plt.clf()
 
 
        ax0 = plt.subplot(grid[0,0])
