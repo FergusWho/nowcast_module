@@ -66,9 +66,9 @@ find -type d -name 'transport_*' -printf '%P\n' \
 
    # SEP scoreboard
    if [[ $obs == earth ]]; then
-      ls ZEUS+iPATH_* \
+      find -type f -name 'ZEUS+iPATH_*' \
       | while read f; do
-         # strip '_differenial' from file names, including files pointed to inside the json file.
+         # strip '_differential' from file names, including files pointed to inside the json file.
          # 'differential' is added by Katie's OpSEP code to differentiate the source files used to create the output files.
          # Since we use the option --FluxType differential when invoking opsep_dir/operational_sep_quantities.py,
          # this is carried over to the output files.
@@ -81,20 +81,26 @@ find -type d -name 'transport_*' -printf '%P\n' \
    fi
 
    # iSWA
-   IssueDate=$(date -ud@$(stat -c %Y *_differential_flux.csv) '+%Y%m%d_%H%M%S')
-   declare -A alias=(
-      [differential_flux]=differential-flux
-      [event_integrated_fluence]=event-integrated-fluence
-      [plot]=quicklook-plot
-      [input]=input
-   )
-   ls *_differential_flux.csv *_event_integrated_fluence.txt *_plot.png input.json \
-   | while read f; do
-      name=${f%.*}
-      name=${name#*_} # remove startdate, if present
-      ext=${f##*.}
-      cp -p $f $StagingDir/iswa/${pfx}_${IssueDate}_${obs}_${alias[$name]}.$ext
-   done
+   f=$(find -type f -name '*_differential_flux.csv')
+   if [[ -z $f ]]; then
+      echo " !!! No differential flux in $dir: skippping"
+      continue
+   else
+      IssueDate=$(date -ud@$(stat -c %Y $f) '+%Y%m%d_%H%M%S')
+      declare -A alias=(
+         [differential_flux]=differential-flux
+         [event_integrated_fluence]=event-integrated-fluence
+         [plot]=quicklook-plot
+         [input]=input
+      )
+      ls *_differential_flux.csv *_event_integrated_fluence.txt *_plot.png input.json \
+      | while read f; do
+         name=${f%.*}
+         name=${name#*_} # remove startdate, if present
+         ext=${f##*.}
+         cp -p $f $StagingDir/iswa/${pfx}_${IssueDate}_${obs}_${alias[$name]}.$ext
+      done
+   fi
 
    cd ..
 done
