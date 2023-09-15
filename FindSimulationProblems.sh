@@ -10,7 +10,7 @@ usage() {
 }
 
 Types=Background,CME,Flare
-while getopts ':hrf:t:s:' flag; do
+while getopts ':hrf:t:s:p:' flag; do
    case $flag in
       r) # Force processing all simulations. Default: skip already processed simulations
          (( Recreate = 1 ));;
@@ -20,6 +20,8 @@ while getopts ':hrf:t:s:' flag; do
          To=${OPTARG};;
       s) # <types>: comma-separated list of simulation types, any of Background, CME, and Flare. Default: all of them
          Types=${OPTARG};;
+      p) # <progress>: show (or not) a progress bar: yes or no (case insensitive). Default: yes
+         Progress=${OPTARG,,};;
       h) # Show help
          usage;;
    esac
@@ -27,6 +29,8 @@ done
 
 MinStartDate=$(date -ud"${From:-20230101}" +%s)
 MaxStartDate=$(date -ud"${To:-now}" +%s)
+
+[[ $Progress == no ]] && Progress=0 || Progress=1
 
 # build modification time tests for find command
 [[ ! -z $From ]] && from_test="-newermt $From"
@@ -51,12 +55,12 @@ for type in ${Types//,/ }; do
    len=${#ntot}
    (( del = 2*len + 3 ))
 
-   printf '[%*d/%*d]' $len 0 $len $ntot
+   (( Progress )) && printf '[%*d/%*d]' $len 0 $len $ntot || printf $ntot
 
    (( n = 0 ))
    for cron_log in ${logs[@]}; do
       (( ++n ))
-      printf '\033[%dD[%*d/%*d]' $del $len $n $len $ntot
+      (( Progress )) && printf '\033[%dD[%*d/%*d]' $del $len $n $len $ntot
 
       run_time=$(basename -s .log $cron_log)
 
