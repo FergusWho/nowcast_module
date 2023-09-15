@@ -8,3 +8,6 @@ SHELL=/bin/bash
                                                                                 
 # Flare sub-module                                                              
 */15 * * * * /shared/iPATH/nowcast_module_v1/flare.sh >/data/iPATH/nowcast_module_v1/cron/Flare/$(date -u +\%Y\%m\%d_\%H%\%M).log 2>&1
+
+# Daily monitoring report
+55 23 * * * /shared/iPATH/nowcast_module_v1/DailyReport.sh &>>/data/iPATH/nowcast_module_v1/cron/daily_report.log
