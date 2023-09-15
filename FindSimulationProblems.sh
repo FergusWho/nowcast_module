@@ -144,7 +144,7 @@ for type in ${Types//,/ }; do
       # parse SLURM logs
       slurm_status=''
       while read slurm_log; do
-         [[ $slurm_log == *transport* ]] && job=$(echo $f | sed -E 's|.*/transport_([^/]+)/.*|\1|') || job=ZEUS
+         [[ $slurm_log == *transport* ]] && job=$(echo $slurm_log | sed -E 's|.*/transport_([^/]+)/.*|\1|') || job=ZEUS
          if zcat $slurm_log | grep -qE '[Ee]rror'; then
             [[ -z $slurm_status ]] && slurm_status='Job'
             slurm_status="$slurm_status:$job"
