@@ -41,6 +41,10 @@ for type in ${Types//,/ }; do
    (( Recreate )) && rm -rf $type/status
    touch $type/status
 
+   # remove running simulations from DB, so they are not duplicated when
+   # analyzed again below
+   sed -Ei '/RUNNING/d' $type/status
+
    logs=($(find cron/$type -name '*.log' $from_test $to_test | sort -V | paste -sd' '))
 
    ntot=${#logs[@]}
@@ -131,7 +135,10 @@ for type in ${Types//,/ }; do
          ' $log)
 
          # simulation is still running, skip it
-         [[ -z $log_status ]] && continue
+         [[ $log_status != OK* && $log_status != Exit* ]] && {
+            echo $run_time $dir RUNNING >>$type/status
+            continue
+         }
       fi
 
       # parse SLURM logs
