@@ -134,6 +134,11 @@ for i in range(0, len(data)):
 
     print (datetime_flare, dt_start, utc_datetime, file=sys.stderr)
 
+    # skip automatic DONKI >=M5 alerts, since they don't have an actual peak time and class yet
+    if data[i].get('peakTime') == data[i].get('beginTime') and data[i].get('classType') == 'M5':
+        print ('Found DONKI automatic alert: skipping', file=sys.stderr)
+        continue
+
     if datetime_flare > dt_start and datetime_flare <= utc_datetime:        
         # check whether this flare has been simulated before
         result = [x for x in list_obj if x.get('flrID')==data[i].get('flrID')]
