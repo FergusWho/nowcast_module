@@ -114,13 +114,10 @@ else:
 
 url_seed = "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/DatabaseDataStreamServlet?format=TEXT&resource=ACE&quantity=ProtonFlux_47_68&duration=1&end-time="+encoded_endtime
 
-url_cme = "https://kauai.ccmc.gsfc.nasa.gov/DONKI/WS/get/CMEAnalysis.txt?mostAccurateOnly=true&speed=500&halfAngle=35" # unused
-# most accurate only, speed lower limit: 500km/s, half width lower limit 35 degrees.
 
 print(url_mag)
 print(url_pla)
 print(url_seed)
-print(url_cme) # not needed
 ##### Read data from the URL
 
 line_no1 = 0

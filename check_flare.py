@@ -12,7 +12,7 @@ from datetime import datetime
 import pytz
 import json
 import sys
-import os # unused
+import os
 import argparse
 from helioweb_locations import *
 
@@ -176,6 +176,16 @@ if len(flare_index) != 0:
     else:
         bgsw_folder_name =t3.strftime('%Y%m%d_%H%M')
 
+    # handle missing background folder here, so errors from accesing input.json are avoided
+    # note that we exit the script here, just to avoid putting the rest of the code after an else block
+    # printing MISSING_BKG will force flare.sh to check for files in the background folder, so
+    # when it fails it will correctly identify a missing background simulation error
+    if not os.path.exists(root_dir + '/Background/' + bgsw_folder_name):
+       bgsw_folder_name = 'MISSING_BKG:' + bgsw_folder_name
+       flare_id = ''
+       f4.close()
+       print (bgsw_folder_name, flare_id)
+       sys.exit(1)
 
 
     #### modify input.json for the flare run
