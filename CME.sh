@@ -93,6 +93,8 @@ else
       hour=16
    fi
    bgsw_folder_name=${CME_id%%T*}_${hour}00
+
+   echo "[$(date -u +'%F %T')] Background simulation: $bgsw_folder_name"
 fi
 
 # get the start and end date for Opsep
@@ -352,6 +354,16 @@ enddate=$(date -d "$startdate + 2 days" +'%Y-%m-%d')
 
     echo "[$(date -u +'%F %T')] Copying output files to the staging area"
     $code_dir/cp2staging.sh
+    echo "[$(date -u +'%F %T')] Done"
+
+    echo "[$(date -u +'%F %T')] SLURM jobs summary:"
+    cd $CME_dir
+    jobs=$(find -name 'slurm*' \
+      | sed -E 's/.*-([0-9]+).*/\1/' \
+      | sort -n \
+      | paste -sd',')
+    sacct -j $jobs -P -X -ojobid,submit,planned,start,end,elapsedraw,partition,ncpus,nnodes,cputimeraw,state,exitcode,workdir \
+    | column -s'|' -t
     echo "[$(date -u +'%F %T')] Done"
 
     } >>$logfile 2>&1

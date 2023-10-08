@@ -118,4 +118,13 @@ rm -r releases
 rm -r path_output
 echo "[$(date -u +'%F %T')] Done"
 
+echo "[$(date -u +'%F %T')] SLURM jobs summary:"
+jobs=$(find -name 'slurm*' \
+  | sed -E 's/.*-([0-9]+).*/\1/' \
+  | sort -n \
+  | paste -sd',')
+sacct -j $jobs -P -X -ojobid,submit,planned,start,end,elapsedraw,partition,ncpus,nnodes,cputimeraw,state,exitcode,workdir \
+| column -s'|' -t
+echo "[$(date -u +'%F %T')] Done"
+
 } >>$logfile 2>&1
