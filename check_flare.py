@@ -249,7 +249,7 @@ if len(flare_index) != 0:
                "prediction_window": { "start_time": "", "end_time": "" },
                "peak_intensity": { "intensity": "", "units": "", "time": ""},
                "peak_intensity_max": { "intensity": "", "units": "", "time": "" },
-               "event_lengths":[ { "start_time": "",  "end_time": "", "threshold": "", "threshold_units": ""  }],
+               "event_lengths":[ { "start_time": "",  "end_time": "", "threshold_start": "", "threshold_units": ""  }],
                "fluences": [{"fluence": "", "units": ""}],
                "fluence_spectra": [{"start_time": "", "end_time": "",
                    "threshold_start":"", "threshold_end":"",
@@ -267,7 +267,7 @@ if len(flare_index) != 0:
                "prediction_window": { "start_time": "", "end_time": "" },
                "peak_intensity": { "intensity": "", "units": "", "time": ""},
                "peak_intensity_max": { "intensity": "", "units": "", "time": "" },
-               "event_lengths": [{ "start_time": "",  "end_time": "", "threshold": "", "threshold_units": ""  }],
+               "event_lengths": [{ "start_time": "",  "end_time": "", "threshold_start": "", "threshold_units": ""  }],
                "fluences": [{"fluence": "", "units": ""}],
                "fluence_spectra": [{"start_time": "", "end_time": "",
                    "threshold_start":"", "threshold_end":"",
@@ -298,15 +298,19 @@ if len(flare_index) != 0:
            "intensity": FSXR,
 #           "catalog_id": data[flare_index[ii]].get('flrID'),
            "urls": [ data[flare_index[ii]].get('link') ]
-           },
+           }
+    }
+    cme = {
            "cme":{
            "half_width": width/2.,
            "speed": Vcme,
+           "start_time":data[flare_index[ii]].get('beginTime'),
 #           "catalog": "hypothetical, derived from flare info"
            }
     }
 
     json_data["sep_forecast_submission"]["triggers"].append(flare)
+    json_data["sep_forecast_submission"]["triggers"].append(cme)
 
     # inputs = {
     #     "magnetic_connectivity":{
