@@ -111,6 +111,7 @@ for type in ${Types//,/ }; do
                exited = 1
             }
 
+            # avoid matching Fortran files/objects listed in some old cron/Background logs
             (/error/ && !/error\.[of]/) || /Error/ {
                error = 1
             }

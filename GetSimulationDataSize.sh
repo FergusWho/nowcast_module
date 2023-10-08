@@ -125,6 +125,7 @@ for type in ${Types//,/ }; do
       [[ $status == unf ]] && continue
 
       log=$(grep -lRF $dir cron/$type)
+      [[ -z $log ]] && continue
       start_date=$(TZ=UTC awk 'NR==2{ print mktime(gensub("[:-]+", " ", "g", substr($0, 2, 19))) }' $log)
 
       {
