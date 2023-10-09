@@ -8,7 +8,7 @@ MPI_comp='mpif90'
 FCOMP='gfortran'
 if_local=0
 trspt_dir='transport'
-thread_count=10
+thread_count=12
 
 while getopts 'r:i:s:e:p:L' flag
 do

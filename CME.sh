@@ -139,11 +139,19 @@ else
 #    cp $root_dir/CME/$CME_id/path_output/$trspt_dir/output.json $root_dir/CME/$CME_id/path_output/${trspt_dir}_psp
 #-----------------------------------------------------------------------------------------
     # Now run the transport modules:
+    if [ $if_local -eq 1 ]
+    then
+        /usr/bin/bash transport_module.sh -r $root_dir -i $CME_id -s $startdate -e $enddate -p earth -L &
+        #/usr/bin/bash transport_module.sh -r $root_dir -i $CME_id -s $startdate -e $enddate -p mars -L &
+        #/usr/bin/bash transport_module.sh -r $root_dir -i $CME_id -s $startdate -e $enddate -p STA -L &  
+        #/usr/bin/bash transport_module.sh -r $root_dir -i $CME_id -s $startdate -e $enddate -p psp -L &
+    else
+        /usr/bin/bash transport_module.sh -r $root_dir -i $CME_id -s $startdate -e $enddate -p earth &
+        #/usr/bin/bash transport_module.sh -r $root_dir -i $CME_id -s $startdate -e $enddate -p mars &
+        #/usr/bin/bash transport_module.sh -r $root_dir -i $CME_id -s $startdate -e $enddate -p STA &  
+        #/usr/bin/bash transport_module.sh -r $root_dir -i $CME_id -s $startdate -e $enddate -p psp &
+    fi
 
-    /usr/bin/bash transport_module.sh -r $root_dir -i $CME_id -s $startdate -e $enddate -p earth &
-    #/usr/bin/bash transport_module.sh -r $root_dir -i $CME_id -s $startdate -e $enddate -p mars &
-    #/usr/bin/bash transport_module.sh -r $root_dir -i $CME_id -s $startdate -e $enddate -p STA &  
-    #/usr/bin/bash transport_module.sh -r $root_dir -i $CME_id -s $startdate -e $enddate -p psp &
 
 fi
 

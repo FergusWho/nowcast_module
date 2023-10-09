@@ -123,7 +123,7 @@ def run_zeus(data):
         #-------------------------------------> Create the input deck for EDITOR
         f3 = open(root_dir+"/inedit", "w")
         f3.write(""" $editpar   inname='dzeus36', chgdk='chgzeus', idump=1, job=3
-          , ipre=1, inmlst=1, iupdate=1, iutask=0, safety=0.20
+          , ipre=1, inmlst=1, iupdate=1, iutask=0, safety=0.10
           , branch='dzeus3.6', xeq='xdzeus36', makename='makezeus'
           , compiler='{0}'
 c          , coptions='debug'

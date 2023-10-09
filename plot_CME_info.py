@@ -1,6 +1,7 @@
 import math
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.colors import ListedColormap
 
 import json
 import argparse
@@ -34,11 +35,18 @@ n_0 = 1.0e6
 with open(root_dir+'../CME_input.json') as input_file:
     input_obj = json.load(input_file)
 
+with open(root_dir+'transport/output.json') as output_file:
+    output_obj = json.load(output_file)
+
 print(input_obj)
+print(output_obj.get('sep_forecast_submission').get('triggers'))
 
 phi_num = int(input_obj.get('cme_width')/5+5)
+phi_e = int(input_obj.get('phi_e'))
+trigger = output_obj.get('sep_forecast_submission').get('triggers')[0].get('cme').get('catalog_id')
 
 print(input_obj.get('cme_width'), phi_num)
+print('trigger:', trigger)
 
 theta_bn_t    = []
 shock_loc_t   = []
@@ -49,7 +57,6 @@ inter_phi     = []
 
 
 f1 = open(root_dir+'shock_posn_comp.dat', 'r')
-#f1 = open('/home/junxiang/Downloads/1126/normal/shock_posn_comp.dat', 'r')
 shock_loc     = []
 comp_rat      = []
 shk_spd       = []
@@ -83,7 +90,6 @@ shell_num = int( math.floor(line_no/phi_num))
 print (shell_num)
 
 f2 = open(root_dir+'shock_momenta.dat', 'r')
-#f2 = open('/home/junxiang/Downloads/1126/normal/shock_momenta.dat', 'r')
 
 time_all      =[]
 
@@ -101,7 +107,7 @@ phi_0 = []
 phi_rad = []
 for i in range(0, phi_num):
        phi_0.append(int(cme_center +del_phi*(i-math.floor(phi_num/2.))))
-       phi_rad.append((round(cme_center +del_phi*(i-math.floor(phi_num/2.))))*pi/180.)
+       phi_rad.append((round(cme_center +del_phi*(i-math.floor(phi_num/2.)))-phi_e)*pi/180.)
 print (phi_0)
 
 foot_phi = [x for x in range(phi_num)]
@@ -123,7 +129,7 @@ phi_max = cme_center + np.floor(phi_num/2.)*5
 xdims = 500
 x1min = 0.05
 x1max = 2.0
-max_n = 50.0
+max_n = 60.0
 
 
 
@@ -140,7 +146,7 @@ for i in range(0, 360):
 azimuths = np.radians(x3a)
 
 r, theta = np.meshgrid(x1a, azimuths)
-#print r.shape, theta.shape
+#print (r.shape, theta.shape)
 
 
 # for field lines:
@@ -150,6 +156,10 @@ dx1a = x1a[2] - x1a[1]
 dt = 0.001/2
 maxt = 20000
 pi = 3.14159265359
+
+print("time stamps")
+print(shell_time)
+
 
 for ii in range(0, shell_num):
        ifile = 31 + ii
@@ -229,65 +239,65 @@ for ii in range(0, shell_num):
        all_fl_th =[]
 
 
-       # # plot field lines that go through certain points
-       # mid_pos = [[1.0, 80], [0.5, 100],[1., 100],[1, 100]]
-       # target = []
-       # for i in range(0,4):
-       #        mfl_r = []
-       #        mfl_th = []
+       # plot field lines that go through certain points
+       mid_pos = [[1.0, phi_e], [1.44, 5.31],[0.97, -123.4],[1, 100]]
+       target = []
+       for i in range(0,4):
+              mfl_r = []
+              mfl_th = []
 
-       #        temp_r = mid_pos[i][0]
-       #        temp_th = mid_pos[i][1]
-       #        target.append([temp_th/180.*pi, temp_r])
+              temp_r = mid_pos[i][0]
+              temp_th = mid_pos[i][1]
+              target.append([temp_th/180.*pi, temp_r])
 
-       #        while temp_r >= x1min:
-       #               mfl_r.append(temp_r)
-       #               mfl_th.append(temp_th/180.*pi)
+              while temp_r >= x1min:
+                     mfl_r.append(temp_r)
+                     mfl_th.append(temp_th/180.*pi)
 
-       #               r_index = (temp_r-x1min)/dx1a
+                     r_index = (temp_r-x1min)/dx1a
 
-       #               dr  = b1[int(round(temp_th))-1, 0, int(r_index)] * dt
-       #               dth = b3[int(round(temp_th))-1, 0, int(r_index)] * dt / temp_r *180./pi
+                     dr  = b1[int(round(temp_th))-1, 0, int(r_index)] * dt
+                     dth = b3[int(round(temp_th))-1, 0, int(r_index)] * dt / temp_r *180./pi
 
-       #               temp_r = temp_r - dr
-       #               temp_th = temp_th - dth
+                     temp_r = temp_r - dr
+                     temp_th = temp_th - dth
 
-       #               if temp_th < 0:
-       #                      temp_th += 360.
-       #               if temp_th >= 360:
-       #                      temp_th -= 360.
+                     if temp_th < 0:
+                            temp_th += 360.
+                     if temp_th >= 360:
+                            temp_th -= 360.
 
-       #        mfl_r.reverse()
-       #        mfl_th.reverse()
+              mfl_r.reverse()
+              mfl_th.reverse()
 
-       #        temp_r = mid_pos[i][0]
-       #        temp_th = mid_pos[i][1]
+              temp_r = mid_pos[i][0]
+              temp_th = mid_pos[i][1]
 
-       #        while temp_r <= x1max:
+              while temp_r <= x1max:
 
-       #               r_index = (temp_r-x1min)/dx1a
+                     r_index = (temp_r-x1min)/dx1a
 
-       #               dr  = b1[int(round(temp_th))-1, 0, int(r_index)] * dt
-       #               dth = b3[int(round(temp_th))-1, 0, int(r_index)] * dt / temp_r *180./pi
+                     dr  = b1[int(round(temp_th))-1, 0, int(r_index)] * dt
+                     dth = b3[int(round(temp_th))-1, 0, int(r_index)] * dt / temp_r *180./pi
 
-       #               temp_r = temp_r + dr
-       #               temp_th = temp_th + dth
+                     temp_r = temp_r + dr
+                     temp_th = temp_th + dth
                      
-       #               if temp_th < 0:
-       #                      temp_th += 360.
-       #               if temp_th >= 360:
-       #                      temp_th -= 360.
+                     if temp_th < 0:
+                            temp_th += 360.
+                     if temp_th >= 360:
+                            temp_th -= 360.
 
-       #               mfl_r.append(temp_r)
-       #               mfl_th.append(temp_th/180.*pi)
+                     mfl_r.append(temp_r)
+                     mfl_th.append(temp_th/180.*pi)
 
-       #        all_fl_r.append(mfl_r)
-       #        all_fl_th.append(mfl_th)                     
+              all_fl_r.append(mfl_r)
+              all_fl_th.append(mfl_th)                     
 
        ticks = []
        
-       for i in range(0,6):
-              ticks.append(i*max_n/5.)
+       for i in range(0,7):
+              ticks.append(i*max_n/6.)
 
        print('done calculating')
        #---------------------------------------
@@ -312,15 +322,52 @@ for ii in range(0, shell_num):
        ax1.set_ylabel('$V_{shk} (km/s)$', fontsize=15)
        ax1.set_title('shock speed', fontsize=20)
        ax1.set_xlim([phi_min, phi_max])
-       ax1.set_ylim([200,3000])
+       ax1.set_ylim([200,2500])
        ax1.set_xlabel('longitude $\phi (^\circ)$', fontsize=15)
        ax1.tick_params(axis='both', which='major', labelsize=14)
 
 
+       #---- rotate plot so earth is at 0 ------------------------
+       dens_norm_new = np.ndarray((360, xdims))
+
+       for i in range(0, 360):
+              old_i = i+phi_e
+              if old_i < 0:
+                     old_i += 360
+              if old_i >= 360:
+                     old_i -= 360
+              for j in range(0,xdims):
+                     dens_norm_new[i,j] = dens_norm[old_i,j]
+
+       for i in range(0,num):
+              for j in range(0, len(fl0_th[i])):
+                     new_th =  fl0_th[i][j] - phi_e*pi/180
+                     if new_th < 0:
+                            new_th += 2*pi
+                     if new_th >= 2*pi:
+                            new_th -= 2*pi
+                     fl0_th[i][j] = new_th
+
+       for i in range(0,4):
+              for j in range(0, len(all_fl_th[i])):
+                     new_th =  all_fl_th[i][j] - phi_e*pi/180
+                     if new_th < 0:
+                            new_th += 2*pi
+                     if new_th >= 2*pi:
+                            new_th -= 2*pi
+                     all_fl_th[i][j] = new_th
+              target[i][0] = target[i][0] - phi_e*pi/180
+
+       #-----------------------------------------------------------
 
        ax2 = plt.subplot(grid[:, 2:], projection='polar')
-       pcm = ax2.contourf(theta, r, dens_norm,  extend='max',\
-          levels = np.linspace(0,max_n,150), cmap ='coolwarm', vmin=0.0, vmax=max_n, yunits ='AU')
+       colors1 = plt.cm.gist_ncar(np.linspace(0.02, 1, 512))
+       colors2 = plt.cm.Greys(np.linspace(0, 1, 512))
+       colors_combined = np.vstack((colors1, colors2))
+       cmap_combined = ListedColormap(colors_combined, name='gist_ncar_greys')
+
+       pcm = ax2.contourf(theta, r, dens_norm_new,  extend='max',\
+          levels = np.linspace(0,max_n,1024), cmap =cmap_combined, vmin=0.0, vmax=max_n, yunits ='AU')
     
        ax2.plot(phi_rad, shock_loc[ii*phi_num:(ii+1)*phi_num], 'k--', linewidth=2.0)
        ax2.set_rlim([0, 2.0])
@@ -334,11 +381,23 @@ for ii in range(0, shell_num):
        
        for i in range(0,num):
               ax2.plot(fl0_th[i], fl0_r[i], 'k')
+
+       for i in range(0,3):
+              ax2.plot(all_fl_th[i], all_fl_r[i], 'w--', linewidth=2.0)
+
+       ax2.plot(target[0][0], target[0][1], 'o', linewidth=1.5, ms=12, mec='k', mfc = '#FFFF00')
+       ax2.plot(target[1][0], target[1][1], 'o', linewidth=1.5, ms=12, mec='k', mfc = 'r')
+       ax2.plot(target[2][0], target[2][1], 's', linewidth=1.5, ms=12, mec='k', mfc = 'g')
+
+       # for i in range(0,3):
+       #        ax2.plot(target[i][0], target[i][1], 'wo',linewidth=2.0)
        
        cbaxes = fig.add_axes([0.55, 0.9, 0.38, 0.03]) 
        cb = plt.colorbar(pcm, cax = cbaxes,orientation='horizontal', ticks= ticks)
        cbaxes.tick_params(labelsize=18)
        cbaxes.set_title('$R^2 N(AU^2cm^{-3})$', fontsize=25)
+
+       # ax2.set_theta_offset(-phi_e/180*pi)
        
        ax3 = plt.subplot(grid[1,0])
        ax3.plot(phi_0, theta_bn[ii*phi_num:(ii+1)*phi_num],'g')
@@ -358,15 +417,53 @@ for ii in range(0, shell_num):
        ax4.set_ylabel('$Emax (MeV)$', fontsize=15)
        ax4.set_title('maximum energy', fontsize=20)
 
+       # adding text
+       plt.figtext(0.6,0.04, 'Trigger:'+trigger+'\n t ='+shell_time[ii], fontsize=20)
 
+       # plt.show()
+       # pause
        plt.savefig(root_dir+'CME{:03d}.png'.format(ii))
+       plt.clf()
+
+       fig = plt.figure(1, figsize=(8,11))
+       grid = plt.GridSpec(3,1, left = 0.06, right=0.96, bottom =0.08, wspace=0.28, hspace =0.35  )
+       plt.title("t="+shell_time[ii])
+
+       ax0 = plt.subplot(grid[0,0])
+       ax0.plot(x1a[0:150], dens[100,0,0:150],'b.-')
+       ax0.set_ylabel('density', fontsize=15)
+       ax0.set_title('density vs r', fontsize=20)
+       ax0.axvline(x=shock_loc[ii*phi_num+int((phi_num+1)/2)], color = 'k')
+       #ax0.set_xlim([phi_min, phi_max])
+       #ax0.set_ylim([0,4])
+       ax0.set_xlabel('r(AU)', fontsize=15)
+       ax0.tick_params(axis='both', which='major', labelsize=10)
 
 
+       ax1 = plt.subplot(grid[1,0])
+       ax1.plot(x1a[0:150], dens_norm[100,0:150],'b.-')
+       ax1.set_ylabel('normalized density', fontsize=15)
+       ax1.set_title('normalized density vs r', fontsize=20)
+       ax1.axvline(x=shock_loc[ii*phi_num+int((phi_num+1)/2)], color = 'k')
+       #ax1.set_xlim([phi_min, phi_max])
+       #ax0.set_ylim([0,4])
+       ax1.set_xlabel('r(AU)', fontsize=15)
+       ax1.tick_params(axis='both', which='major', labelsize=10)
 
+       ax2 = plt.subplot(grid[2,0])
+       ax2.plot(x1a[0:150], v1[100,0,0:150]*52.483,'b.-')
+       ax2.set_ylabel('speed', fontsize=15)
+       ax2.set_title('speed vs r', fontsize=20)
+       ax2.axvline(x=shock_loc[ii*phi_num+int((phi_num+1)/2)], color = 'k')
+       #ax1.set_xlim([phi_min, phi_max])
+       #ax0.set_ylim([0,4])
+       ax2.set_xlabel('r(AU)', fontsize=15)
+       ax2.tick_params(axis='both', which='major', labelsize=10)
 
+       plt.figtext(0.15,0.93, 'Trigger:'+trigger+'\n          t ='+shell_time[ii], fontsize=20)
 
-
-
+       plt.savefig(root_dir+'radial_{:03d}.png'.format(ii))
+       plt.clf()
 
 
 
