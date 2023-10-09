@@ -48,7 +48,7 @@ MaxStartDate=$(date -udtoday +%s)
             f=$(basename $f .json)
             n=$(ls $DataDir/staging/sep_scoreboard/${f/_differential/}.* 2>/dev/null | wc -l)
             (( nseps += n ))
-         done < <(find $dir -name 'ZEUS+iPATH*.json')
+         done < <(find $DataDir/$dir -name 'ZEUS+iPATH*.json')
 
          echo "$run_dt $dir $status $files SEPSB:$nseps"
       done
