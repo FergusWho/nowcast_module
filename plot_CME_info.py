@@ -2,7 +2,9 @@ import math
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
-
+import datetime
+from datetime import timedelta
+from datetime import datetime
 import json
 import argparse
 #from osgeo import gdal
@@ -35,15 +37,33 @@ n_0 = 1.0e6
 with open(root_dir+'../CME_input.json') as input_file:
     input_obj = json.load(input_file)
 
-with open(root_dir+'transport/output.json') as output_file:
-    output_obj = json.load(output_file)
+with open('transport/output.json', 'r') as read_file:
+    json_data = json.load(read_file)
+
+
+if "flare" in json_data["sep_forecast_submission"]["triggers"][0]:
+    print('triggered by flare')
+    flare_start_time = datetime.strptime(json_data["sep_forecast_submission"]["triggers"][0]["flare"]["start_time"], '%Y-%m-%dT%H:%MZ')
+    FSXR=json_data["sep_forecast_submission"]["triggers"][0]["flare"]["intensity"]
+    Vcme = 2.4e4*FSXR**0.3 # km/s
+    time_to_inner = 0.05*AU/(Vcme*1000.)/3600.*2/3.
+    print(time_to_inner)
+    simulation_zero_time = flare_start_time + timedelta(hours=time_to_inner)
+    trigger = 'Flare: '+json_data.get('sep_forecast_submission').get('triggers')[0].get('flare').get('start_time')
+else:
+    if "cme" in json_data["sep_forecast_submission"]["triggers"][0]:
+        print('triggered by CME')
+        cme_start_time = datetime.strptime(json_data["sep_forecast_submission"]["triggers"][0]["cme"]["start_time"], '%Y-%m-%dT%H:%M:%SZ')
+        time21_5 = datetime.strptime(json_data["sep_forecast_submission"]["triggers"][0]["cme"]["time_at_height"]["time"],'%Y-%m-%dT%H:%MZ')
+        simulation_zero_time = cme_start_time + (time21_5 - cme_start_time)/3.
+        trigger = json_data.get('sep_forecast_submission').get('triggers')[0].get('cme').get('catalog_id')
+    else:
+        print('ERROR - No trigger info in output.json')
 
 print(input_obj)
-print(output_obj.get('sep_forecast_submission').get('triggers'))
 
 phi_num = int(input_obj.get('cme_width')/5+5)
 phi_e = int(input_obj.get('phi_e'))
-trigger = output_obj.get('sep_forecast_submission').get('triggers')[0].get('cme').get('catalog_id')
 
 print(input_obj.get('cme_width'), phi_num)
 print('trigger:', trigger)
@@ -117,9 +137,11 @@ time_index = [2,7,12,17,22]
 
 
 shell_time =[]
+shell_time_str = []
 for i in range(0, shell_num):
        shell_time.append('%(time).1F %(unit)s' %{"time":time_all[i*phi_num], "unit":"hrs"})
-
+       real_time = simulation_zero_time + timedelta(hours=time_all[i*phi_num])
+       shell_time_str.append(real_time.strftime('%Y-%m-%dT%H:%M:%SZ'))
 
 
 phi_min = cme_center - np.floor(phi_num/2.)*5
@@ -418,7 +440,7 @@ for ii in range(0, shell_num):
        ax4.set_title('maximum energy', fontsize=20)
 
        # adding text
-       plt.figtext(0.6,0.04, 'Trigger:'+trigger+'\n t ='+shell_time[ii], fontsize=20)
+       plt.figtext(0.6,0.04, 'Trigger:'+trigger+'\n dt ='+shell_time[ii]+'\n t='+shell_time_str[ii], fontsize=20)
 
        # plt.show()
        # pause
@@ -460,7 +482,7 @@ for ii in range(0, shell_num):
        ax2.set_xlabel('r(AU)', fontsize=15)
        ax2.tick_params(axis='both', which='major', labelsize=10)
 
-       plt.figtext(0.15,0.93, 'Trigger:'+trigger+'\n          t ='+shell_time[ii], fontsize=20)
+       plt.figtext(0.15,0.93, 'Trigger:'+trigger+'\n  dt ='+shell_time[ii]+'   t='+shell_time_str[ii], fontsize=20)
 
        plt.savefig(root_dir+'radial_{:03d}.png'.format(ii))
        plt.clf()

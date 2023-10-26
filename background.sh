@@ -4,7 +4,7 @@ root_dir='/data/iPATH/test'
 python_bin='/data/spack/opt/spack/linux-centos7-skylake_avx512/gcc-10.2.0/python-3.8.9-dtvwd3qomfzkcimvlwvw5ilvr4eb5dvg/bin/python3'
 # default for CCMC AWS
 
-run_time=$(date +'%Y-%m-%d_%H:%M' -u)
+run_time=$(date -u +'%Y-%m-%d_%H:%M')
 if_local=0
 
 # testing for specific event:

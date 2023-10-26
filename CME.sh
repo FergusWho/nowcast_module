@@ -8,7 +8,7 @@ python_bin='/data/spack/opt/spack/linux-centos7-skylake_avx512/gcc-10.2.0/python
 MPI_comp='mpif90'
 FCOMP='gfortran'
 
-run_time=$(date +'%Y-%m-%d_%H:%M' -u)
+run_time=$(date -u +'%Y-%m-%d_%H:%M')
 if_local=0
 
 echo "-----------------------------------------"
@@ -67,7 +67,7 @@ else
     cp -r $root_dir/Background/$bgsw_folder_name $root_dir/CME/$CME_id
     echo "CME found! Checking Time: "$run_time >>$root_dir/CME/$CME_id/log.txt
     echo "CME id: "$CME_id >>$root_dir/CME/$CME_id/log.txt
-    echo "current time: "$(date +'%Y-%m-%d_%H:%M' -u) >>$root_dir/CME/$CME_id/log.txt
+    echo "current time: "$(date -u +'%Y-%m-%d_%H:%M') >>$root_dir/CME/$CME_id/log.txt
 
     # use the modified dzeus36 version for nowcasting
     cp $root_dir/dzeus36_alt $root_dir/CME/$CME_id/dzeus36
@@ -86,7 +86,7 @@ else
         /opt/slurm/bin/sbatch -W run_zeus2.sh -r $root_dir/CME/$CME_id
     fi
     wait
-    echo "CME setup and acceleration done. Time: "$(date +'%Y-%m-%d_%H:%M' -u) >>$root_dir/CME/$CME_id/log.txt 
+    echo "CME setup and acceleration done. Time: "$(date -u +'%Y-%m-%d_%H:%M') >>$root_dir/CME/$CME_id/log.txt 
     cd $root_dir
 
     #-----------------------------------------------------------------------------------------
