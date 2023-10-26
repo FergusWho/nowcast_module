@@ -17,7 +17,7 @@ import argparse
 from helioweb_locations import *
 
 # some parameters 
-# all unusued
+# all unused
 AU  = 1.5e11        
 eo  = 1.6e-19
 pi  = 3.141592653589793116
@@ -27,7 +27,7 @@ vo  = 52483.25
 co  = 3.0e8
 n_0 = 1.0e6
 
-# command line arguments
+# command-line arguments
 parser = argparse.ArgumentParser()
 parser.add_argument("--root_dir", type=str, default='/data/iPATH/nowcast_module', \
        help=("Root directory"))
@@ -116,6 +116,18 @@ print (url_cme, file=sys.stderr)
 
 
 f1 = urllib.request.urlopen(url_cme)
+
+# ensure DONKI response is not empty, otherwise stop here
+if len(f1.read()) == 0:
+   print ('Empty response from DONKI', file=sys.stderr)
+   f4 = open(root_dir+'/CME/log.txt', 'a')
+   f4.write('Checking Time:{} | No new CME found, no CME in past 7 days.\n'.format(utc_time))
+   f4.close()
+   bgsw_folder_name = ''
+   flare_id = ''
+   print (bgsw_folder_name, flare_id)
+   sys.exit(1)
+
 data = json.load(f1)
 
 

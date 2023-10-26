@@ -44,7 +44,7 @@ model_mode = args.model_mode
 
 ######################################################################################################
 
-# get current time, or parse the one provided by command line
+# get current time, or parse the one provided by the command line
 # resulting time is in UTC
 if (run_time == ""):
        # get current time
@@ -111,6 +111,18 @@ print (url_flare, file=sys.stderr)
 
 
 f1 = urllib.request.urlopen(url_flare)
+
+# ensure DONKI response is not empty, otherwise stop here
+if len(f1.read()) == 0:
+   print ('Empty response from DONKI', file=sys.stderr)
+   f4 = open(root_dir+'/Flare/log.txt', 'a')
+   f4.write('Checking Time:{} | No new flare found, no flare in past 7 days.\n'.format(utc_time))
+   f4.close()
+   bgsw_folder_name = ''
+   flare_id = ''
+   print (bgsw_folder_name, flare_id)
+   sys.exit(1)
+
 data = json.load(f1)
 
 
