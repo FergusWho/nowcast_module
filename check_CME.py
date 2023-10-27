@@ -118,7 +118,8 @@ print (url_cme, file=sys.stderr)
 f1 = urllib.request.urlopen(url_cme)
 
 # ensure DONKI response is not empty, otherwise stop here
-if len(f1.read()) == 0:
+buf = f1.read()
+if len(buf) == 0:
    print ('Empty response from DONKI', file=sys.stderr)
    f4 = open(root_dir+'/CME/log.txt', 'a')
    f4.write('Checking Time:{} | No new CME found, no CME in past 7 days.\n'.format(utc_time))
@@ -128,7 +129,7 @@ if len(f1.read()) == 0:
    print (bgsw_folder_name, flare_id)
    sys.exit(1)
 
-data = json.load(f1)
+data = json.loads(buf)
 
 
 
