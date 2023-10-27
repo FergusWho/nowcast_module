@@ -284,9 +284,23 @@ for ii in range(0, shell_num):
        phi_STA = phi_e + STA_lon - earth_lon
        phi_mars = phi_e + mars_lon - earth_lon
        
+       if phi_STA >= 360.:
+              phi_STA -= 360.
+       if phi_STA < 0:
+              phi_STA += 360.
+
+       if phi_mars >= 360.:
+              phi_mars -= 360.
+       if phi_mars < 0:
+              phi_mars += 360.
+
        if current_time > datetime.strptime('2018-249', "%Y-%j"):
               psp_r, psp_lat, psp_lon = find_psp(current_time, root_dir1)
               phi_psp = phi_e + psp_lon - earth_lon
+              if phi_psp >= 360.:
+                     phi_psp -= 360.
+              if phi_psp < 0:
+                     phi_psp += 360.
 
               mid_pos = [[1.0, phi_e], [mars_r, phi_mars],[STA_r, phi_STA],[psp_r, phi_psp]]
        else:
@@ -300,7 +314,7 @@ for ii in range(0, shell_num):
               temp_r = mid_pos[i][0]
               temp_th = mid_pos[i][1]
               target.append([temp_th/180.*pi, temp_r])
-
+              
               while temp_r >= x1min:
                      mfl_r.append(temp_r)
                      mfl_th.append(temp_th/180.*pi)
@@ -519,7 +533,8 @@ for ii in range(0, shell_num):
 
        plt.figtext(0.15,0.93, 'Trigger:'+trigger+'\ndt ='+shell_time[ii]+'   t='+shell_time_str[ii], fontsize=20)
 
-       plt.savefig(root_dir+'radial_{:03d}.png'.format(ii))
+#       plt.savefig(root_dir+'radial_{:03d}.png'.format(ii))
+#       debug only. comment out when not using
        plt.clf()
 
 
