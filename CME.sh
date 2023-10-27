@@ -53,7 +53,7 @@ CME_id=${strarr[1]}
 
 # get the start and end date for Opsep
 startdate=(${bgsw_folder_name//_/ })
-enddate=$(date -d "$startdate + 2 days" +'%Y-%m-%d')
+#enddate=$(date -d "$startdate + 2 days" +'%Y-%m-%d')
 
 echo $bgsw_folder_name
 
@@ -128,30 +128,37 @@ else
     cp $root_dir/CME/$CME_id/path_output/$trspt_dir/output.json $root_dir/CME/$CME_id/path_output/${trspt_dir}_STA
  
     # now for PSP
-#    mkdir $root_dir/CME/$CME_id/path_output/${trspt_dir}_psp
-#    $python_bin $root_dir/prepare_PATH.py --root_dir $root_dir/CME/$CME_id --path_dir $iPATH_dir --run_mode 2 --ranks $thread_count --input $root_dir/CME/$CME_id/${CME_dir}_psp_input.json >>$root_dir/CME/$CME_id/log.txt 2>&1
+    first_psp_date=$(date -d 2018-09-06 +'%Y-%m-%d')   # not the actual first date
+    if [[ $startdate > $first_psp_date ]]
+    then
+        mkdir $root_dir/CME/$CME_id/path_output/${trspt_dir}_psp
+        $python_bin $root_dir/prepare_PATH.py --root_dir $root_dir/CME/$CME_id --path_dir $iPATH_dir --run_mode 2 --ranks $thread_count --input $root_dir/CME/$CME_id/${CME_dir}_psp_input.json >>$root_dir/CME/$CME_id/log.txt 2>&1
 
-#    cp $iPATH_dir/Transport/trspt_input $root_dir/CME/$CME_id/path_output/${trspt_dir}_psp
-#    cp $root_dir/plot_iPATH_nowcast.py $root_dir/CME/$CME_id/path_output/${trspt_dir}_psp
-#    cp $root_dir/CME/$CME_id/${CME_dir}_psp_input.json $root_dir/CME/$CME_id/path_output/${trspt_dir}_psp
-#    cp $root_dir/CME/$CME_id/path_output/$trspt_dir/combine.out $root_dir/CME/$CME_id/path_output/${trspt_dir}_psp
-#    cp $root_dir/CME/$CME_id/path_output/$trspt_dir/trspt.out $root_dir/CME/$CME_id/path_output/${trspt_dir}_psp
-#    cp $root_dir/CME/$CME_id/path_output/$trspt_dir/output.json $root_dir/CME/$CME_id/path_output/${trspt_dir}_psp
+        cp $iPATH_dir/Transport/trspt_input $root_dir/CME/$CME_id/path_output/${trspt_dir}_psp
+        cp $root_dir/plot_iPATH_nowcast.py $root_dir/CME/$CME_id/path_output/${trspt_dir}_psp
+        cp $root_dir/CME/$CME_id/${CME_dir}_psp_input.json $root_dir/CME/$CME_id/path_output/${trspt_dir}_psp
+        cp $root_dir/CME/$CME_id/path_output/$trspt_dir/combine.out $root_dir/CME/$CME_id/path_output/${trspt_dir}_psp
+        cp $root_dir/CME/$CME_id/path_output/$trspt_dir/trspt.out $root_dir/CME/$CME_id/path_output/${trspt_dir}_psp
+        cp $root_dir/CME/$CME_id/path_output/$trspt_dir/output.json $root_dir/CME/$CME_id/path_output/${trspt_dir}_psp
+    fi
 #-----------------------------------------------------------------------------------------
     # Now run the transport modules:
     if [ $if_local -eq 1 ]
     then
-        /usr/bin/bash transport_module.sh -r $root_dir -i $CME_id -s $startdate -e $enddate -p earth -L &
-        #/usr/bin/bash transport_module.sh -r $root_dir -i $CME_id -s $startdate -e $enddate -p mars -L &
-        #/usr/bin/bash transport_module.sh -r $root_dir -i $CME_id -s $startdate -e $enddate -p STA -L &  
-        #/usr/bin/bash transport_module.sh -r $root_dir -i $CME_id -s $startdate -e $enddate -p psp -L &
+        /usr/bin/bash transport_module.sh -r $root_dir -i $CME_id -s $startdate -p earth -L &
+        /usr/bin/bash transport_module.sh -r $root_dir -i $CME_id -s $startdate -p mars -L &
+        #/usr/bin/bash transport_module.sh -r $root_dir -i $CME_id -s $startdate -p STA -L &  
+        #if [[ $startdate > $first_psp_date ]]
+        #then
+            #/usr/bin/bash transport_module.sh -r $root_dir -i $CME_id -s $startdate -p psp -L &
+        #fi
     else
-        /usr/bin/bash transport_module.sh -r $root_dir -i $CME_id -s $startdate -e $enddate -p earth &
-        #/usr/bin/bash transport_module.sh -r $root_dir -i $CME_id -s $startdate -e $enddate -p mars &
-        #/usr/bin/bash transport_module.sh -r $root_dir -i $CME_id -s $startdate -e $enddate -p STA &  
-        #/usr/bin/bash transport_module.sh -r $root_dir -i $CME_id -s $startdate -e $enddate -p psp &
+        /usr/bin/bash transport_module.sh -r $root_dir -i $CME_id -s $startdate -p earth &
+        /usr/bin/bash transport_module.sh -r $root_dir -i $CME_id -s $startdate -p mars &
+        #/usr/bin/bash transport_module.sh -r $root_dir -i $CME_id -s $startdate -p STA &  
+        #if [[ $startdate > $first_psp_date ]]
+        #then        
+            #/usr/bin/bash transport_module.sh -r $root_dir -i $CME_id -s $startdate -p psp &
+        #fi
     fi
-
-
 fi
-

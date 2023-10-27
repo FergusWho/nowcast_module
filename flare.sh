@@ -44,7 +44,7 @@ CME_dir=$run_time
 trspt_dir='transport'
 
 
-# read last line of output from check_CME.py
+# read last line of output from check_flare.py
 last_line=`$python_bin $root_dir/check_flare.py --root_dir $root_dir --run_time $run_time | tail -n 1`
 IFS=' '
 read -a strarr <<<$last_line
@@ -125,11 +125,26 @@ else
     
     # Plot result:
     $python_bin $root_dir/Flare/$CME_id/path_output/$trspt_dir/plot_iPATH_nowcast.py
-    cd $root_dir/Flare/$CME_id/path_output
-    $python_bin $root_dir/Flare/$CME_id/path_output/plot_CME_info.py
-    wait
-    /usr/bin/convert -delay 5 $root_dir/Flare/$CME_id/path_output/CME*.png $root_dir/Flare/$CME_id/path_output/CME.gif
-    wait
+
+    # read start and end time from differential_flux output
+    skip_headers=2
+
+    while IFS=, read -r col0 col1
+    do
+        if ((skip_headers>0))
+        then
+            ((skip_headers--))
+        elif ((skip_headers==0))
+        then
+            starttime=$col0
+            ((skip_headers--))
+        else
+            endtime=$col0
+        fi
+    done < $root_dir/Flare/$CME_id/path_output/$trspt_dir/${startdate}_differential_flux.csv
+    #starttime="${starttime// /T}"
+    #endtime="${endtime// /T}"
+    echo $starttime, $endtime    
 
     # Use OpSep to produce output for SEP scoreboard
     echo "Now using OpSEP to generate output:" >>$root_dir/Flare/$CME_id/log.txt
@@ -137,12 +152,18 @@ else
     # copy output json that contains trigger info to OpSEP
     cp $root_dir/Flare/$CME_id/path_output/$trspt_dir/output.json $opsep_dir/library/model_template.json
     cd $opsep_dir
-    python3 operational_sep_quantities.py --StartDate $startdate --EndDate $enddate --Experiment user --ModelName ZEUS+iPATH_flare --FluxType differential --UserFile ${startdate}_differential_flux_flare.csv --spase spase://CCMC/SimulationModel/iPATH/2 >>$root_dir/Flare/$CME_id/log.txt
+    python3 operational_sep_quantities.py --StartDate "$starttime" --EndDate "$endtime" --Experiment user --ModelName ZEUS+iPATH_flare --FluxType differential --UserFile ${startdate}_differential_flux_flare.csv --spase spase://CCMC/SimulationModel/iPATH/2 --Threshold '30,1;50,1' >>$root_dir/Flare/$CME_id/log.txt
     wait
     # return model template back to default
     cp $opsep_dir/library/model_template.json.bk $opsep_dir/library/model_template.json
     cd $root_dir
-
+    
+    # make CME movie
+    cd $root_dir/Flare/$CME_id/path_output
+    $python_bin $root_dir/Flare/$CME_id/path_output/plot_CME_info.py
+    wait
+    /usr/bin/convert -delay 5 $root_dir/Flare/$CME_id/path_output/CME*.png $root_dir/Flare/$CME_id/path_output/CME.gif
+    wait
 
 fi
 

@@ -10,13 +10,12 @@ if_local=0
 trspt_dir='transport'
 thread_count=12
 
-while getopts 'r:i:s:e:p:L' flag
+while getopts 'r:i:s:p:L' flag
 do
     case "${flag}" in
         r) root_dir=${OPTARG};;
         i) CME_id=${OPTARG};;
         s) startdate=${OPTARG};;
-        e) enddate=${OPTARG};;
         p) location=${OPTARG};;
         L) if_local=1;;
     esac
@@ -44,11 +43,26 @@ then
     
     # Plot result:
     $python_bin $root_dir/CME/$CME_id/path_output/$trspt_dir/plot_iPATH_nowcast.py
-    cd $root_dir/CME/$CME_id/path_output
-    $python_bin $root_dir/CME/$CME_id/path_output/plot_CME_info.py
-    wait
 
+    # read start and end time from differential_flux output
+    skip_headers=2
 
+    while IFS=, read -r col0 col1
+    do
+        if ((skip_headers>0))
+        then
+            ((skip_headers--))
+        elif ((skip_headers==0))
+        then
+            starttime=$col0
+            ((skip_headers--))
+        else
+            endtime=$col0
+        fi
+    done < $root_dir/CME/$CME_id/path_output/$trspt_dir/${startdate}_differential_flux.csv
+    #starttime="${starttime// /T}"
+    #endtime="${endtime// /T}"
+    echo $starttime, $endtime
 
     # Use OpSep to produce output for SEP scoreboard
     echo "Now using OpSEP to generate output:" >>$root_dir/CME/$CME_id/log.txt
@@ -56,7 +70,7 @@ then
     # copy output json that contains trigger info to OpSEP
     cp $root_dir/CME/$CME_id/path_output/$trspt_dir/output.json $opsep_dir/library/model_template.json
     cd $opsep_dir
-    python3 operational_sep_quantities.py --StartDate $startdate --EndDate $enddate --Experiment user --ModelName ZEUS+iPATH_CME --FluxType differential --UserFile ${startdate}_differential_flux.csv --spase spase://CCMC/SimulationModel/iPATH/2 >>$root_dir/CME/$CME_id/log.txt
+    python3 operational_sep_quantities.py --StartDate "$starttime" --EndDate "$endtime" --Experiment user --ModelName ZEUS+iPATH_CME --FluxType differential --UserFile ${startdate}_differential_flux.csv --spase spase://CCMC/SimulationModel/iPATH/2 --Threshold '30,1;50,1' >>$root_dir/CME/$CME_id/log.txt
     wait
     # return model template back to default
     cp $opsep_dir/library/model_template.json.bk $opsep_dir/library/model_template.json
@@ -64,6 +78,9 @@ then
     cd $root_dir
 
     # make CME movie
+    cd $root_dir/CME/$CME_id/path_output
+    $python_bin $root_dir/CME/$CME_id/path_output/plot_CME_info.py
+    wait
     /usr/bin/convert -delay 5 $root_dir/CME/$CME_id/path_output/CME*.png $root_dir/CME/$CME_id/path_output/CME.gif
     wait
 
