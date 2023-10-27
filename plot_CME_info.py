@@ -10,6 +10,9 @@ import argparse
 #from osgeo import gdal
 
 from pyhdf.SD import SD, SDC
+import sys
+
+
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--root_dir", type=str, default='./', \
@@ -18,6 +21,12 @@ parser.add_argument("--root_dir", type=str, default='./', \
 args = parser.parse_args()
 
 root_dir = args.root_dir
+
+# adding nowcast_module to the system path
+sys.path.insert(0, root_dir+'../../..')
+
+from helioweb_locations import *
+
 #################################
 
 cme_center = 100.
@@ -138,10 +147,12 @@ time_index = [2,7,12,17,22]
 
 shell_time =[]
 shell_time_str = []
+shell_datetime = []
 for i in range(0, shell_num):
        shell_time.append('%(time).1F %(unit)s' %{"time":time_all[i*phi_num], "unit":"hrs"})
        real_time = simulation_zero_time + timedelta(hours=time_all[i*phi_num])
        shell_time_str.append(real_time.strftime('%Y-%m-%dT%H:%M:%SZ'))
+       shell_datetime.append(real_time)
 
 
 phi_min = cme_center - np.floor(phi_num/2.)*5
@@ -261,10 +272,28 @@ for ii in range(0, shell_num):
        all_fl_th =[]
 
 
-       # plot field lines that go through certain points
-       mid_pos = [[1.0, phi_e], [1.44, 5.31],[0.97, -123.4],[1, 100]]
+       ## plot field lines that go through certain points
+       # find vantage point locations: (assumes Earth at 1 AU and doesn't move during the time)
+       current_time = shell_datetime[ii]
+       root_dir1 = root_dir+'../../../'
+
+       earth_r, earth_lat, earth_lon = find_earth(current_time, root_dir1)
+       STA_r, STA_lat, STA_lon = find_STA(current_time, root_dir1)
+       mars_r, mars_lat, mars_lon = find_mars(current_time, root_dir1)
+
+       phi_STA = phi_e + STA_lon - earth_lon
+       phi_mars = phi_e + mars_lon - earth_lon
+       
+       if current_time > datetime.strptime('2018-249', "%Y-%j"):
+              psp_r, psp_lat, psp_lon = find_psp(current_time, root_dir1)
+              phi_psp = phi_e + psp_lon - earth_lon
+
+              mid_pos = [[1.0, phi_e], [mars_r, phi_mars],[STA_r, phi_STA],[psp_r, phi_psp]]
+       else:
+              mid_pos = [[1.0, phi_e], [mars_r, phi_mars],[STA_r, phi_STA]]
+
        target = []
-       for i in range(0,4):
+       for i in range(0,len(mid_pos)):
               mfl_r = []
               mfl_th = []
 
@@ -370,7 +399,7 @@ for ii in range(0, shell_num):
                             new_th -= 2*pi
                      fl0_th[i][j] = new_th
 
-       for i in range(0,4):
+       for i in range(0,len(mid_pos)):
               for j in range(0, len(all_fl_th[i])):
                      new_th =  all_fl_th[i][j] - phi_e*pi/180
                      if new_th < 0:
@@ -404,12 +433,17 @@ for ii in range(0, shell_num):
        for i in range(0,num):
               ax2.plot(fl0_th[i], fl0_r[i], 'k')
 
-       for i in range(0,3):
+       for i in range(0,len(mid_pos)):
               ax2.plot(all_fl_th[i], all_fl_r[i], 'w--', linewidth=2.0)
 
-       ax2.plot(target[0][0], target[0][1], 'o', linewidth=1.5, ms=12, mec='k', mfc = '#FFFF00')
-       ax2.plot(target[1][0], target[1][1], 'o', linewidth=1.5, ms=12, mec='k', mfc = 'r')
-       ax2.plot(target[2][0], target[2][1], 's', linewidth=1.5, ms=12, mec='k', mfc = 'g')
+       ax2.plot(target[0][0], target[0][1], 'o', linewidth=1.5, ms=12, mec='k', mfc = '#FFFF00', label = 'Earth')
+       ax2.plot(target[1][0], target[1][1], 'o', linewidth=1.5, ms=12, mec='k', mfc = 'r', label = 'Mars')
+       ax2.plot(target[2][0], target[2][1], 's', linewidth=1.5, ms=12, mec='k', mfc = 'g', label = 'STEREO-A')
+
+       if current_time > datetime.strptime('2018-249', "%Y-%j"):
+              ax2.plot(target[3][0], target[3][1], 'D', linewidth=1.5, ms=12, mec='k', mfc = 'y', label = 'PSP')
+
+       ax2.legend(fontsize=15, loc='lower right', bbox_to_anchor=(1.1, -0.05))
 
        # for i in range(0,3):
        #        ax2.plot(target[i][0], target[i][1], 'wo',linewidth=2.0)
@@ -440,7 +474,8 @@ for ii in range(0, shell_num):
        ax4.set_title('maximum energy', fontsize=20)
 
        # adding text
-       plt.figtext(0.6,0.04, 'Trigger:'+trigger+'\n dt ='+shell_time[ii]+'\n t='+shell_time_str[ii], fontsize=20)
+       plt.figtext(0.58,0.07, 'Trigger:'+trigger, fontsize=20)
+       plt.figtext(0.58,0.03, 'dt ='+shell_time[ii]+'    t='+shell_time_str[ii], fontsize=20)
 
        # plt.show()
        # pause
@@ -482,7 +517,7 @@ for ii in range(0, shell_num):
        ax2.set_xlabel('r(AU)', fontsize=15)
        ax2.tick_params(axis='both', which='major', labelsize=10)
 
-       plt.figtext(0.15,0.93, 'Trigger:'+trigger+'\n  dt ='+shell_time[ii]+'   t='+shell_time_str[ii], fontsize=20)
+       plt.figtext(0.15,0.93, 'Trigger:'+trigger+'\ndt ='+shell_time[ii]+'   t='+shell_time_str[ii], fontsize=20)
 
        plt.savefig(root_dir+'radial_{:03d}.png'.format(ii))
        plt.clf()
