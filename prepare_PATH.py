@@ -111,7 +111,7 @@ def run_zeus(data):
             f2.write(
                 "*d par.251,252 \n"
                 "       parameter     ( cme_center = 100.0 , cme_width = {}, \n"
-                "     1               del_phi = 5.0 , phi_no = {}, shd = 2) \n"
+                "     1               del_phi = 5.0 , phi_no = {}, shd = 1) \n"
                 .format(data.get('cme_width'),
                     int(math.floor(data.get('cme_width')/5.)+7) )
                     )

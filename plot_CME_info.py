@@ -66,8 +66,11 @@ else:
         time21_5 = datetime.strptime(json_data["sep_forecast_submission"]["triggers"][0]["cme"]["time_at_height"]["time"],'%Y-%m-%dT%H:%MZ')
         simulation_zero_time = cme_start_time + (time21_5 - cme_start_time)/3.
         trigger = json_data.get('sep_forecast_submission').get('triggers')[0].get('cme').get('catalog_id')
+        Vcme = float(json_data.get('sep_forecast_submission').get('triggers')[0].get('cme').get('speed'))
     else:
         print('ERROR - No trigger info in output.json')
+
+max_v = Vcme*1.5
 
 print(input_obj)
 
@@ -96,7 +99,8 @@ theta_vn      = []
 max_e         = []
 min_e         = []
 real_spd      = []
-
+wave_comp_rat1= []
+wave_comp_rat2= []
 
 line_no = 0
 for line in f1:
@@ -106,11 +110,12 @@ for line in f1:
        shock_loc.append(float(columns[0]))
        comp_rat.append(float(columns[1]))
        shk_spd.append(float(columns[2]))
-       shk_begin.append(float(columns[3]))
-       shk_end.append(float(columns[4]))
+       shk_begin.append(int(columns[3]))
+       shk_end.append(int(columns[4]))
        theta_bn.append(float(columns[5]))
        theta_vn.append(float(columns[6]))
-       
+       wave_comp_rat1.append(float(columns[7]))
+       wave_comp_rat2.append(float(columns[8]))      
        real_spd.append(float(columns[2])*math.cos(float(columns[6])/180.*pi))
        line_no = line_no + 1
 
@@ -169,8 +174,8 @@ max_n = 60.0
 x1a = [0.0]*xdims
 
 for i in range(0, xdims):
-       x1a[i] = x1min+ i * (x1max-x1min)/(xdims-1)
-
+       x1a[i] = x1min+ i * (x1max-x1min)/xdims
+# to be consistent with zeus
 
 x3a = []
 
@@ -373,7 +378,9 @@ for ii in range(0, shell_num):
 
 
        ax0 = plt.subplot(grid[0,0])
-       ax0.plot(phi_0, comp_rat[ii*phi_num:(ii+1)*phi_num])
+       ax0.plot(phi_0, comp_rat[ii*phi_num:(ii+1)*phi_num], 'k')
+       # ax0.plot(phi_0, wave_comp_rat1[ii*phi_num:(ii+1)*phi_num], 'r')
+       # ax0.plot(phi_0, wave_comp_rat2[ii*phi_num:(ii+1)*phi_num], 'b')
        ax0.set_ylabel('s', fontsize=15)
        ax0.set_title('Compression ratio', fontsize=20)
        ax0.set_xlim([phi_min, phi_max])
@@ -387,7 +394,7 @@ for ii in range(0, shell_num):
        ax1.set_ylabel('$V_{shk} (km/s)$', fontsize=15)
        ax1.set_title('shock speed', fontsize=20)
        ax1.set_xlim([phi_min, phi_max])
-       ax1.set_ylim([200,2500])
+       ax1.set_ylim([200,max_v])
        ax1.set_xlabel('longitude $\phi (^\circ)$', fontsize=15)
        ax1.tick_params(axis='both', which='major', labelsize=14)
 
@@ -505,6 +512,7 @@ for ii in range(0, shell_num):
        ax0.set_ylabel('density', fontsize=15)
        ax0.set_title('density vs r', fontsize=20)
        ax0.axvline(x=shock_loc[ii*phi_num+int((phi_num+1)/2)], color = 'k')
+       ax0.axvline(x=x1a[shk_end[ii*phi_num+int((phi_num+1)/2)]-3], color = 'k', ls='--')
        #ax0.set_xlim([phi_min, phi_max])
        #ax0.set_ylim([0,4])
        ax0.set_xlabel('r(AU)', fontsize=15)
@@ -516,6 +524,7 @@ for ii in range(0, shell_num):
        ax1.set_ylabel('normalized density', fontsize=15)
        ax1.set_title('normalized density vs r', fontsize=20)
        ax1.axvline(x=shock_loc[ii*phi_num+int((phi_num+1)/2)], color = 'k')
+       ax1.axvline(x=x1a[shk_end[ii*phi_num+int((phi_num+1)/2)]-3], color = 'k', ls='--')
        #ax1.set_xlim([phi_min, phi_max])
        #ax0.set_ylim([0,4])
        ax1.set_xlabel('r(AU)', fontsize=15)
@@ -526,6 +535,8 @@ for ii in range(0, shell_num):
        ax2.set_ylabel('speed', fontsize=15)
        ax2.set_title('speed vs r', fontsize=20)
        ax2.axvline(x=shock_loc[ii*phi_num+int((phi_num+1)/2)], color = 'k')
+       ax2.axvline(x=x1a[shk_end[ii*phi_num+int((phi_num+1)/2)]-3], color = 'k', ls='--')
+
        #ax1.set_xlim([phi_min, phi_max])
        #ax0.set_ylim([0,4])
        ax2.set_xlabel('r(AU)', fontsize=15)

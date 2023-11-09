@@ -143,22 +143,22 @@ else
     fi
 #-----------------------------------------------------------------------------------------
     # Now run the transport modules:
-    if [ $if_local -eq 1 ]
-    then
-        /usr/bin/bash transport_module.sh -r $root_dir -i $CME_id -s $startdate -p earth -L &
-        /usr/bin/bash transport_module.sh -r $root_dir -i $CME_id -s $startdate -p mars -L &
+    # if [ $if_local -eq 1 ]
+    # then
+        #/usr/bin/bash transport_module.sh -r $root_dir -i $CME_id -s $startdate -p earth -L &
+        #/usr/bin/bash transport_module.sh -r $root_dir -i $CME_id -s $startdate -p mars -L &
         #/usr/bin/bash transport_module.sh -r $root_dir -i $CME_id -s $startdate -p STA -L &  
         #if [[ $startdate > $first_psp_date ]]
         #then
             #/usr/bin/bash transport_module.sh -r $root_dir -i $CME_id -s $startdate -p psp -L &
         #fi
-    else
-        /usr/bin/bash transport_module.sh -r $root_dir -i $CME_id -s $startdate -p earth &
-        /usr/bin/bash transport_module.sh -r $root_dir -i $CME_id -s $startdate -p mars &
+    #else
+        #/usr/bin/bash transport_module.sh -r $root_dir -i $CME_id -s $startdate -p earth &
+        #/usr/bin/bash transport_module.sh -r $root_dir -i $CME_id -s $startdate -p mars &
         #/usr/bin/bash transport_module.sh -r $root_dir -i $CME_id -s $startdate -p STA &  
         #if [[ $startdate > $first_psp_date ]]
         #then        
             #/usr/bin/bash transport_module.sh -r $root_dir -i $CME_id -s $startdate -p psp &
         #fi
-    fi
+    #fi
 fi
