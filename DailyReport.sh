@@ -53,5 +53,7 @@ MaxStartDate=$(date -udtoday +%s)
          echo "$run_dt $dir $status $files SEPSB:$nseps"
       done
    done
+
+   echo "---"
 } \
 |& tee >(mailx -s "iPATH rt-hpc-prod summary" -r m_ipath corti@hawaii.edu)

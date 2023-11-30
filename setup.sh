@@ -9,8 +9,8 @@ mkdir -p $DataDir/cron/{Background,CME,Flare}
 # create output folders for simulations
 mkdir -p $DataDir/{Background,CME,Flare}
 
-# create staging area
-mkdir -p $DataDir/staging/{iswa,sep_scoreboard}
+# create staging and archive areas
+mkdir -p $DataDir/{staging,archive}/{iswa,sep_scoreboard}
 
 # copy spacecraft and planet positions
 cp -r $CodeDir/helioweb $DataDir/
