@@ -8,14 +8,20 @@ This is a version customized for the CCMC production server, with the following 
 - Date and time formats used for folder and file names were changed: `yyyy-mm-dd_HH:MM` → `yyyymmdd_HHMM`, `yyyy-mm-dd` → `yyyymmdd`, and `yyyy-mm-ddTHH:MM:SS` → `yyyymmddTHHMMSS`.
 - Simulation type (`CME` or `Flare`) and observer (`earth`, `mars`, etc) are always added to file and folder names.
 - Fixed mode in output json files: __nowcast__ for CME, __forecast__ for Flare.
+- Fixed minor issues with output json files content, according to Joycelyn suggestions.
 - Unused Python and Bash scripts were removed.
 - Added `setup.sh` script to install the `crontab` file and create the hierarchy of simulation output folders. Similar setup scripts were added to the `ipath_v2` and `operational-sep_v3` repos, in their `rt-hpc-prod` branch.
-- Added the script `cp2staging.sh` to copy relevant output files to the staging areas for iSWA and the SEP Scoreboard.
+- Added the script `cp2staging.sh` to copy relevant output files to the staging areas for iSWA and the SEP Scoreboard. This script is called at the end of `CME.sh` and `flare.sh`.
+- Added the script `DailyStagingToArchive.sh` to move files older than 30 days from the staging to the archive area. This script is run by `cron` every day at midnight.
 - Added safety checks before running jobs:
     - Background `ZEUS` jobs are not run if `grepSW.py` fails to create `input.json`.
+    - CME `ZEUS` jobs are not run if the corresponding background folder is missing.
+    - Automatic DONKI >=M5 flare alerts do no trigger simulations in `flare.sh`.
+    - Empty replies from DONKI in `check_CME.sh` and `check_flare.sh` do no trigger simulations.
     - iPATH transport jobs are not run if the CME `ZEUS` simulation failed (missing `ZEUS` log file or missing/empy shock-related `.dat` files).
-- Added scripts `WatchScript.sh`, `GetSimulationRunTimes.sh`, `GetSimulationDataSize.sh`, and `FindSimulationProblems.sh` to monitor simulation status and statistics.
-- More cleanup:
+    - Plots and output json files are not created if the iPATH transport jobs failed (missing or empty `fp_total` file).
+- Added scripts `WatchScript.sh`, `GetSimulationRunTimes.sh`, `GetSimulationDataSize.sh`, `FindSimulationProblems.sh`, and `DailyReport.sh` to monitor simulation status and statistics. `DailyReport.sh` is run by `cron` every day at 11:55PM.
+- More cleanup, to reduce disk size of simulations:
     - First 30 `ZEUS` dump files are deleted.
     - Slurm log files are gzipped.
     - CME animation frames (`png` files) are deleted, after checking for the corresponding `gif` correctedness.
@@ -28,3 +34,5 @@ This is a version customized for the CCMC production server, with the following 
     - Slurm ZEUS logfiles are saved inside each simulation folder.
     - Slurm iPATH logfiles are saved in the corresponding `path_output/transport_<observer>` folder of each simulation.
     - Moved some log files from the data dir root to Background, CME, and Flare folders: `backgroundlog.txt` → `Background/log.txt`, `pastCME.json` → `CME/past.json`, `CMElog.txt` → `CME/log.txt`, `pastflare.json` → `Flare/past.json`, and `flarelog.txt` → `Flare/log.txt`.
+    - Reduced warnings from Python code.
+    - Added info about `SLURM` jobs statistics.
