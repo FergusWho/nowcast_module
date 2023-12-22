@@ -74,7 +74,8 @@ for type in ${Types//,/ }; do
                else exited = 1
             }
 
-            (/error/ && !/error\.[of]/) || /Error/ {
+            # avoid matching Fortran files/objects listed in some old cron/Background logs
+            /[Ee]rror/ && !/error\.[of]/ {
                error = 1
             }
 
@@ -112,7 +113,7 @@ for type in ${Types//,/ }; do
             }
 
             # avoid matching Fortran files/objects listed in some old cron/Background logs
-            (/error/ && !/error\.[of]/) || /Error/ {
+            /[Ee]rror/ && !/error\.[of]/ {
                error = 1
             }
 
@@ -120,10 +121,17 @@ for type in ${Types//,/ }; do
                missing_file = 1
             }
 
+            # keep these two pattern for backward compatibility
             type == "Background" && /Cleaning up/ {
                last = 1
             }
-            type != "Background" && /Copying output files to the staging area/ {
+            type != "Background" && /Copying output files/ {
+               last = 1
+            }
+
+            # new logs format
+            /SLURM jobs summary/ {
+               OK = 0 # reset status set by one of the two previous obsolete patterns
                last = 1
             }
             last && /Done/ {
@@ -141,7 +149,7 @@ for type in ${Types//,/ }; do
 
          # simulation is still running, skip it
          [[ $log_status != OK* && $log_status != Exit* ]] && {
-            echo $run_time $dir RUNNING >>$type/status
+            echo $run_time $dir RUNNING${log_status:+:$log_status} >>$type/status
             continue
          }
       fi
@@ -150,7 +158,7 @@ for type in ${Types//,/ }; do
       slurm_status=''
       while read slurm_log; do
          [[ $slurm_log == *transport* ]] && job=$(echo $slurm_log | sed -E 's|.*/transport_([^/]+)/.*|\1|') || job=ZEUS
-         if zcat $slurm_log | grep -qE '[Ee]rror'; then
+         if zcat $slurm_log | grep -qE '[Ee]rror|failed'; then
             [[ -z $slurm_status ]] && slurm_status='Job'
             slurm_status="$slurm_status:$job"
          fi

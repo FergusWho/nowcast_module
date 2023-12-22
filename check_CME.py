@@ -1,31 +1,19 @@
 #=================================================================================
 # Python script to grep real time Solar wind parameters from API
 
-import math # unused
-import numpy as np # unused
-import matplotlib.pyplot as plt # unused
-
+from math import pi
+import numpy as np
 import urllib.request
 import datetime
 from datetime import timedelta
 from datetime import datetime
+import time
 import pytz
 import json
 import sys
 import os
 import argparse
 from helioweb_locations import *
-
-# some parameters 
-# all unused
-AU  = 1.5e11        
-eo  = 1.6e-19
-pi  = 3.141592653589793116
-bo  = 2.404e-9       
-t_o = 2858068.3
-vo  = 52483.25 
-co  = 3.0e8
-n_0 = 1.0e6
 
 # command-line arguments
 parser = argparse.ArgumentParser()
@@ -41,56 +29,34 @@ args = parser.parse_args()
 root_dir = args.root_dir
 run_time = args.run_time
 model_mode = args.model_mode
-
+observers = { 'mars': 'planets/mars', 'venus': 'planets/venus', 'STA': 'spacecraft/stereoa', 'PSP': 'spacecraft/psp' }
 ######################################################################################################
+
+def exit_after_error(utc_time, msg, error_type):
+   with open(root_dir+'/CME/log.txt', 'a') as log_file:
+      log_file.write('Checking Time:{} | {}\n'.format(utc_time, error_type))
+   print('{}: exit'.format(msg), file=sys.stderr)
+   sys.exit(1)
 
 # get current time, or parse the one provided by the command line
 # resulting time is in UTC
 if (run_time == ""):
        # get current time
        now = datetime.now()
-       LOCAL_TIMEZONE = datetime.now().astimezone().tzinfo
-       local_time = now.strftime("%Y-%m-%d %H:%M:%S")
-
        utc = pytz.timezone("UTC")
        utc_datetime = now.astimezone(utc)
        utc_datetime = utc_datetime.replace(tzinfo=None) # remove the timezone info for consistency
-       
-       #print("Current Local Time =", local_time, '\nUTC Time =', utc_time)
-
        if (model_mode == ""):
-            model_mode = 'nowcast'
+             model_mode = 'nowcast'
 else:
        utc_datetime = datetime.strptime(run_time, '%Y%m%d_%H%M')
        if (model_mode == ""):
              model_mode = 'historical'
 
-
 utc_time = utc_datetime.strftime("%Y-%m-%d %H:%M:%S")
 utc_time_json = utc_datetime.strftime("%Y-%m-%dT%H:%M:%SZ")
-print ("test timestamp:", utc_time, file=sys.stderr)
-print ("model mode:", model_mode, file=sys.stderr)
-
-### define folder name
-# separate date and %H:%M:%S
-date_str= utc_datetime.strftime("%Y-%m-%d")
-date = datetime.strptime(date_str, '%Y-%m-%d')
-
-seconds = (utc_datetime - date).total_seconds()
-
-# if (seconds < 8*3600):
-#        run_name = date_str+'_00:00'
-# elif (seconds < 16*3600):
-#        run_name = date_str+'_08:00'
-# else:
-#        run_name = date_str+'_16:00' 
-
-# print ("folder name:", run_name)
-
-# f0 = open(root_dir+'/temp.txt','w')
-# f0.write(run_name)
-# f0.close()
-
+print("Run time:", utc_time, file=sys.stderr)
+print("Model mode:", model_mode, file=sys.stderr)
 ######################################################################################################
 
 
@@ -99,54 +65,48 @@ enddate = utc_datetime.strftime("%Y-%m-%d")
 startdate = (utc_datetime - timedelta(days=7) ).strftime("%Y-%m-%d")
 
 
-
-
-
-#------ get the current list ------
-# # text: 
-# url_cme = "https://kauai.ccmc.gsfc.nasa.gov/DONKI/WS/get/CMEAnalysis.txt?startmostAccurateOnly=true&speed=500&halfAngle=35"
-# # JSON:
-# url_cme = "https://kauai.ccmc.gsfc.nasa.gov/DONKI/WS/get/CMEAnalysis?&mostAccurateOnly=true&speed=500&halfAngle=35&catalog=ALL"
-
 #------ get the list for target date -----
-url_cme = "https://kauai.ccmc.gsfc.nasa.gov/DONKI/WS/get/CMEAnalysis?startDate="+startdate+"&endDate="+enddate+"&mostAccurateOnly=true&speed=450&halfAngle=27"
+url_cme = "https://kauai.ccmc.gsfc.nasa.gov/DONKI/WS/get/CMEAnalysis?startDate="+startdate+"&endDate="+enddate+"&mostAccurateOnly=true&speed=450&halfAngle=15"
+print('DONKI URL:', file=sys.stderr)
+print(url_cme, file=sys.stderr)
 
 
-print (url_cme, file=sys.stderr)
+# constants to avoid infinite loops during DONKI requests
+MAX_REQUESTS = 100
+REQUEST_WAIT_TIME = 1 # seconds
 
+nreqs = 0
+while nreqs < MAX_REQUESTS:
+   try:
+      print('Requesting CMEs [{}/{}]'.format(nreqs+1, MAX_REQUESTS), file=sys.stderr)
+      f1 = urllib.request.urlopen(url_cme)
+      if f1.getcode() == 200:
+         print('Request succeeded', file=sys.stderr)
+         break
 
-f1 = urllib.request.urlopen(url_cme)
+   except Exception as inst:
+      print(inst, file=sys.stderr)
+      print('Request failed, trying again', file=sys.stderr)
+      time.sleep(REQUEST_WAIT_TIME)
+      nreqs += 1
+if nreqs == MAX_REQUESTS:
+   exit_after_error(utc_time, 'Failed to download data', 'ERROR:DOWNLOAD_FAILED')
 
 # ensure DONKI response is not empty, otherwise stop here
 buf = f1.read()
 if len(buf) == 0:
-   print ('Empty response from DONKI', file=sys.stderr)
-   f4 = open(root_dir+'/CME/log.txt', 'a')
-   f4.write('Checking Time:{} | No new CME found, no CME in past 7 days.\n'.format(utc_time))
-   f4.close()
-   bgsw_folder_name = ''
-   flare_id = ''
-   print (bgsw_folder_name, flare_id)
-   sys.exit(1)
+   exit_after_error(utc_time, 'Empy response from DONKI', 'ERROR:EMPTY_RESPONSE')
 
 data = json.loads(buf)
 
-
-
-
-print (len(data), file=sys.stderr)
-
-#print (data[0].get('speed'))
-#print (data[1])
+print('Retrieved {} CMEs'.format(len(data)), file=sys.stderr)
 
 CME_index=[]
-
-
-
 
 #### check CMEs in the last 48 hours, every 15 mins
 
 dt_start = utc_datetime - timedelta(minutes=2879)
+print('Looking for CMEs between {} and {}'.format(dt_start, utc_datetime), file=sys.stderr)
 
 # load list of CMEs already simulated
 with open(root_dir+'/CME/past.json') as cme_list:
@@ -155,46 +115,61 @@ with open(root_dir+'/CME/past.json') as cme_list:
 for i in range(0, len(data)):
     cme_start_time = data[i].get('associatedCMEID').split("-CME-")[0]
 
+    # expected URL format for CME analyses:
+    #    https://kauai.ccmc.gsfc.nasa.gov/DONKI/view/CMEAnalysis/xxxxx/-1
+    cme_analysis_id = data[i].get('link').split('/')[6]
+
     datetime_CME = datetime.strptime(cme_start_time, '%Y-%m-%dT%H:%M:%S')
-    #datetime_CME = datetime_CME.replace(tzinfo=utc) # make it an aware datetime object
-    print (datetime_CME, dt_start, utc_datetime, file=sys.stderr)
+    print('[{:2d}] CME date: {}, analysis: {}'.format(i, datetime_CME, cme_analysis_id), file=sys.stderr)
 
-    if datetime_CME > dt_start and datetime_CME <= utc_datetime:        
+    if datetime_CME > dt_start and datetime_CME <= utc_datetime:
         # check whether this CME has been simulated before
-        result = [x for x in list_obj if x.get('associatedCMEID')==data[i].get('associatedCMEID')]
-        
-        if result == []:
-        # no run found for this CME, new CME detected:
-            CME_index.append(i)
-        else:
-            print ('Previous simulation run found:', result, file=sys.stderr)
+        # use either associatedCMEID or (associatedCMEID + link) if link is available in past.json
+        result = [x for x in list_obj if x.get('associatedCMEID') == data[i].get('associatedCMEID') and (x.get('link') is None or x.get('link') == data[i].get('link')) ]
 
-print ('total NEW CME counts in the last 48 hours:', len(CME_index), file=sys.stderr)
+        if result == []:
+            # no run found for this CME, new CME detected:
+            CME_index.append(i)
+            print('     New CME found:', data[i].get('associatedCMEID'), data[i].get('link'), file=sys.stderr)
+        else:
+            print('     Previous simulation run found:', result, file=sys.stderr)
+
+print('New CMEs found in the last 48 hours:', len(CME_index), file=sys.stderr)
 ii = len(CME_index)-1 # index number for the latest CME
 
 f4 = open(root_dir+'/CME/log.txt', 'a')
 
 #### check if there is a background solar wind setup in the most recent 8-hour window
 # now assuming there can be only at most 1 CME in the 15 mins time window
-print ('CME_index', len(CME_index), file=sys.stderr)
+print('Last CME_index:', ii, file=sys.stderr)
 
 if len(CME_index) != 0:
-    list_obj.append({"associatedCMEID":data[CME_index[ii]].get('associatedCMEID')})
+    list_obj.append({
+      "associatedCMEID": data[CME_index[ii]].get('associatedCMEID'),
+      "link": data[CME_index[ii]].get('link')
+    })
     with open(root_dir+'/CME/past.json', 'w') as write_file:
-        json.dump(list_obj, write_file, indent=4)
+       json.dump(list_obj, write_file, indent=4)
 
-    cme_start_time = data[CME_index[ii]].get('associatedCMEID').split("-CME-")[0]
+    cme_id = data[CME_index[ii]].get('associatedCMEID')
+    cme_start_time = cme_id.split("-CME-")[0]
     datetime_CME = datetime.strptime(cme_start_time, '%Y-%m-%dT%H:%M:%S')
+
+    # expected URL format for CME analyses:
+    #    https://kauai.ccmc.gsfc.nasa.gov/DONKI/view/CMEAnalysis/xxxxx/-1
+    cme_analysis_id = data[CME_index[ii]].get('link').split('/')[6]
 
     target_date = datetime_CME.strftime('%Y-%m-%d')
     t1 = datetime.strptime(target_date, '%Y-%m-%d')     # 00:00
     t2 = t1 + timedelta(hours=8)                        # 08:00
     t3 = t2 + timedelta(hours=8)                        # 16:00
-    
-    f4.write('Checking Time:{} | CME found:{} speed:{}\n'.format(utc_time, data[CME_index[ii]].get('associatedCMEID'), data[CME_index[ii]].get('speed')))
+
+    f4.write('Checking Time:{} | CME found:{}_{} speed:{} width:{} lat:{} lon:{}\n'.format(
+      utc_time, cme_id, cme_analysis_id, data[CME_index[ii]].get('speed'),
+      data[CME_index[ii]].get('halfAngle')*2, data[CME_index[ii]].get('latitude'), data[CME_index[ii]].get('longitude')))
 
     # assuming the background solar wind setup can finish in 15 mins
-    if datetime_CME < t2: 
+    if datetime_CME < t2:
         bgsw_folder_name =t1.strftime('%Y%m%d_%H%M')
     elif datetime_CME < t3:
         bgsw_folder_name =t2.strftime('%Y%m%d_%H%M')
@@ -206,21 +181,18 @@ if len(CME_index) != 0:
     # printing MISSING_BKG will force CME.sh to check for files in the background folder, so
     # when it fails it will correctly identify a missing background simulation error
     if not os.path.exists(root_dir + '/Background/' + bgsw_folder_name):
-       bgsw_folder_name = 'MISSING_BKG:' + bgsw_folder_name
-       CME_id = ''
+       print('MISSING_BKG:' + bgsw_folder_name)
        f4.close()
-       print (bgsw_folder_name, CME_id)
-       sys.exit(1)
-
+       exit_after_error(utc_time, 'Missing background folder', 'ERROR:MISSING_BKG')
 
     #### modify input.json for the CME run
     f2 = open(root_dir+'/Background/'+bgsw_folder_name+'/input.json', 'r')
     input_data = json.load(f2)
     f2.close()
 
-    input_data['cme_speed'] = data[CME_index[ii]].get('speed') 
-    input_data['cme_width'] = data[CME_index[ii]].get('halfAngle')*2 
-    input_data['phi_e'] = 100.0-data[CME_index[ii]].get('longitude') 
+    input_data['cme_speed'] = data[CME_index[ii]].get('speed') * np.cos(data[CME_index[ii]].get('latitude')*pi/180.0)
+    input_data['cme_width'] = data[CME_index[ii]].get('halfAngle')*2
+    input_data['phi_e'] = 100.0-data[CME_index[ii]].get('longitude')
 
     # change density multiplier based on CME speed
     if data[CME_index[ii]].get('speed') >= 1500:
@@ -229,29 +201,35 @@ if len(CME_index) != 0:
         n_multi = data[CME_index[ii]].get('speed')*2e-3 + 1.
 
     input_data['n_multi'] = n_multi
-    
+
     f3 = open(root_dir+'/Background/'+bgsw_folder_name+'/'+run_time+'_CME_earth_input.json', 'w')
     json.dump(input_data, f3, indent=4)
     f3.close()
 
-    # setup input file for Mars
-    mars_r, mars_lat, mars_lon = find_mars(datetime_CME, root_dir)
-    earth_r, earth_lat, earth_lon = find_earth(datetime_CME, root_dir)
-    input_data['phi_e'] = 100.0-data[CME_index[ii]].get('longitude') + mars_lon - earth_lon
-    input_data['r0_e'] = mars_r
+    earth_r, earth_lat, earth_lon = find_location('planets/earth', datetime_CME, root_dir)
 
-    f3 = open(root_dir+'/Background/'+bgsw_folder_name+'/'+run_time+'_CME_mars_input.json', 'w')
-    json.dump(input_data, f3, indent=4)
-    f3.close()
-    #### Generating Output JSON 
+    # setup input files for all other observers
+    for obs, loc in observers.items():
+       if obs == 'PSP' and datetime_CME < datetime.strptime('2018-249', "%Y-%j"):
+            continue
 
+       rad, lat, lon = find_location(loc, datetime_CME, root_dir)
+
+       input_data['phi_e'] = 100.0-data[CME_index[ii]].get('longitude') + lon - earth_lon
+       input_data['r0_e'] = rad
+
+       f3 = open(root_dir+'/Background/'+bgsw_folder_name+'/'+run_time+'_CME_'+obs+'_input.json', 'w')
+       json.dump(input_data, f3, indent=4)
+       f3.close()
+
+    #### Generating Output JSON
     json_data={"sep_forecast_submission":{
         "model": { "short_name": "", "spase_id": "" },
         "options": "",
         "issue_time": "",
         "mode": model_mode,
         "triggers": [],
-        "forecasts": [           
+        "forecasts": [
             {
                "energy_channel": { "min": 10, "max": -1, "units": "MeV"},
                "species": "proton",
@@ -297,7 +275,6 @@ if len(CME_index) != 0:
            "start_time":cme_start_time_fixed,
            "lat": data[CME_index[ii]].get('latitude'),
            "lon": data[CME_index[ii]].get('longitude'),
-#           "pa": 261,          
            "half_width": data[CME_index[ii]].get('halfAngle'),
            "speed": data[CME_index[ii]].get('speed'),
            "height": 21.5,
@@ -311,33 +288,16 @@ if len(CME_index) != 0:
 
     json_data["sep_forecast_submission"]["triggers"].append(cme)
 
-    # inputs = {
-    #     "magnetic_connectivity":{
-    #     "method": "Parker Spiral",
-    #     "lat": 0.0,
-    #     "lon": 0.0,
-    #     "solar_wind":{
-    #         "observatory":"DSCOVR",
-    #         "speed":input_data['glv'],
-    #         "proton_density":input_data['gln'],
-    #         "magnetic_field":input_data['glb']
-    #     }
-    #     }
-    # }
-    
-    # json_data["sep_forecast_submission"]["inputs"].append(inputs)
-
     with open(root_dir+'/Background/'+bgsw_folder_name+'/'+run_time+'_CME_earth_output.json', 'w') as write_file:
         json.dump(json_data, write_file, indent=4)
-    CME_id = data[CME_index[ii]].get('associatedCMEID').replace('-', '', 2).replace(':', '', 2)
+    CME_id = cme_id.replace('-', '', 2).replace(':', '', 2) + '_' + cme_analysis_id
 else:
     bgsw_folder_name=''
     CME_id = ''
     if len(data) > 0:
-        f4.write('Checking Time:{} | No new CME found, last CME in 7 days: {}\n'.format(utc_time, data[len(data)-1].get('associatedCMEID') ))
+        f4.write('Checking Time:{} | No new CME found, last CME in 7 days: {}_{}\n'.format(
+            utc_time, data[len(data)-1].get('associatedCMEID'), data[-1].get('link').split('/')[6]))
     else:
         f4.write('Checking Time:{} | No new CME found, no CME in past 7 days.\n'.format(utc_time))
 f4.close()
-print (bgsw_folder_name, CME_id)
-
-
+print(bgsw_folder_name, CME_id)

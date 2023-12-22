@@ -1,31 +1,17 @@
 #=================================================================================
 # Python script to grep real time Solar wind parameters from API
 
-import math # unused
-import numpy as np # unused
-import matplotlib.pyplot as plt # unused
-
 import urllib.request
 import datetime
 from datetime import timedelta
 from datetime import datetime
+import time
 import pytz
 import json
 import sys
 import os
 import argparse
 from helioweb_locations import *
-
-# some parameters 
-# all unused
-AU  = 1.5e11        
-eo  = 1.6e-19
-pi  = 3.141592653589793116
-bo  = 2.404e-9       
-t_o = 2858068.3
-vo  = 52483.25 
-co  = 3.0e8
-n_0 = 1.0e6
 
 # command-line arguments
 parser = argparse.ArgumentParser()
@@ -41,22 +27,23 @@ args = parser.parse_args()
 root_dir = args.root_dir
 run_time = args.run_time
 model_mode = args.model_mode
-
+observers = {}
 ######################################################################################################
+
+def exit_after_error(utc_time, msg, error_type):
+   with open(root_dir+'/Flare/log.txt', 'a') as log_file:
+      log_file.write('Checking Time:{} | {}\n'.format(utc_time, error_type))
+   print('{}: exit'.format(msg), file=sys.stderr)
+   sys.exit(1)
 
 # get current time, or parse the one provided by the command line
 # resulting time is in UTC
 if (run_time == ""):
        # get current time
        now = datetime.now()
-       LOCAL_TIMEZONE = datetime.now().astimezone().tzinfo
-       local_time = now.strftime("%Y-%m-%d %H:%M:%S")
-
        utc = pytz.timezone("UTC")
        utc_datetime = now.astimezone(utc)
        utc_datetime = utc_datetime.replace(tzinfo=None) # remove the timezone info for consistency
-       
-       #print("Current Local Time =", local_time, '\nUTC Time =', utc_time)
        if (model_mode == ""):
              model_mode = "forecast"
 else:
@@ -66,29 +53,8 @@ else:
 
 utc_time = utc_datetime.strftime("%Y-%m-%d %H:%M:%S")
 utc_time_json = utc_datetime.strftime("%Y-%m-%dT%H:%M:%SZ")
-print ("test timestamp:", utc_time, file=sys.stderr)
-print ("model mode:", model_mode, file=sys.stderr)
-
-### define folder name
-# separate date and %H:%M:%S
-date_str= utc_datetime.strftime("%Y-%m-%d")
-date = datetime.strptime(date_str, '%Y-%m-%d')
-
-seconds = (utc_datetime - date).total_seconds()
-
-# if (seconds < 8*3600):
-#        run_name = date_str+'_00:00'
-# elif (seconds < 16*3600):
-#        run_name = date_str+'_08:00'
-# else:
-#        run_name = date_str+'_16:00' 
-
-# print ("folder name:", run_name)
-
-# f0 = open(root_dir+'/temp.txt','w')
-# f0.write(run_name)
-# f0.close()
-
+print("Run time:", utc_time, file=sys.stderr)
+print("Model mode:", model_mode, file=sys.stderr)
 ######################################################################################################
 
 
@@ -96,47 +62,51 @@ seconds = (utc_datetime - date).total_seconds()
 enddate = utc_datetime.strftime("%Y-%m-%d")
 startdate = (utc_datetime - timedelta(days=7) ).strftime("%Y-%m-%d")
 
-#------ get the current list ------
-# # text: 
-# url_flare = "https://kauai.ccmc.gsfc.nasa.gov/DONKI/WS/get/FLR?"
-# # JSON:
-# url_flare = "https://kauai.ccmc.gsfc.nasa.gov/DONKI/WS/get/FLR?"
 
 #------ get the list for target date -----
 url_flare = "https://kauai.ccmc.gsfc.nasa.gov/DONKI/WS/get/FLR?startDate="+startdate+"&endDate="+enddate
+print('DONKI URL:', file=sys.stderr)
+print(url_flare, file=sys.stderr)
 
 
+# constants to avoid infinite loops during DONKI requests
+MAX_REQUESTS = 100
+REQUEST_WAIT_TIME = 1 # seconds
 
-print (url_flare, file=sys.stderr)
+nreqs = 0
+while nreqs < MAX_REQUESTS:
+   try:
+      print('Requesting flares [{}/{}]'.format(nreqs+1, MAX_REQUESTS), file=sys.stderr)
+      f1 = urllib.request.urlopen(url_flare)
+      if f1.getcode() == 200:
+         print('Request succeeded', file=sys.stderr)
+         break
 
-
-f1 = urllib.request.urlopen(url_flare)
+   except Exception as inst:
+      print(inst, file=sys.stderr)
+      print('Request failed, trying again', file=sys.stderr)
+      time.sleep(REQUEST_WAIT_TIME)
+      nreqs += 1
+if nreqs == MAX_REQUESTS:
+   exit_after_error(utc_time, 'Failed to download data', 'ERROR:DOWNLOAD_FAILED')
 
 # ensure DONKI response is not empty, otherwise stop here
 buf = f1.read()
 if len(buf) == 0:
-   print ('Empty response from DONKI', file=sys.stderr)
-   f4 = open(root_dir+'/Flare/log.txt', 'a')
-   f4.write('Checking Time:{} | No new flare found, no flare in past 7 days.\n'.format(utc_time))
-   f4.close()
-   bgsw_folder_name = ''
-   flare_id = ''
-   print (bgsw_folder_name, flare_id)
-   sys.exit(1)
+   exit_after_error(utc_time, 'Empy response from DONKI', 'ERROR:EMPTY_RESPONSE')
 
 data = json.loads(buf)
 
-
-print (len(data), file=sys.stderr)
-#print (data[0].get('speed'))
-#print (data[1])
+print('Retrieved {} flares'.format(len(data)), file=sys.stderr)
 
 flare_index=[]
 
 #### check flares in the last 48 hours, every 15 mins
 
 dt_start = utc_datetime - timedelta(minutes=2879)
+print('Looking for flares between {} and {}'.format(dt_start, utc_datetime), file=sys.stderr)
 
+# load list of flares already simulated
 with open(root_dir+'/Flare/past.json') as flare_list:
     list_obj = json.load(flare_list)
 
@@ -144,32 +114,32 @@ for i in range(0, len(data)):
     flare_start_time = data[i].get('flrID').split("-FLR-")[0]
 
     datetime_flare = datetime.strptime(flare_start_time, '%Y-%m-%dT%H:%M:%S')
-
-    print (datetime_flare, dt_start, utc_datetime, file=sys.stderr)
+    print('[{:2d}] Flare date: {}'.format(i, datetime_flare), file=sys.stderr)
 
     # skip automatic DONKI >=M5 alerts, since they don't have an actual peak time and class yet
     if data[i].get('peakTime') == data[i].get('beginTime') and data[i].get('classType') == 'M5':
         print ('Found DONKI automatic alert: skipping', file=sys.stderr)
         continue
 
-    if datetime_flare > dt_start and datetime_flare <= utc_datetime:        
+    if datetime_flare > dt_start and datetime_flare <= utc_datetime:
         # check whether this flare has been simulated before
         result = [x for x in list_obj if x.get('flrID')==data[i].get('flrID')]
-        
-        if result == []:
-        # no run found for this flare, new flare detected:
-            flare_index.append(i)
-        else:
-            print ('Previous simulation run found:', result, file=sys.stderr)
 
-print ('total NEW flare counts in the last 48 hours:', len(flare_index), file=sys.stderr)
+        if result == []:
+            # no run found for this flare, new flare detected:
+            flare_index.append(i)
+            print('     New flare found:', data[i].get('flrID'), file=sys.stderr)
+        else:
+            print('     Previous simulation run found:', result, file=sys.stderr)
+
+print('New flares found in the last 48 hours:', len(flare_index), file=sys.stderr)
 ii = len(flare_index)-1 # index number for the latest flare
 
 f4 = open(root_dir+'/Flare/log.txt', 'a')
 
 #### check if there is a background solar wind setup in the most recent 8-hour window
 # now assuming there can be only at most 1 flare in the 15 mins time window
-print ('flare_index', len(flare_index), file=sys.stderr)
+print('Last flare_index', ii, file=sys.stderr)
 
 if len(flare_index) != 0:
     list_obj.append({"flrID":data[flare_index[ii]].get('flrID')})
@@ -183,11 +153,11 @@ if len(flare_index) != 0:
     t1 = datetime.strptime(target_date, '%Y-%m-%d')     # 00:00
     t2 = t1 + timedelta(hours=8)                        # 08:00
     t3 = t2 + timedelta(hours=8)                        # 16:00
-    
+
     f4.write('Checking Time:{} | flare found:{} class:{}\n'.format(utc_time, data[flare_index[ii]].get('flrID'), data[flare_index[ii]].get('classType')))
 
     # assuming the background solar wind setup can finish in 15 mins
-    if datetime_flare < t2: 
+    if datetime_flare < t2:
         bgsw_folder_name =t1.strftime('%Y%m%d_%H%M')
     elif datetime_flare < t3:
         bgsw_folder_name =t2.strftime('%Y%m%d_%H%M')
@@ -199,11 +169,9 @@ if len(flare_index) != 0:
     # printing MISSING_BKG will force flare.sh to check for files in the background folder, so
     # when it fails it will correctly identify a missing background simulation error
     if not os.path.exists(root_dir + '/Background/' + bgsw_folder_name):
-       bgsw_folder_name = 'MISSING_BKG:' + bgsw_folder_name
-       flare_id = ''
+       print('MISSING_BKG:' + bgsw_folder_name)
        f4.close()
-       print (bgsw_folder_name, flare_id)
-       sys.exit(1)
+       exit_after_error(utc_time, 'Missing background folder', 'ERROR:MISSING_BKG')
 
 
     #### modify input.json for the flare run
@@ -211,11 +179,9 @@ if len(flare_index) != 0:
     input_data = json.load(f2)
     f2.close()
 
-    # determin CME speed based on flare class
-
+    # derive CME speed from flare class
     flare_class = data[flare_index[ii]].get('classType')
     class_tokens = list(flare_class)
-    #print('flare_class:', flare_class,class_tokens[1]+class_tokens[2]+class_tokens[3])
     class_num = float(class_tokens[1]+class_tokens[2]+class_tokens[3])
 
     if class_tokens[0] == 'X':
@@ -233,7 +199,7 @@ if len(flare_index) != 0:
     if width >= 140.:
         width = 140.
 
-    print('flare_class, Vcme', flare_class, Vcme, file=sys.stderr)
+    print('Flare_class = {}, Vcme = {}'.format(flare_class, Vcme), file=sys.stderr)
 
     location = data[flare_index[ii]].get('sourceLocation')
     loc_tokens = list(location)
@@ -243,7 +209,7 @@ if len(flare_index) != 0:
     if loc_tokens[3]=='E':
         phi_e = 100 + angle
 
-    print(loc_tokens[3], phi_e, file=sys.stderr)
+    print('Flare location = {}, phi_e = {}'.format(location, phi_e), file=sys.stderr)
 
     input_data['cme_speed'] = Vcme
     input_data['cme_width'] = int(width)
@@ -256,20 +222,35 @@ if len(flare_index) != 0:
         n_multi = Vcme*2e-3 + 1.
 
     input_data['n_multi'] = n_multi
-    
+
     f3 = open(root_dir+'/Background/'+bgsw_folder_name+'/'+run_time+'_flare_earth_input.json', 'w')
     json.dump(input_data, f3, indent=4)
     f3.close()
 
-    #### Generating Output JSON 
+    earth_r, earth_lat, earth_lon = find_location('planets/earth', datetime_flare, root_dir)
 
+    # setup input files for all other observers
+    for obs, loc in observers.items():
+       if obs == 'PSP' and datetime_flare < datetime.strptime('2018-249', "%Y-%j"):
+            continue
+
+       rad, lat, lon = find_location(loc, datetime_flare, root_dir)
+
+       input_data['phi_e'] = 100.0-data[CME_index[ii]].get('longitude') + lon - earth_lon
+       input_data['r0_e'] = rad
+
+       f3 = open(root_dir+'/Background/'+bgsw_folder_name+'/'+run_time+'_CME_'+obs+'_input.json', 'w')
+       json.dump(input_data, f3, indent=4)
+       f3.close()
+
+    #### Generating Output JSON
     json_data={"sep_forecast_submission":{
         "model": { "short_name": "", "spase_id": "" },
         "options": "",
         "issue_time": "",
         "mode": model_mode,
         "triggers": [],
-        "forecasts": [           
+        "forecasts": [
             {
                "energy_channel": { "min": 10, "max": -1, "units": "MeV"},
                "species": "proton",
@@ -319,12 +300,8 @@ if len(flare_index) != 0:
            "start_time":data[flare_index[ii]].get('beginTime'),
            "peak_time": data[flare_index[ii]].get('peakTime'),
            "end_time": flare_end_time,
-           "location": data[flare_index[ii]].get('sourceLocation'),         
-#           "CME_half_width": width/2.,
-#           "CME_speed": Vcme,
-#           "coordinates": "HEEQ",
+           "location": data[flare_index[ii]].get('sourceLocation'),
            "intensity": FSXR,
-#           "catalog_id": data[flare_index[ii]].get('flrID'),
            "urls": [ data[flare_index[ii]].get('link') ]
            }
     }
@@ -333,28 +310,11 @@ if len(flare_index) != 0:
            "half_width": width/2.,
            "speed": Vcme,
            "start_time":data[flare_index[ii]].get('beginTime'),
-#           "catalog": "hypothetical, derived from flare info"
            }
     }
 
     json_data["sep_forecast_submission"]["triggers"].append(flare)
     json_data["sep_forecast_submission"]["triggers"].append(cme)
-
-    # inputs = {
-    #     "magnetic_connectivity":{
-    #     "method": "Parker Spiral",
-    #     "lat": 0.0,
-    #     "lon": 0.0,
-    #     "solar_wind":{
-    #         "observatory":"DSCOVR",
-    #         "speed":input_data['glv'],
-    #         "proton_density":input_data['gln'],
-    #         "magnetic_field":input_data['glb']
-    #     }
-    #     }
-    # }
-    
-    # json_data["sep_forecast_submission"]["inputs"].append(inputs)
 
     with open(root_dir+'/Background/'+bgsw_folder_name+'/'+run_time+'_flare_earth_output.json', 'w') as write_file:
         json.dump(json_data, write_file, indent=4)
@@ -367,6 +327,4 @@ else:
     else:
         f4.write('Checking Time:{} | No new flare found, no flare in past 7 days.\n'.format(utc_time))
 f4.close()
-print (bgsw_folder_name, flare_id)
-
-
+print(bgsw_folder_name, flare_id)

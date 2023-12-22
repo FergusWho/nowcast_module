@@ -18,7 +18,7 @@ print_stats() {
 
       ($3 >= MinStartDate && $3 < MaxStartDate) {
          # skip failed simulations, if requested
-         if (OnlyGood && $2 != "ok") next
+         if (OnlyGood && $2 != "OK") next
 
          # check that we have a valid column (in case col was originally a text)
          # skip small (i.e., failed) runs
@@ -35,7 +35,9 @@ print_stats() {
          ds[++n] = s
       }
 
-      END{
+      END {
+         if (!n) exit
+
          asort(ds)
 
          if (n % 2) s_med = ds[int(n/2)+1]
@@ -50,7 +52,7 @@ print_stats() {
          s_M = ds[n]
 
          avg /= n
-         std = sqrt(n/(n-1)*(std/n - avg*avg))
+         std = n > 1 ? sqrt(n/(n-1)*(std/n - avg*avg)) : 0
 
          printf "%11s | %5d | %3.0fMB %3.0fMB %3.0fMB | %3.0fMB %3.0fMB | %3.0fMB %3.0fMB\n",
             type, n, s_5, s_med, s_95, avg, std, s_m, s_M
@@ -80,6 +82,8 @@ while getopts ':hrglf:t:s:' flag; do
          To=${OPTARG};;
       s) # <types>: comma-separated list of simulation types, any of Background, CME, and Flare. Default: all of them
          Types=${OPTARG};;
+      p) # <progress>: show (or not) a progress bar: yes or no (case insensitive). Default: yes
+         Progress=${OPTARG,,};;
       h) # Show help
          usage;;
    esac
@@ -91,6 +95,8 @@ done
 
 MinStartDate=$(date -ud"${From:-20230101}" +%s)
 MaxStartDate=$(date -ud"${To:-now}" +%s)
+
+[[ $Progress == no ]] && Progress=0 || Progress=1
 
 echo "Data size for simulations ($sim_selection) between $(date -ud@$MinStartDate +'%F %T') and $(date -ud@$MaxStartDate +'%F %T')"
 
@@ -105,24 +111,21 @@ for type in ${Types//,/ }; do
    len=${#ntot}
    (( del = 2*len + 3 ))
 
-   printf '[%*d/%*d]' $len 0 $len $ntot
+   (( Progress )) && printf '[%*d/%*d]' $len 0 $len $ntot || printf $ntot
 
    (( n = 0 ))
    while read dir; do
       (( ++n ))
-      printf '\033[%dD[%*d/%*d]' $del $len $n $len $ntot
+      (( Progress )) && printf '\033[%dD[%*d/%*d]' $del $len $n $len $ntot
 
       grep -q $dir $type/datasize && continue
 
       log=$dir/log.txt
       [[ ! -f $log ]] && continue
 
-      # derive status from log file
-      grep -q 'exit' $log && status='exit' || status='ok'
-      tail -1 $log | grep -q Done || { [[ $status == ok ]] && status='unf'; }
-      [[ $type == Background ]] && search='Cleaning up' || search='Copying output files to the staging area'
-      grep -q "$search" $log || { [[ $status == ok ]] && status='unf'; }
-      [[ $status == unf ]] && continue
+      # read status from status DB
+      status=$(awk -vdir=$dir '$2 ~ dir { print $3 }' $type/status)
+      [[ -z $status || $status == RUNNING* ]] && continue
 
       log=$(grep -lRF $dir cron/$type)
       [[ -z $log ]] && continue

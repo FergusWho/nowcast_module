@@ -4,7 +4,7 @@ DataDir=/data/iPATH/nowcast_module_v1
 cd $DataDir
 
 w=$(tput cols)
-n=$(( w/32 ))
+n=$(( w/38 ))
 
 echo "  --- Simulation jobs ---"
 squeue --me -h -o "%.18i %.10M %.6D %R %Z" \
@@ -12,7 +12,7 @@ squeue --me -h -o "%.18i %.10M %.6D %R %Z" \
 echo
 
 echo "  --- Simulation logs (most recent 10/type) ---"
-find -mindepth 3 -type f -name log.txt -printf "%P\n" \
+find -mindepth 3 -maxdepth 3 -type f -name log.txt -printf "%P\n" \
 | sort -rV \
 | awk '
    $0 ~ /Background/ && nbkg < 10 { ++nbkg; print $0 }
@@ -24,6 +24,7 @@ find -mindepth 3 -type f -name log.txt -printf "%P\n" \
 | pr -${n}T -W$w
 echo
 
+n=$(( w/32 ))
 echo "  --- cron logs (most recent 10/type) ---"
 find cron -type f \
 | sort -rV \
