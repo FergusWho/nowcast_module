@@ -10,6 +10,10 @@ MaxStartDate=$(date -udtoday +%s)
 {
    $CodeDir/FindSimulationProblems.sh -f yesterday -t today -p no
 
+   # silently update data size and run time DBs
+   $CodeDir/GetSimulationDataSize.sh -f yesterday -t today -p no &>/dev/null
+   $CodeDir/GetSimulationRunTimes.sh -f yesterday -t today -p no &>/dev/null
+
    for type in CME Flare; do
       echo
       echo "Successful $type simulations:"
@@ -28,12 +32,12 @@ MaxStartDate=$(date -udtoday +%s)
       ' $DataDir/$type/status | sort -V \
       | while read run_dt dir status; do
          # get date-time prefix for iSWA files
-         sim_dt=$(awk '/Simulation start date automatically extracted/{ print $6 }' $DataDir/$dir/log.txt)
+         sim_dt=$(awk '/Simulation start date automatically extracted/{ print $6; exit }' $DataDir/$dir/log.txt)
 
          # count number of iSWA files for each file type
-         files=$(ls $DataDir/staging/iswa \
-         | awk -F'[_-]' -vdt=$sim_dt -vtype=$type '
-            $0 ~ dt && $0 ~ type {
+         files=$(find $DataDir/staging/iswa -name "*_${type}_${sim_dt}_*" -printf '%P\n' \
+         | awk -F'[_-]' '
+            {
                ftype[$7]++
             }
             END {
