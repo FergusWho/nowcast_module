@@ -39,6 +39,9 @@ if [[ -z $StartDate ]]; then
    StartDate=${CME_start_time//[-:Z]}
    StartDate=${StartDate/T/_}
 
+   # add seconds if missing
+   (( ${#StartDate} == 13 )) && StartDate=${StartDate}00
+
    echo "Simulation start date automatically extracted: $StartDate"
 fi
 
