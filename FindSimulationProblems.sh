@@ -45,11 +45,19 @@ for type in ${Types//,/ }; do
    (( Recreate )) && rm -rf $type/status
    touch $type/status
 
+   # save list of cron logs with running simulations
+   logs=($(awk -vtype=$type '/RUNNING/{ printf "cron/%s/%s.log\n", type, $1 }' $type/status))
+
    # remove running simulations from DB, so they are not duplicated when
    # analyzed again below
    sed -Ei '/RUNNING/d' $type/status
 
-   logs=($(find cron/$type -name '*.log' $from_test $to_test | sort -V | paste -sd' '))
+   # find cron logs modified within requested time range
+   # include also the list of previously running simulations, irrespective of their time
+   logs=($({
+         printf "%s\n" ${logs[@]};
+         find cron/$type -name '*.log' $from_test $to_test;
+      } | sort -V))
 
    ntot=${#logs[@]}
    len=${#ntot}

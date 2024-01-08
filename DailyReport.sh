@@ -19,6 +19,7 @@ MaxStartDate=$(date -udtoday +%s)
       echo "Successful $type simulations:"
 
       # find good simulations in the last 24 hours
+      # select also good simulations in the last 48 hours, to include possible RUNNING simulations from previous day
       TZ=UTC awk -vMinStartDate=$MinStartDate -vMaxStartDate=$MaxStartDate '
          /.*\/.*OK$/ {
             y = substr($1, 1, 4)
@@ -27,10 +28,14 @@ MaxStartDate=$(date -udtoday +%s)
             H = substr($1, 10, 2)
             M = substr($1, 12, 2)
             ut = mktime(y" "m" "d" "H" "M" 00")
-            if (MinStartDate <= ut && ut < MaxStartDate) print
+            if (MinStartDate-86400 <= ut && ut < MaxStartDate) print
          }
       ' $DataDir/$type/status | sort -V \
       | while read run_dt dir status; do
+         # check if simulation finished to run in the last 24 hours
+         ut=$(stat -c %Y $DataDir/$dir/log.txt)
+         (( ut < MinStartDate )) && continue
+
          # get date-time prefix for iSWA files
          sim_dt=$(awk '/Simulation start date automatically extracted/{ print $6; exit }' $DataDir/$dir/log.txt)
 
