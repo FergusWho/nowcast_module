@@ -180,7 +180,10 @@ for line in f1:
               bz_data.append(float(columns[5]))
        line_no1 +=1
 
-print('Magnetic field: {} data points, from {} to {}'.format(len(time1), time1[0], time1[-1]), file=sys.stderr)
+if len(time1) != 0:
+   print('Magnetic field: {} data points, from {} to {}'.format(len(time1), time1[0], time1[-1]), file=sys.stderr)
+else:
+   print('Warning: No magnetic field data!', file=sys.stderr)
 
 
 # read solar wind plasma data
@@ -197,7 +200,10 @@ for line in f2:
               T_data.append(float(columns[4]))
        line_no2 +=1
 
-print('Solar wind plasma: {} data points, from {} to {}'.format(len(time2), time2[0], time2[-1]), file=sys.stderr)
+if len(time2) != 0:
+   print('Solar wind plasma: {} data points, from {} to {}'.format(len(time2), time2[0], time2[-1]), file=sys.stderr)
+else:
+   print('Warning: No solar wind plasma data!', file=sys.stderr)
 
 
 # read data for proton flux in the range of 47-68 KeV
@@ -213,7 +219,10 @@ for line in f4:
               flux_data.append(float(columns[2]))
        line_no3 +=1
 
-print('Seed population: {} data points, from {} to {}'.format(len(time3), time3[0], time3[-1]), file=sys.stderr)
+if len(time3) != 0:
+   print('Seed population: {} data points, from {} to {}'.format(len(time3), time3[0], time3[-1]), file=sys.stderr)
+else:
+   print('Warning: No seed population data!', file=sys.stderr)
 
 
 f1.close()
