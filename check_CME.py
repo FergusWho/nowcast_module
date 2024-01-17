@@ -14,6 +14,7 @@ import sys
 import os
 import argparse
 from helioweb_locations import *
+import traceback
 
 # command-line arguments
 parser = argparse.ArgumentParser()
@@ -113,26 +114,32 @@ with open(root_dir+'/CME/past.json') as cme_list:
     list_obj = json.load(cme_list)
 
 for i in range(0, len(data)):
-    cme_start_time = data[i].get('associatedCMEID').split("-CME-")[0]
+   try:
+      cme_start_time = data[i].get('associatedCMEID').split("-CME-")[0]
 
-    # expected URL format for CME analyses:
-    #    https://kauai.ccmc.gsfc.nasa.gov/DONKI/view/CMEAnalysis/xxxxx/-1
-    cme_analysis_id = data[i].get('link').split('/')[6]
+      # expected URL format for CME analyses:
+      #    https://kauai.ccmc.gsfc.nasa.gov/DONKI/view/CMEAnalysis/xxxxx/-1
+      cme_analysis_id = data[i].get('link').split('/')[6]
 
-    datetime_CME = datetime.strptime(cme_start_time, '%Y-%m-%dT%H:%M:%S')
-    print('[{:2d}] CME date: {}, analysis: {}'.format(i, datetime_CME, cme_analysis_id), file=sys.stderr)
+      datetime_CME = datetime.strptime(cme_start_time, '%Y-%m-%dT%H:%M:%S')
+      print('[{:2d}] CME date: {}, analysis: {}'.format(i, datetime_CME, cme_analysis_id), file=sys.stderr)
 
-    if datetime_CME > dt_start and datetime_CME <= utc_datetime:
-        # check whether this CME has been simulated before
-        # use either associatedCMEID or (associatedCMEID + link) if link is available in past.json
-        result = [x for x in list_obj if x.get('associatedCMEID') == data[i].get('associatedCMEID') and (x.get('link') is None or x.get('link') == data[i].get('link')) ]
+      if datetime_CME > dt_start and datetime_CME <= utc_datetime:
+         # check whether this CME has been simulated before
+         # use either associatedCMEID or (associatedCMEID + link) if link is available in past.json
+         result = [x for x in list_obj if x.get('associatedCMEID') == data[i].get('associatedCMEID') and (x.get('link') is None or x.get('link') == data[i].get('link')) ]
 
-        if result == []:
+         if result == []:
             # no run found for this CME, new CME detected:
             CME_index.append(i)
             print('     New CME found:', data[i].get('associatedCMEID'), data[i].get('link'), file=sys.stderr)
-        else:
+         else:
             print('     Previous simulation run found:', result, file=sys.stderr)
+
+   except Exception as e:
+      traceback.print_exception(e)
+      print('[{:2d}] JSON data:'.format(i), file=sys.stderr)
+      json.dump(data[i], sys.stderr, indent=3)
 
 print('New CMEs found in the last 48 hours:', len(CME_index), file=sys.stderr)
 ii = len(CME_index)-1 # index number for the latest CME

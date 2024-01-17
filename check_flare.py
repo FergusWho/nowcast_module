@@ -12,6 +12,7 @@ import sys
 import os
 import argparse
 from helioweb_locations import *
+import traceback
 
 # command-line arguments
 parser = argparse.ArgumentParser()
@@ -111,26 +112,32 @@ with open(root_dir+'/Flare/past.json') as flare_list:
     list_obj = json.load(flare_list)
 
 for i in range(0, len(data)):
-    flare_start_time = data[i].get('flrID').split("-FLR-")[0]
+   try:
+      flare_start_time = data[i].get('flrID').split("-FLR-")[0]
 
-    datetime_flare = datetime.strptime(flare_start_time, '%Y-%m-%dT%H:%M:%S')
-    print('[{:2d}] Flare date: {}'.format(i, datetime_flare), file=sys.stderr)
+      datetime_flare = datetime.strptime(flare_start_time, '%Y-%m-%dT%H:%M:%S')
+      print('[{:2d}] Flare date: {}'.format(i, datetime_flare), file=sys.stderr)
 
-    # skip automatic DONKI >=M5 alerts, since they don't have an actual peak time and class yet
-    if data[i].get('peakTime') == data[i].get('beginTime') and data[i].get('classType') == 'M5':
-        print ('Found DONKI automatic alert: skipping', file=sys.stderr)
-        continue
+      # skip automatic DONKI >=M5 alerts, since they don't have an actual peak time and class yet
+      if data[i].get('peakTime') == data[i].get('beginTime') and data[i].get('classType') == 'M5':
+         print ('Found DONKI automatic alert: skipping', file=sys.stderr)
+         continue
 
-    if datetime_flare > dt_start and datetime_flare <= utc_datetime:
-        # check whether this flare has been simulated before
-        result = [x for x in list_obj if x.get('flrID')==data[i].get('flrID')]
+      if datetime_flare > dt_start and datetime_flare <= utc_datetime:
+         # check whether this flare has been simulated before
+         result = [x for x in list_obj if x.get('flrID')==data[i].get('flrID')]
 
-        if result == []:
+         if result == []:
             # no run found for this flare, new flare detected:
             flare_index.append(i)
             print('     New flare found:', data[i].get('flrID'), file=sys.stderr)
-        else:
+         else:
             print('     Previous simulation run found:', result, file=sys.stderr)
+
+   except Exception as e:
+      traceback.print_exception(e)
+      print('[{:2d}] JSON data:'.format(i), file=sys.stderr)
+      json.dump(data[i], sys.stderr, indent=3)
 
 print('New flares found in the last 48 hours:', len(flare_index), file=sys.stderr)
 ii = len(flare_index)-1 # index number for the latest flare
