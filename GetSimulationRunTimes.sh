@@ -98,6 +98,11 @@ MaxStartDate=$(date -ud"${To:-now}" +%s)
 
 [[ $Progress == no ]] && Progress=0 || Progress=1
 
+# make sure SLURM programs are in PATH
+which sacct &>/dev/null || {
+   source /etc/profile.d/slurm.sh
+}
+
 echo "Run times for simulations ($sim_selection) between $(date -ud@$MinStartDate +'%F %T') and $(date -ud@$MaxStartDate +'%F %T')"
 
 cd $DataDir
@@ -141,8 +146,7 @@ for type in ${Types//,/ }; do
          | while read f; do
             [[ $f == *transport* ]] && loc=$(echo $f | sed -E 's|.*/transport_([^/]+)/.*|\1|') || loc=ZEUS
             jid=$(echo $f | sed -E 's/.*-([0-9]+)\..*/\1/')
-            slurm_runtime=$(seff $jid \
-               | awk '/Job Wall-clock time:/{ split($4, a, ":"); t = a[1]*3660 + a[2]*60 + a[3]; print t }')
+            slurm_runtime=$(sacct -j $jid -nPX -oelapsedraw)
             echo -n " $loc" $slurm_runtime
          done
 

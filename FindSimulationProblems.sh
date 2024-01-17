@@ -173,7 +173,7 @@ for type in ${Types//,/ }; do
       done < <(find $dir -name slurm*)
 
       [[ $cron_status == OK ]] && status='' || status="${cron_status:+cron:$cron_status}"
-      [[ ! -z $status ]] && status="$status,"
+      [[ ! -z $status ]] && status="$status;"
       if [[ ! -z $slurm_status ]]; then
          [[ $log_status == OK ]] && status="$status$slurm_status" || status="$status$log_status,$slurm_status"
       else
