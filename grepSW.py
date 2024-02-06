@@ -173,6 +173,9 @@ for line in f1:
 
        if line_no1 >0 and line != '':
               columns = line.split()
+              if len(columns) < 6:
+                  continue
+
               time1.append(str(columns[0]) + ' '+ str(columns[1]))
               B_data.append(float(columns[2]))
               bx_data.append(float(columns[3]))
@@ -193,6 +196,8 @@ for line in f2:
 
        if line_no2 >0 and line != '':
               columns = line.split()
+              if len(columns) < 5:
+                  continue
 
               time2.append(str(columns[0]) + ' '+ str(columns[1]))
               usw_data.append(float(columns[2]))
@@ -214,6 +219,8 @@ for line in f4:
 
        if line_no3 >0 and line != '':
               columns = line.split()
+              if len(columns) < 3:
+                  continue
 
               time3.append(str(columns[0]) + ' '+ str(columns[1]))
               flux_data.append(float(columns[2]))
