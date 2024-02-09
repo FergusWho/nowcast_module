@@ -92,7 +92,7 @@ if nreqs == MAX_REQUESTS:
 # ensure DONKI response is not empty, otherwise stop here
 buf = f1.read()
 if len(buf) == 0:
-   exit_after_error(utc_time, 'Empy response from DONKI', 'ERROR:EMPTY_RESPONSE')
+   exit_after_error(utc_time, 'Empty response from DONKI', 'ERROR:EMPTY_RESPONSE')
 
 data = json.loads(buf)
 
@@ -138,6 +138,7 @@ for i in range(0, len(data)):
       traceback.print_exception(e)
       print('[{:2d}] JSON data:'.format(i), file=sys.stderr)
       json.dump(data[i], sys.stderr, indent=3)
+      print()
 
 print('New flares found in the last 48 hours:', len(flare_index), file=sys.stderr)
 ii = len(flare_index)-1 # index number for the latest flare
@@ -197,6 +198,8 @@ if len(flare_index) != 0:
        traceback.print_exception(e)
        print('[{:2d}] JSON data:'.format(i), file=sys.stderr)
        json.dump(data[flare_index[ii]], sys.stderr, indent=3)
+       print()
+       exit_after_error(utc_time, 'Wrong format in DONKI data', 'ERROR:DONKI_WRONG_DATA_FORMAT')
 
     list_obj.append({
       "flrID": flare_id
