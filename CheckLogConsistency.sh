@@ -57,23 +57,50 @@ for type in CME Flare Background; do
    echo
 
    echo "### Looking for mismatches between status and log.txt ..."
-   touch $type/missing-log.list
-   grep -Ff <(
-         comm -2 -3 \
-            <(cut -d' ' -f1 $type/status | sort -V) \
-            <(sed -E "${ExtractDateTimeRegEx[$type]}" $type/log.txt | sort -Vu)
-      ) $type/status \
-      >$type/missing-log.new.list
+   touch $type/missing-log.list $type/missing-status.list
+
+   echo "    Missing from log.txt:"
+   comm -2 -3 \
+      <(cut -d' ' -f1 $type/status | sort -V) \
+      <(sed -E "${ExtractDateTimeRegEx[$type]}" $type/log.txt | sort -Vu) \
+   | grep -v $today \
+   >$type/missing-log.new.list
    comm -3 \
       <(cut -d' ' -f1 $type/missing-log.new.list) \
       <(cut -d' ' -f1 $type/missing-log.list)
    echo
 
+   echo "    Missing from status:"
+   comm -1 -3 \
+      <(cut -d' ' -f1 $type/status | sort -V) \
+      <(sed -E "${ExtractDateTimeRegEx[$type]}" $type/log.txt | sort -Vu) \
+   | grep -v $today \
+   >$type/missing-status.new.list
+   comm -3 \
+      <(cut -d' ' -f1 $type/missing-status.new.list) \
+      <(cut -d' ' -f1 $type/missing-status.list)
+   echo
+
    echo "### Looking for mismatches between status and simulation folders ..."
    comm -3 \
       <(sed -En "/$type\//s|.* $type/(.*) .*|\1|p" $type/status | sort -V) \
-      <(find $type -mindepth 1 -maxdepth 1 -type d -printf '%P\n' | sort -V) \
+      <(find $type -mindepth 1 -maxdepth 1 -type d ! -newermt $today -printf '%P\n' | sort -V) \
    | grep -v $today
+   echo
+
+   [[ $type == Background ]] && continue
+
+   echo "### Looking for mismatches between simulation folders and past.json ..."
+   touch $type/missing-simulations.list
+   comm -3 \
+      <(find $type -mindepth 1 -maxdepth 1 -type d -printf '%P\n' | sort -V) \
+      <(jq -r '.[] | ((.flrID // .associatedCMEID) | "\(.[:19] | gsub("[-:]"; ""))\(.[19:])") + (if .link == null then "" else .link | gsub(".*/(?<id>[0-9]+)/-1"; "_\(.id)") end)' $type/past.json | sort -V) \
+   | tr '\t' ',' \
+   | awk -F, 'NF==1{ print $1, "MissingLog" } NF==2{ print $2, "MissingSim" }' \
+   > $type/missing-simulations.new.list
+   comm -3 \
+      <(cut -d' ' -f1 $type/missing-simulations.new.list) \
+      <(cut -d' ' -f1 $type/missing-simulations.list)
    echo
 
    printf '\n\n\n'
