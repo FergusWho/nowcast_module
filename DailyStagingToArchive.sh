@@ -13,4 +13,3 @@ find $StagingDir -type f -mtime +$nDays \
    cp -p $path ${path/staging/archive} && rm $path
 done
 
-echo "---"

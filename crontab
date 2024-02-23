@@ -10,7 +10,7 @@ SHELL=/bin/bash
 */15 * * * * /shared/iPATH/nowcast_module_v1/flare.sh >/data/iPATH/nowcast_module_v1/cron/Flare/$(date -u +\%Y\%m\%d_\%H\%M).log 2>&1
 
 # Daily monitoring report
-55 23 * * * /shared/iPATH/nowcast_module_v1/DailyReport.sh &>>/data/iPATH/nowcast_module_v1/cron/daily_report.log
+55 23 * * * /shared/iPATH/nowcast_module_v1/DailyReport.sh &>>/data/iPATH/nowcast_module_v1/cron/DailyReport/$(date -u +\%Y\%m\%d).log
 
 # Daily cleaning of staging area
-0 0 * * * /shared/iPATH/nowcast_module_v1/DailyStagingToArchive.sh &>>/data/iPATH/nowcast_module_v1/cron/daily_staging_cleanup.log
+0 0 * * * /shared/iPATH/nowcast_module_v1/DailyStagingToArchive.sh &>>/data/iPATH/nowcast_module_v1/cron/DailyStagingCleanup/$(date -u +\%Y\%m\%d).log
