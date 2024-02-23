@@ -43,8 +43,9 @@ for type in ${Types//,/ }; do
 
    echo "### Looking for missing cron jobs ..."
    touch $type/missing-cron.list
-   ls cron/$type | cut -d'_' -f1 | sort -V | uniq -c \
-   | awk -vn=${ExpectedCronJobs[$type]} '$1 != n{ printf "%s %2d\n", $2, $1 }' \
+   find cron/$type -type f -name '*.log' -printf '%f\n' \
+   | cut -d'_' -f1 | sort -V | uniq -c \
+   | awk -vn=${ExpectedCronJobs[$type]} '$1 != n{ printf "%s %d\n", $2, $1 }' \
    >$type/missing-cron.new.list
    comm -3 \
       <(cut -d' ' -f1,2 $type/missing-cron.new.list) \
@@ -54,7 +55,7 @@ for type in ${Types//,/ }; do
 
    echo "### Looking for mismatches between cron and status ..."
    comm -3 \
-      <(ls cron/$type | cut -d'.' -f1 | sort -V) \
+      <(find cron/$type -type f -name '*.log' -printf '%f\n' | cut -d'.' -f1 | sort -V) \
       <(cut -d' ' -f1 $type/status | sort -V) \
    | grep -v $today
    echo
