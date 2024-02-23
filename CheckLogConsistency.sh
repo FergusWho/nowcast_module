@@ -9,8 +9,11 @@ usage() {
    exit 0
 }
 
-while getopts ':h' flag; do
+Types=Background,CME,Flare
+while getopts ':hs:' flag; do
    case $flag in
+      s) # <types>: comma-separated list of simulation types, any of Background, CME, and Flare. Default: all of them
+         Types=${OPTARG};;
       h) # Show help
          usage;;
    esac
@@ -31,7 +34,7 @@ declare -A ExpectedCronJobs=(
    [Background]=3
 )
 
-for type in CME Flare Background; do
+for type in ${Types//,/ }; do
    printf '=%.0s' $(seq $(( ${#type}+8 )))
    printf '\n'
    printf "=== $type ===\n"
