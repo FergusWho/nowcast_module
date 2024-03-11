@@ -74,7 +74,11 @@ while read dir; do
             dest=$StagingDir/sep_scoreboard/${f/_differential/}
             cp -p $f $dest
             [[ $f == *.json ]] && {
-               sed -Ei 's/_differential//g' $dest
+               # remove also the extra field sep_forecast_submission.model_type.flux_type,
+               # including the leading comma, since the previous field will become
+               # the last field in the model object (JSON spec does not allow a
+               # comma after the last item of an object/list)
+               sed -Ei -e's/, +"flux_type": +"[^"]+"//' -e's/_differential//g' $dest
                touch -r $f $dest # restore original modification time
             }
          fi
