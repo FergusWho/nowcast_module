@@ -83,7 +83,8 @@ for type in ${Types//,/ }; do
             }
 
             # avoid matching Fortran files/objects listed in some old cron/Background logs
-            /[Ee]rror/ && !/error\.[of]/ {
+            # avoid matching urllib.requests failures, since they are handled by the scripts
+            /[Ee]rror/ && !/error\.[of]|HTTP Error/ {
                error = 1
             }
 
