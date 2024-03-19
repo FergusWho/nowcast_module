@@ -72,29 +72,28 @@ utc_time = utc_datetime.strftime("%Y-%m-%d %H:%M:%S")
 
 #### Find the API urls
 # the output files contains magnetic field and plasma data during the last 24 hours
-# See https://ccmc.gsfc.nasa.gov/support/iswa/iswa-webservices.php for source
-encoded_endtime = utc_datetime.strftime("%Y-%m-%d%%20%H:%M:%S")
+# See https://ccmc.gsfc.nasa.gov/tools/iSWA/ for source
+# need to add 1 minute to utc_datetime because time.max is exclusive
+utc_start_datetime = utc_datetime - timedelta(days=1)
+encoded_starttime = utc_start_datetime.strftime("%Y-%m-%dT%H:%M:%S.0Z")
+encoded_endtime = (utc_datetime + timedelta(minutes=1)).strftime("%Y-%m-%dT%H:%M:%S.0Z")
 
-dscovr_start_time = datetime.strptime('2016-07-25_08:00', '%Y-%m-%d_%H:%M')
-# DSCOVR data only available after this time
-if utc_datetime > dscovr_start_time:
-       url_mag =  "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/DatabaseDataStreamServlet?format=TEXT&resource=DSCOVR,DSCOVR,DSCOVR,DSCOVR&quantity=B_t,B_x,B_y,B_z&duration=1&end-time="+encoded_endtime
-       url_pla =  "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/DatabaseDataStreamServlet?format=TEXT&resource=DSCOVR,DSCOVR,DSCOVR&quantity=BulkSpeed,ProtonDensity,IonTemperature&duration=1&end-time="+encoded_endtime
+swpc_start_time = datetime.strptime('2016-07-24_00:00', '%Y-%m-%d_%H:%M')
+# NOAA/SWPC real-time solar wind data data only available after this time
+if utc_datetime > swpc_start_time:
+       url_mag = "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/hapi/data?id=swpc_rtsw_mag_p1m&time.min="+encoded_starttime+"&time.max="+encoded_endtime+"&include=header&format=json&parameters=B_t,B_x,B_y,B_z"
+       url_pla = "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/hapi/data?id=swpc_rtsw_plasma_p1m&time.min="+encoded_starttime+"&time.max="+encoded_endtime+"&include=header&format=json&parameters=BulkSpeed,ProtonDensity,IonTemperature"
 else:
-       url_mag =  "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/DatabaseDataStreamServlet?format=TEXT&resource=ACE,ACE,ACE,ACE&quantity=B_t,B_x,B_y,B_z&duration=1&end-time="+encoded_endtime
-       url_pla =  "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/DatabaseDataStreamServlet?format=TEXT&resource=ACE,ACE,ACE&quantity=BulkSpeed,ProtonDensity,IonTemperature&duration=1&end-time="+encoded_endtime
+       url_mag = "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/hapi/data?id=ace_mag_p1m&time.min="+encoded_starttime+"&time.max="+encoded_endtime+"&include=header&format=json&parameters=B_t,B_x,B_y,B_z"
+       url_pla = "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/hapi/data?id=ace_swepam_p1m&time.min="+encoded_starttime+"&time.max="+encoded_endtime+"&include=header&format=json&parameters=BulkSpeed,ProtonDensity,IonTemperature"
 
-url_seed = "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/DatabaseDataStreamServlet?format=TEXT&resource=ACE&quantity=ProtonFlux_47_68&duration=1&end-time="+encoded_endtime
+url_seed = "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/hapi/data?id=ace_epam_p5m&time.min="+encoded_starttime+"&time.max="+encoded_endtime+"&include=header&format=json&parameters=ProtonFlux_47_68"
 
 print('iSWA URLs:', file=sys.stderr)
 print(url_mag, file=sys.stderr)
 print(url_pla, file=sys.stderr)
 print(url_seed, file=sys.stderr)
 ##### Read data from the URL
-
-line_no1 = 0
-line_no2 = 0
-line_no3 = 0
 
 time1 = [] # time stamp for mag
 time2 = [] # time stamp for plasma
@@ -167,21 +166,12 @@ by_data = []
 bz_data = []
 
 # read magnetic field data
-for line in f1:
-       line = line.decode("utf-8")
-       line = line.strip()
-
-       if line_no1 >0 and line != '':
-              columns = line.split()
-              if len(columns) < 6:
-                  continue
-
-              time1.append(str(columns[0]) + ' '+ str(columns[1]))
-              B_data.append(float(columns[2]))
-              bx_data.append(float(columns[3]))
-              by_data.append(float(columns[4]))
-              bz_data.append(float(columns[5]))
-       line_no1 +=1
+for t, bx, by, bz, bt in json.load(f1).get('data', []):
+   time1.append(t)
+   bx_data.append(bx)
+   by_data.append(by)
+   bz_data.append(bz)
+   B_data.append(bt)
 
 if len(time1) != 0:
    print('Magnetic field: {} data points, from {} to {}'.format(len(time1), time1[0], time1[-1]), file=sys.stderr)
@@ -190,20 +180,11 @@ else:
 
 
 # read solar wind plasma data
-for line in f2:
-       line = line.decode("utf-8")
-       line = line.strip()
-
-       if line_no2 >0 and line != '':
-              columns = line.split()
-              if len(columns) < 5:
-                  continue
-
-              time2.append(str(columns[0]) + ' '+ str(columns[1]))
-              usw_data.append(float(columns[2]))
-              n_data.append(float(columns[3]))
-              T_data.append(float(columns[4]))
-       line_no2 +=1
+for t, n, V, T in json.load(f2).get('data', []):
+   time2.append(t)
+   n_data.append(n)
+   usw_data.append(V)
+   T_data.append(T)
 
 if len(time2) != 0:
    print('Solar wind plasma: {} data points, from {} to {}'.format(len(time2), time2[0], time2[-1]), file=sys.stderr)
@@ -213,18 +194,9 @@ else:
 
 # read data for proton flux in the range of 47-68 KeV
 # data source: ACE
-for line in f4:
-       line = line.decode("utf-8")
-       line = line.strip()
-
-       if line_no3 >0 and line != '':
-              columns = line.split()
-              if len(columns) < 3:
-                  continue
-
-              time3.append(str(columns[0]) + ' '+ str(columns[1]))
-              flux_data.append(float(columns[2]))
-       line_no3 +=1
+for t, F in json.load(f4).get('data', []):
+   time3.append(t)
+   flux_data.append(F)
 
 if len(time3) != 0:
    print('Seed population: {} data points, from {} to {}'.format(len(time3), time3[0], time3[-1]), file=sys.stderr)
@@ -245,10 +217,10 @@ f4.close()
 B_mean = 0.0
 B_sqr_mean = 0.0
 count = 0
-end_time1 = datetime.strptime(time1[len(time1)-1], "%Y-%m-%d %H:%M:%S.%f")
+end_time1 = datetime.strptime(time1[len(time1)-1], "%Y-%m-%dT%H:%M:%SZ")
 
 for i in range(0, len(time1)):
-       tobj = datetime.strptime(time1[i], "%Y-%m-%d %H:%M:%S.%f")
+       tobj = datetime.strptime(time1[i], "%Y-%m-%dT%H:%M:%SZ")
        diff = end_time1-tobj
        if diff.seconds/3600 < 8 and B_data[i] > 0:
               B_mean += B_data[i]
@@ -275,7 +247,7 @@ for j in range(0, window_count):
        bz_mean_temp = 0.0
        count = 0
        for i in range(0, len(time1)):
-              tobj = datetime.strptime(time1[i], "%Y-%m-%d %H:%M:%S.%f")
+              tobj = datetime.strptime(time1[i], "%Y-%m-%dT%H:%M:%SZ")
               diff = end_time1-tobj
 
               if diff.seconds/3600 < (j+1)*8/window_count and diff.seconds/3600 >= j*8/window_count and B_data[i] > 0:
@@ -311,7 +283,7 @@ db_sqr = 0.0
 db_sqr_count =0
 
 for i in range(0, len(time1)):
-       tobj = datetime.strptime(time1[i], "%Y-%m-%d %H:%M:%S.%f")
+       tobj = datetime.strptime(time1[i], "%Y-%m-%dT%H:%M:%SZ")
        diff = end_time1-tobj
        if diff.seconds/3600 < 8 and B_data[i] > 0:
               n_count = 0
@@ -337,10 +309,10 @@ v_mean = 0.0
 T_mean = 0.0
 
 count = 0
-end_time2 = datetime.strptime(time2[len(time2)-1], "%Y-%m-%d %H:%M:%S.%f")
+end_time2 = datetime.strptime(time2[len(time2)-1], "%Y-%m-%dT%H:%M:%SZ")
 
 for i in range(0, len(time2)):
-       tobj = datetime.strptime(time2[i], "%Y-%m-%d %H:%M:%S.%f")
+       tobj = datetime.strptime(time2[i], "%Y-%m-%dT%H:%M:%SZ")
        diff = end_time2-tobj
        if diff.seconds/3600 < 8:
               if n_data[i] >= 0.2 and usw_data[i]> 0 and T_data[i]>0:
@@ -366,7 +338,7 @@ if n_mean < 1.0:
 if len(time3) != 0:
        flux_mean = 0.0
        count = 0
-       end_time3 = datetime.strptime(time3[len(time3)-1], "%Y-%m-%d %H:%M:%S.%f")
+       end_time3 = datetime.strptime(time3[len(time3)-1], "%Y-%m-%dT%H:%M:%SZ")
        diff = utc_datetime - end_time3
        if diff.seconds/3600 > 8:
               print('Warning! ACE proton flux data missing!', file=sys.stderr)
@@ -375,7 +347,7 @@ if len(time3) != 0:
               inj_rate = 0.004
        else:
               for i in range(0, len(time3)):
-                     tobj = datetime.strptime(time3[i], "%Y-%m-%d %H:%M:%S.%f")
+                     tobj = datetime.strptime(time3[i], "%Y-%m-%dT%H:%M:%SZ")
                      diff = end_time3-tobj
                      if diff.seconds/3600 < 8:
                             if flux_data[i] < 2e5:
