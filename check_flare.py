@@ -220,9 +220,17 @@ if len(flare_index) != 0:
     # printing MISSING_BKG will force flare.sh to check for files in the background folder, so
     # when it fails it will correctly identify a missing background simulation error
     if not os.path.exists(root_dir + '/Background/' + bgsw_folder_name):
-       print('MISSING_BKG:' + bgsw_folder_name)
-       f4.close()
-       exit_after_error(utc_time, 'Missing background folder', 'ERROR:MISSING_BKG')
+       print('MISSING_BKG:' + bgsw_folder_name, file=sys.stderr)
+       print('Trying previous background simulation folder', file=sys.stderr)
+
+       # try to use the previous background simulation
+       current_bkg_dir = bgsw_folder_name
+       prev_bkg_dt = datetime.strptime(bgsw_folder_name, '%Y%m%d_%H%M') - timedelta(hours=8)
+       bgsw_folder_name = prev_bkg_dt.strftime('%Y%m%d_%H%M')
+       if not os.path.exists(root_dir + '/Background/' + bgsw_folder_name):
+            print('MISSING_BKG:' + current_bkg_dir + ',' + bgsw_folder_name)
+            f4.close()
+            exit_after_error(utc_time, 'Missing background folder', 'ERROR:MISSING_BKG')
 
     list_obj.append({
       "flrID": flare_id,
