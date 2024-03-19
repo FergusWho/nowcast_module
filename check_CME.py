@@ -138,10 +138,10 @@ for i in range(0, len(data)):
             print('     Previous simulation run found:', result, file=sys.stderr)
 
    except Exception as e:
-      traceback.print_exception(e)
+      traceback.print_exception(e, file=sys.stderr)
       print('[{:2d}] JSON data:'.format(i), file=sys.stderr)
       json.dump(data[i], sys.stderr, indent=3)
-      print()
+      print(file=sys.stderr)
 
 print('New CMEs found in the last 48 hours:', len(CME_index), file=sys.stderr)
 ii = len(CME_index)-1 # index number for the latest CME
@@ -177,10 +177,11 @@ if len(CME_index) != 0:
        phi_e = 100.0 - CME_longitude
 
     except Exception as e:
-       traceback.print_exception(e)
-       print('[{:2d}] JSON data:'.format(i), file=sys.stderr)
+       traceback.print_exception(e, file=sys.stderr)
+       print('[{:2d}] JSON data:'.format(CME_index[ii]), file=sys.stderr)
        json.dump(data[CME_index[ii]], sys.stderr, indent=3)
-       print()
+       print(file=sys.stderr)
+       f4.close()
        exit_after_error(utc_time, 'Wrong format in DONKI data', 'ERROR:DONKI_WRONG_DATA_FORMAT')
 
     list_obj.append({
