@@ -77,6 +77,9 @@ if [[ -z $CME_id ]]; then
    read -a strarr <<<$last_line
    bgsw_folder_name=${strarr[0]}
    CME_id=${strarr[1]}     # this is actually flare_id
+   only_time_changed=${strarr[2]}
+
+   [[ $only_time_changed == True ]] && skip_jobs=1
 
    echo "[$(date -u +'%F %T')] Background simulation: $bgsw_folder_name"
 
@@ -157,16 +160,40 @@ logfile=$CME_dir/log.txt
 if (( skip_jobs )); then
    echo "[$(date -u +'%F %T')] Skipping jobs enabled"
 
-   echo "[$(date -u +'%F %T')] Setting up necessary files for skipping jobs ..."
-   cp $data_dir/Background/$bgsw_folder_name/${run_time}_*.json $CME_dir/
-   rm -f $CME_dir/log.txt
-   rm -f $CME_dir/path_output/{CME.gif,staging.info}
-   rm -f $CME_dir/path_output/transport_*/{ZEUS+iPATH*,*.csv,*.txt,*.png,*.pkl}
-   for dir in $CME_dir/path_output/transport_*; do
-      tar -xzf $dir/fp.tar.gz -C $dir fp_total
+   # look for the most recent previous flare version folder
+   version=${CME_id#*_}
+   for (( v = version-1; v > 0; --v )); do
+      previous_dir=${CME_dir/_$version/_$v}
+      [[ -d $previous_dir ]] && break || previous_dir=
    done
-   echo "[$(date -u +'%F %T')] Done"
-else
+
+   # no previous flare version folder found: check if folder name is still in the old format
+   if [[ -z $previous_dir ]]; then
+      previous_dir=${CME_dir/_$version/}
+      [[ ! -d $previous_dir ]] && previous_dir=
+   fi
+
+   if [[ ! -z $previous_dir ]]; then
+      echo "[$(date -u +'%F %T')] Copying previous flare version simulation $previous_dir to $CME_dir ..."
+      cp -r $previous_dir $CME_dir
+      echo "[$(date -u +'%F %T')] Done"
+
+      echo "[$(date -u +'%F %T')] Setting up necessary files for skipping jobs ..."
+      cp $data_dir/Background/$bgsw_folder_name/${run_time}_*.json $CME_dir/
+      rm -f $CME_dir/log.txt
+      rm -f $CME_dir/path_output/{CME.gif,staging.info}
+      rm -f $CME_dir/path_output/transport_*/{ZEUS+iPATH*,*.csv,*.txt,*.png,*.pkl}
+      for dir in $CME_dir/path_output/transport_*; do
+         tar -xzf $dir/fp.tar.gz -C $dir fp_total
+      done
+      echo "[$(date -u +'%F %T')] Done"
+   else
+      echo "[$(date -u +'%F %T')] No previous flare version folder found: skipping jobs disabled"
+      skip_jobs=0
+   fi
+fi
+
+if (( !skip_jobs )); then
    echo "[$(date -u +'%F %T')] Copying background simulation to $CME_dir ..."
    [[ -d $CME_dir ]] && mv $CME_dir $CME_dir.bak # rename already existing simulation folder, just in case
    cp -r $data_dir/Background/$bgsw_folder_name $CME_dir

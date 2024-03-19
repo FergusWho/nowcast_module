@@ -109,30 +109,78 @@ print('Looking for flares between {} and {}'.format(dt_start, utc_datetime), fil
 with open(root_dir+'/Flare/past.json') as flare_list:
     list_obj = json.load(flare_list)
 
+MAX_REQUESTS = 10
 for i in range(0, len(data)):
    try:
       # expected ID format: yyyy-mm-ddTHH:MM:SS-CME-xxx
       flare_id = data[i].get('flrID')
       flare_start_time = flare_id.split("-FLR-")[0]
 
+      flare_link       = data[i].get('link')
+      flare_class      = data[i].get('classType', '')
+      flare_location   = data[i].get('sourceLocation', '')
+      flare_begin_time = data[i].get('beginTime', '')
+      flare_peak_time  = data[i].get('peakTime', '')
+
       datetime_flare = datetime.strptime(flare_start_time, '%Y-%m-%dT%H:%M:%S')
-      print('[{:2d}] Flare date: {}'.format(i, datetime_flare), file=sys.stderr)
+      print('[{:2d}] Flare date: {}, link: {}'.format(i, datetime_flare, flare_link), file=sys.stderr)
 
       # skip automatic DONKI >=M5 alerts, since they don't have an actual peak time and class yet
-      if data[i].get('peakTime') == data[i].get('beginTime') and data[i].get('classType') == 'M5':
-         print ('Found DONKI automatic alert: skipping', file=sys.stderr)
+      if flare_peak_time == flare_begin_time and flare_class == 'M5':
+         print('     Found DONKI automatic alert: skipping', file=sys.stderr)
          continue
 
       if datetime_flare > dt_start and datetime_flare <= utc_datetime:
+         # retrieve flare version number from flare URL
+         nreqs = 0
+         while nreqs < MAX_REQUESTS:
+            try:
+               response = urllib.request.urlopen(flare_link)
+               if response.getcode() == 200:
+                  break
+            except Exception:
+               time.sleep(REQUEST_WAIT_TIME)
+               nreqs += 1
+         if nreqs == MAX_REQUESTS:
+            # skip this flare, will be retried next time
+            continue
+
+         flare_version = response.geturl().split('/')[-1]
+
          # check whether this flare has been simulated before
-         result = [x for x in list_obj if x.get('flrID')==flare_id]
+         # first condition: check flare id (old past.json format)
+         # second condition: check link (new past.json format, March 13, 2024)
+         # NB: this should at most return 1 item; in case of more items,
+         # the most recent flare will be the last item
+         result = [x for x in list_obj if (x.get('link') is None and x.get('flrID') == flare_id) or
+                                          (x.get('link') is not None and x.get('link') == flare_link)]
 
          if result == []:
             # no run found for this flare, new flare detected:
             flare_index.append(i)
-            print('     New flare found:', flare_id, file=sys.stderr)
-         else:
+            data[i]['only_time_changed'] = False
+            data[i]['version'] = flare_version
+            print('     New flare found:', flare_id, flare_link, flare_version, flare_begin_time, flare_peak_time, flare_class, flare_location, file=sys.stderr)
+         elif result[-1].get('version') is None or result[-1].get('version') == flare_version:
+            # (old past.json format) or (new past.json format, same flare version)
             print('     Previous simulation run found:', result, file=sys.stderr)
+         else:
+            # new past.json format, different version
+            if result[-1].get('classType') != flare_class or result[-1].get('sourceLocation') != flare_location:
+               # class and/or location changed => new simulation
+               flare_index.append(i)
+               data[i]['only_time_changed'] = False
+               data[i]['version'] = flare_version
+               print('     Previous flare with different class and/or location found:', flare_class, flare_location, result, file=sys.stderr)
+            elif result[-1].get('peakTime') != flare_peak_time or result[-1].get('beginTime') != flare_begin_time:
+               # start and/or peak time changed, but class and location still the same => reuse previous version simulation
+               flare_index.append(i)
+               data[i]['only_time_changed'] = True
+               data[i]['version'] = flare_version
+               print('     Previous flare with different start and/or peak time found:', flare_begin_time, flare_peak_time, result, file=sys.stderr)
+            else:
+               # different version, but none of the relevant properties changed => skip it
+               print('     Previous flare with different version but same relevant properties found:', result, file=sys.stderr)
 
    except Exception as e:
       traceback.print_exception(e, file=sys.stderr)
@@ -151,8 +199,11 @@ print('Last flare_index:', ii, file=sys.stderr)
 
 if len(flare_index) != 0:
     try:
+       only_time_changed = data[flare_index[ii]].get('only_time_changed')
+
        flare_id         = data[flare_index[ii]].get('flrID')
        flare_link       = data[flare_index[ii]].get('link')
+       flare_version    = data[flare_index[ii]].get('version')
        flare_class      = data[flare_index[ii]].get('classType')
        flare_location   = data[flare_index[ii]].get('sourceLocation')
        flare_begin_time = data[flare_index[ii]].get('beginTime')
@@ -202,9 +253,8 @@ if len(flare_index) != 0:
        f4.close()
        exit_after_error(utc_time, 'Wrong format in DONKI data', 'ERROR:DONKI_WRONG_DATA_FORMAT')
 
-
-    f4.write('Checking Time:{} | flare found:{} class:{} location:{} begin:{} peak:{} end:{}\n'.format(
-      utc_time, flare_id, flare_class, flare_location,
+    f4.write('Checking Time:{} | flare found:{} version:{} class:{} location:{} begin:{} peak:{} end:{}\n'.format(
+      utc_time, flare_id, flare_version, flare_class, flare_location,
       flare_begin_time, flare_peak_time, flare_end_time))
 
     # assuming the background solar wind setup can finish in 15 mins
@@ -234,6 +284,12 @@ if len(flare_index) != 0:
 
     list_obj.append({
       "flrID": flare_id,
+      "link": flare_link,
+      "version": flare_version,
+      "beginTime": flare_begin_time,
+      "peakTime": flare_peak_time,
+      "classType": flare_class,
+      "sourceLocation": flare_location
     })
     with open(root_dir+'/Flare/past.json', 'w') as write_file:
        json.dump(list_obj, write_file, indent=4)
@@ -329,7 +385,7 @@ if len(flare_index) != 0:
            "end_time": flare_end_time,
            "location": flare_location,
            "intensity": FSXR,
-           "urls": [ flare_link ]
+           "urls": [ flare_link, flare_link.replace('-1', str(flare_version)) ]
            }
     }
     cme = {
@@ -345,14 +401,15 @@ if len(flare_index) != 0:
 
     with open(root_dir+'/Background/'+bgsw_folder_name+'/'+run_time+'_flare_earth_output.json', 'w') as write_file:
         json.dump(json_data, write_file, indent=4)
-    flare_id = flare_id.replace('-', '', 2).replace(':', '', 2)
+    flare_id = flare_id.replace('-', '', 2).replace(':', '', 2) + '_' + flare_version
 else:
     bgsw_folder_name=''
     flare_id = ''
+    only_time_changed = ''
     if len(data) > 0:
         f4.write('Checking Time:{} | No new flare found, last flare in 7 days: {}\n'.format(
             utc_time, data[len(data)-1].get('flrID') ))
     else:
         f4.write('Checking Time:{} | No new flare found, no flare in past 7 days.\n'.format(utc_time))
 f4.close()
-print(bgsw_folder_name, flare_id)
+print(bgsw_folder_name, flare_id, only_time_changed)
