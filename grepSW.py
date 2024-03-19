@@ -227,8 +227,13 @@ for i in range(0, len(time1)):
               B_sqr_mean += B_data[i]**2.0
               count += 1
 
-B_mean = B_mean/count
-B_sqr_mean = B_sqr_mean / count
+if count > 0:
+   B_mean = B_mean/count
+   B_sqr_mean = B_sqr_mean / count
+else:
+   print('Warning! Magnetic field data missing!', file=sys.stderr)
+   print('Magnetic field intensity set to default!', file=sys.stderr)
+   B_mean = 5.0
 
 print('Magnetic field: {} good points, <B> = {}, sqrt(<B^2>) = {}'.format(count, B_mean, np.sqrt(B_sqr_mean)), file=sys.stderr)
 
@@ -281,6 +286,7 @@ print('Turbulence: {} windows, <B> = {}, <Bx> = {}, <By> = {}, <Bz> = {}'.format
 
 db_sqr = 0.0
 db_sqr_count =0
+turb_power = 0
 
 for i in range(0, len(time1)):
        tobj = datetime.strptime(time1[i], "%Y-%m-%dT%H:%M:%SZ")
@@ -292,8 +298,9 @@ for i in range(0, len(time1)):
                             (by_data[i] - by_mean_n[n_count])**2.+(bz_data[i] - bz_mean_n[n_count])**2.
                      db_sqr_count += 1
 
-db_sqr = db_sqr/db_sqr_count
-turb_power = db_sqr/B_sqr_mean
+if db_sqr_count > 0:
+   db_sqr = db_sqr/db_sqr_count
+   turb_power = db_sqr/B_sqr_mean
 
 print('Turbulence: {} good points, <deltaB^2> = {}, power = {}'.format(db_sqr_count, db_sqr, turb_power), file=sys.stderr)
 
@@ -322,9 +329,10 @@ for i in range(0, len(time2)):
                      T_mean += T_data[i]
                      count += 1
 
-n_mean = n_mean/count
-v_mean = v_mean/count
-T_mean = T_mean/count
+if count > 0:
+   n_mean = n_mean/count
+   v_mean = v_mean/count
+   T_mean = T_mean/count
 
 print('Solar wind plasma: {} good points, <n> = {}, <v> = {}, <T> = {}'.format(
    count, n_mean, v_mean, T_mean), file=sys.stderr)
@@ -353,11 +361,12 @@ if len(time3) != 0:
                             if flux_data[i] < 2e5:
                                    flux_mean += flux_data[i]
                                    count += 1
-              flux_mean = flux_mean/count
+              if count > 0:
+                  flux_mean = flux_mean/count
 
               # Calculate injection rate based on the flux:
               inj_rate = 0.002 * (flux_mean/n_mean*5.6/1554.8)**0.8
-                     # 0.002 corresponding to the flux of 1554.8 and density of 5.6 is based on the May 17, 2012 event.
+              # 0.002 corresponding to the flux of 1554.8 and density of 5.6 is based on the May 17, 2012 event.
 else:
        print('Warning! ACE proton flux data missing!', file=sys.stderr)
        print('Injection efficiency set to default!', file=sys.stderr)
