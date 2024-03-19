@@ -77,13 +77,54 @@ if [[ -z $CME_id ]]; then
 
    echo "[$(date -u +'%F %T')] Background simulation: $bgsw_folder_name"
 
-   # abort if no CME or if no background simulation exists
+   # exit if no CME or if no background simulation exists
    if [[ -z $bgsw_folder_name ]]; then
       echo "[$(date -u +'%F %T')] There is no CME: exit"
       exit 1
-   elif [[ ! -f $data_dir/Background/$bgsw_folder_name/zr005JH ]]; then
+   elif [[ $bgsw_folder_name == MISSING_BKG* ]]; then
+      # check_CME.py could not find the background folder
+      # this happens when:
+      # - a simulation is triggered within 10 seconds of the background cron job
+      # start time (00, 08, 16); in this case, since the CME has not been added
+      # to past.json, it will be retried in the next cron
+      # - grepSW.py failed to download any of the needed data; in this case,
+      # since check_CME.py tried to find the previous background folder, it means
+      # the last 2 background simualations failed: most likely there are issues
+      # with the AWS instance or with iSWA servers
       echo "[$(date -u +'%F %T')] Background simulation not found: exit"
       exit 1
+   elif [[ ! -f $data_dir/Background/$bgsw_folder_name/zr006JH ]]; then
+      # the background simulation is not done yet or it failed
+
+      # retrieve job id, eventually waiting up to 2 minutes for its submission
+      # jobs are always submitted within 2 minutes from the background cron job start time
+      jobid=$(awk '/Submitted batch job/{ print $4 }' $data_dir/Background/$bgsw_folder_name/log.txt)
+      (( n = 0, MAX_WAIT = 12 ))
+      while (( jobid == 0 && n < MAX_WAIT )); do
+         echo "[$(date -u +'%F %T')] Waiting for ZEUS job to be submitted ..."
+         jobid=$(awk '/Submitted batch job/{ print $4 }' $data_dir/Background/$bgsw_folder_name/log.txt)
+         sleep 10s
+         (( ++n ))
+      done
+
+      # retrieve job status, eventually waiting up to 70 minutes for its completion
+      # 95% of the background simulations are completed within 70 minutes
+      job_status=$(sacct -j $jobid -P -X -n -ostate 2>/dev/null)
+      (( n = 0, MAX_WAIT = 14 ))
+      while [[ $job_status != RUNNING && $n -lt $MAX_WAIT ]]; do
+         echo "[$(date -u +'%F %T')] Waiting for ZEUS job $jobid to finish ..."
+         sleep 5m
+         (( ++n ))
+      done
+
+      [[ $jobs_status != COMPLETED ]] && {
+         # NB: the CME has already been added to past.json, so it won't be
+         # rerun in the next cron; if the background simulation is still running
+         # or it has been manually fixed, then this CME needs to be manually
+         # rerun
+         echo "[$(date -u +'%F %T')] Background simulation failed or taking longer than expected: exit"
+         exit 1
+      }
    fi
 else
    hour=${CME_id:9:2}
