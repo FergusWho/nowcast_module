@@ -158,6 +158,12 @@ for i in range(0, p_num_trsp-1):
                      y2 = fp_transport1[itime][j+1]*eo*100.*no*(mp*vo)**(-3.)/(4.* pi) + 1e-11
                      x1 = energy1[j]/1e6
                      x2 = energy1[j+1]/1e6
+
+                     if y1 <= 0:
+                        y1 = 1e-11
+                     if y2 <= 0:
+                        y2 = 1e-11
+
                      m1 = (np.log10(y1) - np.log10(y2) )/( np.log10(x1) - np.log10(x2))
                      n1 = np.log10(y1) - m1* np.log10(x1)
 
