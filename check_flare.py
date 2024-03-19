@@ -202,11 +202,6 @@ if len(flare_index) != 0:
        f4.close()
        exit_after_error(utc_time, 'Wrong format in DONKI data', 'ERROR:DONKI_WRONG_DATA_FORMAT')
 
-    list_obj.append({
-      "flrID": flare_id
-    })
-    with open(root_dir+'/Flare/past.json', 'w') as write_file:
-       json.dump(list_obj, write_file, indent=4)
 
     f4.write('Checking Time:{} | flare found:{} class:{} location:{} begin:{} peak:{} end:{}\n'.format(
       utc_time, flare_id, flare_class, flare_location,
@@ -228,6 +223,12 @@ if len(flare_index) != 0:
        print('MISSING_BKG:' + bgsw_folder_name)
        f4.close()
        exit_after_error(utc_time, 'Missing background folder', 'ERROR:MISSING_BKG')
+
+    list_obj.append({
+      "flrID": flare_id,
+    })
+    with open(root_dir+'/Flare/past.json', 'w') as write_file:
+       json.dump(list_obj, write_file, indent=4)
 
     #### modify input.json for the flare run
     with open(root_dir+'/Background/'+bgsw_folder_name+'/input.json', 'r') as f2:

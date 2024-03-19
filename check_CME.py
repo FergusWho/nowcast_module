@@ -184,13 +184,6 @@ if len(CME_index) != 0:
        f4.close()
        exit_after_error(utc_time, 'Wrong format in DONKI data', 'ERROR:DONKI_WRONG_DATA_FORMAT')
 
-    list_obj.append({
-      "associatedCMEID": CME_id,
-      "link": CME_link
-    })
-    with open(root_dir+'/CME/past.json', 'w') as write_file:
-       json.dump(list_obj, write_file, indent=4)
-
     f4.write('Checking Time:{} | CME found:{}_{} speed:{} width:{} lat:{} lon:{} time_21.5:{}\n'.format(
       utc_time, CME_id, CME_analysis_id, CME_speed,
       CME_halfAngle*2, CME_latitude, CME_longitude, CME_time21_5))
@@ -211,6 +204,13 @@ if len(CME_index) != 0:
        print('MISSING_BKG:' + bgsw_folder_name)
        f4.close()
        exit_after_error(utc_time, 'Missing background folder', 'ERROR:MISSING_BKG')
+
+    list_obj.append({
+      "associatedCMEID": CME_id,
+      "link": CME_link
+    })
+    with open(root_dir+'/CME/past.json', 'w') as write_file:
+       json.dump(list_obj, write_file, indent=4)
 
     #### modify input.json for the CME run
     with open(root_dir+'/Background/'+bgsw_folder_name+'/input.json', 'r') as f2:
