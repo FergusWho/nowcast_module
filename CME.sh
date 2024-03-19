@@ -120,7 +120,7 @@ if [[ -z $CME_id ]]; then
          (( ++n ))
       done
 
-      [[ $jobs_status != COMPLETED ]] && {
+      [[ $jobs_status != COMPLETED || ! -f $data_dir/Background/$bgsw_folder_name/zr006JH ]] && {
          # NB: the CME has already been added to past.json, so it won't be
          # rerun in the next cron; if the background simulation is still running
          # or it has been manually fixed, then this CME needs to be manually
