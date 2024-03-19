@@ -6,7 +6,7 @@ cleanup_acceleration_files() {
    cd $CME_dir/path_output
 
    # compress intermediate acceleration files
-   for f in observer_pov.dat kappa-par-perp.dat all_shell_bndy.dat dist_at_shock.dat esc_distr* momenta-hi.dat solar_wind_profile.dat; do
+   for f in observer_pov.dat kappa-par-perp.dat all_shell_bndy.dat dist_at_shock.dat esc_distr*.dat momenta-hi.dat solar_wind_profile.dat; do
       [[ -s $f ]] && gzip $f
    done
 
@@ -37,12 +37,15 @@ Observers=(earth)
 # example: bash flare.sh -t 20220120_0830
 # rerun already processed event:
 # example: bash flare.sh -t 20230819_1715 -i 20230818T220000-FLR-001
-while getopts 't:i:L' flag
+# rerun already processed event, but skip all jobs:
+# example: bash flare.sh -t 20230819_1715 -i 20230818T220000-FLR-001 -S
+while getopts 't:i:LS' flag
 do
     case "${flag}" in
         t) run_time=${OPTARG};;
         L) if_local=1;;
         i) CME_id=${OPTARG};;
+        S) skip_jobs=1;;
     esac
 done
 echo "[$(date -u +'%F %T')] Run time: $run_time"
@@ -127,6 +130,8 @@ if [[ -z $CME_id ]]; then
       }
    fi
 else
+   echo "[$(date -u +'%F %T')] Requested flare id: $CME_id"
+
    hour=${CME_id:9:2}
 
    # remove leading zero, otherwise Bash interprets it as hex number
@@ -144,112 +149,130 @@ else
    echo "[$(date -u +'%F %T')] Background simulation: $bgsw_folder_name"
 fi
 
- #-----------------------------------------------
- # CME setup and acceleration:
- CME_dir=$data_dir/Flare/$CME_id
- logfile=$CME_dir/log.txt
+#-----------------------------------------------
+# CME setup and acceleration:
+CME_dir=$data_dir/Flare/$CME_id
+logfile=$CME_dir/log.txt
 
- echo "[$(date -u +'%F %T')] Copying background simulation to $CME_dir ..."
- [[ -d $CME_dir ]] && mv $CME_dir $CME_dir.bak # rename already existing simulation folder, just in case
- cp -r $data_dir/Background/$bgsw_folder_name $CME_dir
+if (( skip_jobs )); then
+   echo "[$(date -u +'%F %T')] Skipping jobs enabled"
 
- # use the modified dzeus36 version for nowcasting
- cp $code_dir/dzeus36_alt $CME_dir/dzeus36
+   echo "[$(date -u +'%F %T')] Setting up necessary files for skipping jobs ..."
+   cp $data_dir/Background/$bgsw_folder_name/${run_time}_*.json $CME_dir/
+   rm -f $CME_dir/log.txt
+   rm -f $CME_dir/path_output/{CME.gif,staging.info}
+   rm -f $CME_dir/path_output/transport_*/{ZEUS+iPATH*,*.csv,*.txt,*.png,*.pkl}
+   for dir in $CME_dir/path_output/transport_*; do
+      tar -xzf $dir/fp.tar.gz -C $dir fp_total
+   done
+   echo "[$(date -u +'%F %T')] Done"
+else
+   echo "[$(date -u +'%F %T')] Copying background simulation to $CME_dir ..."
+   [[ -d $CME_dir ]] && mv $CME_dir $CME_dir.bak # rename already existing simulation folder, just in case
+   cp -r $data_dir/Background/$bgsw_folder_name $CME_dir
 
- # remove background simulation log
- rm $CME_dir/log.txt
- echo "[$(date -u +'%F %T')] Done"
- echo
- echo "[$(date -u +'%F %T')] Switching to $logfile"
+   # use the modified dzeus36 version for nowcasting
+   cp $code_dir/dzeus36_alt $CME_dir/dzeus36
 
- # redirect everything to the logfile
- {
+   # remove background simulation log
+   rm $CME_dir/log.txt
+   echo "[$(date -u +'%F %T')] Done"
+fi
+
+echo
+echo "[$(date -u +'%F %T')] Switching to $logfile"
+
+# redirect everything to the logfile
+{
     cd $CME_dir
 
     echo "[$(date -u +'%F %T')] Flare found! Checking Time: $run_time"
     echo "[$(date -u +'%F %T')] Flare id: $CME_id"
 
-    # delete residual files created by other CME/Flare simulations in the copied Background folder
-    echo "[$(date -u +'%F %T')] Deleting residual files ..."
-    rm -f slurm* # Slurm logfiles from Background simulation
-    find -type f -name '*.json' | grep -v ${run_time}_flare | xargs rm -f # json files from CME/Flare simulations
-    echo "[$(date -u +'%F %T')] Done"
-    echo
-
-    # modify ZEUS source code according to the input json file
-    echo "[$(date -u +'%F %T')] Setting up acceleration module ..."
-    python3 $code_dir/prepare_PATH.py --root_dir $CME_dir --path_dir $iPATH_dir --run_mode 0 --input ${run_time}_flare_earth_input.json
-    echo "[$(date -u +'%F %T')] Done"
-    echo
-
-    # CME_input.json used by plot_CME_info.py
-    cp ${run_time}_flare_earth_input.json CME_input.json
-
-    echo "[$(date -u +'%F %T')] Compiling ZEUS ..."
-    csh -v ./iPATH_zeus.s
-    echo "[$(date -u +'%F %T')] Compilation done"
-    echo
-
-    echo "[$(date -u +'%F %T')] Running acceleration module"
-    if [ $if_local -eq 1 ]
-    then
-        ./xdzeus36 <input
-    else
-        # wait for job to finish before returning
-        sbatch -W $code_dir/run_zeus2.sh -r $CME_dir
-
-        # compress Slurm logfile
-        for f in slurm*.out; do
-           [[ -s $f ]] && gzip $f
-        done
-    fi
-    echo "[$(date -u +'%F %T')] Done"
-    echo
-
-    # check if CME ZEUS simulation was successful
-    [[ ! -s $CME_dir/zl002JH ]] && {
-      echo "[$(date -u +'%F %T')] ZEUS log file missing: simulation job probably terminated before completion"
-      echo "[$(date -u +'%F %T')] Cleanup and exit"
-      cleanup_acceleration_files
-      exit 1
-    }
-
-    shock_files=(all_shell_bndy dist_all_shl dist_at_shock
-      esc_distr_dn esc_distr-hi esc_distr_up
-      kappa-par-perp momenta-hi shock_momenta shock_posn_comp)
-    bad_shock_files=()
-    for f in ${shock_files[@]}; do
-      [[ ! -s $CME_dir/path_output/$f.dat ]] && bad_shock_files+=($f)
-    done
-    (( ${#bad_shock_files[@]} )) && {
-      echo "[$(date -u +'%F %T')] One or more shock-related files missing or empty: shock detection failed"
-      printf "%s " ${bad_shock_files[@]}
-      printf "\n"
-      echo "[$(date -u +'%F %T')] Cleanup and exit"
-      cleanup_acceleration_files
-      exit 1
-    }
-
-    #-----------------------------------------------------------------------------------------
-    # setup and compile for the transport module
-
-    # modify iPATH source code according to the input json file
-    echo "[$(date -u +'%F %T')] Setting up transport module for Earth ..."
-    python3 $code_dir/prepare_PATH.py --root_dir $CME_dir --path_dir $iPATH_dir --run_mode 2 --ranks $thread_count --input ${run_time}_flare_earth_input.json
-    echo "[$(date -u +'%F %T')] Done"
-    echo
-
     trspt_dir=$CME_dir/path_output/transport_earth
-    mkdir $trspt_dir
 
-    echo "[$(date -u +'%F %T')] Compiling iPATH ..."
-    $MPI_comp -O3 $iPATH_dir/Transport/parallel_wrapper.f $iPATH_dir/Transport/transport_2.05.f -o $trspt_dir/trspt.out
-    $FCOMP $iPATH_dir/Transport/combine.f -o $trspt_dir/combine.out
-    echo "[$(date -u +'%F %T')] Done"
-    echo
+    if (( !skip_jobs )); then
+      # delete residual files created by other CME/Flare simulations in the copied Background folder
+      echo "[$(date -u +'%F %T')] Deleting residual files ..."
+      rm -f slurm* # Slurm logfiles from Background simulation
+      find -type f -name '*.json' | grep -v ${run_time}_flare | xargs rm -f # json files from CME/Flare simulations
+      echo "[$(date -u +'%F %T')] Done"
+      echo
+
+      # modify ZEUS source code according to the input json file
+      echo "[$(date -u +'%F %T')] Setting up acceleration module ..."
+      python3 $code_dir/prepare_PATH.py --root_dir $CME_dir --path_dir $iPATH_dir --run_mode 0 --input ${run_time}_flare_earth_input.json
+      echo "[$(date -u +'%F %T')] Done"
+      echo
+
+      # CME_input.json used by plot_CME_info.py
+      cp ${run_time}_flare_earth_input.json CME_input.json
+
+      echo "[$(date -u +'%F %T')] Compiling ZEUS ..."
+      csh -v ./iPATH_zeus.s
+      echo "[$(date -u +'%F %T')] Compilation done"
+      echo
+
+      echo "[$(date -u +'%F %T')] Running acceleration module"
+      if [ $if_local -eq 1 ]
+      then
+         ./xdzeus36 <input
+      else
+         # wait for job to finish before returning
+         sbatch -W $code_dir/run_zeus2.sh -r $CME_dir
+
+         # compress Slurm logfile
+         for f in slurm*.out; do
+            [[ -s $f ]] && gzip $f
+         done
+      fi
+      echo "[$(date -u +'%F %T')] Done"
+      echo
+
+      # check if CME ZEUS simulation was successful
+      [[ ! -s $CME_dir/zl002JH ]] && {
+         echo "[$(date -u +'%F %T')] ZEUS log file missing: simulation job probably terminated before completion"
+         echo "[$(date -u +'%F %T')] Cleanup and exit"
+         cleanup_acceleration_files
+         exit 1
+      }
+
+      shock_files=(all_shell_bndy dist_all_shl dist_at_shock
+         esc_distr_dn esc_distr-hi esc_distr_up
+         kappa-par-perp momenta-hi shock_momenta shock_posn_comp)
+      bad_shock_files=()
+      for f in ${shock_files[@]}; do
+         [[ ! -s $CME_dir/path_output/$f.dat ]] && bad_shock_files+=($f)
+      done
+      (( ${#bad_shock_files[@]} )) && {
+         echo "[$(date -u +'%F %T')] One or more shock-related files missing or empty: shock detection failed"
+         printf "%s " ${bad_shock_files[@]}
+         printf "\n"
+         echo "[$(date -u +'%F %T')] Cleanup and exit"
+         cleanup_acceleration_files
+         exit 1
+      }
+
+      #-----------------------------------------------------------------------------------------
+      # setup and compile for the transport module
+
+      # modify iPATH source code according to the input json file
+      echo "[$(date -u +'%F %T')] Setting up transport module for Earth ..."
+      python3 $code_dir/prepare_PATH.py --root_dir $CME_dir --path_dir $iPATH_dir --run_mode 2 --ranks $thread_count --input ${run_time}_flare_earth_input.json
+      echo "[$(date -u +'%F %T')] Done"
+      echo
+
+      mkdir $trspt_dir
+
+      echo "[$(date -u +'%F %T')] Compiling iPATH ..."
+      $MPI_comp -O3 $iPATH_dir/Transport/parallel_wrapper.f $iPATH_dir/Transport/transport_2.05.f -o $trspt_dir/trspt.out
+      $FCOMP $iPATH_dir/Transport/combine.f -o $trspt_dir/combine.out
+      echo "[$(date -u +'%F %T')] Done"
+      echo
+    fi
 
     echo "[$(date -u +'%F %T')] Copying files to $trspt_dir ..."
-    cp $iPATH_dir/Transport/trspt_input $trspt_dir
+    (( !skip_jobs )) && cp $iPATH_dir/Transport/trspt_input $trspt_dir
     mv ${run_time}_flare_earth_input.json $trspt_dir/input.json
     mv ${run_time}_flare_earth_output.json $trspt_dir/output.json
     echo "[$(date -u +'%F %T')] Done"
@@ -263,19 +286,21 @@ fi
     for obs in ${Observers[@]//earth}; do
         [[ $obs == PSP && $cur_date < $first_PSP_date ]] && continue
 
-        echo "[$(date -u +'%F %T')] Setting up transport module for ${obs^} ..."
-        python3 $code_dir/prepare_PATH.py --root_dir $CME_dir --path_dir $iPATH_dir --run_mode 2 --ranks $thread_count --input ${run_time}_flare_${obs}_input.json
-        echo "[$(date -u +'%F %T')] Done"
-        echo
+        if (( !skip_jobs )); then
+            echo "[$(date -u +'%F %T')] Setting up transport module for ${obs^} ..."
+            python3 $code_dir/prepare_PATH.py --root_dir $CME_dir --path_dir $iPATH_dir --run_mode 2 --ranks $thread_count --input ${run_time}_flare_${obs}_input.json
+            echo "[$(date -u +'%F %T')] Done"
+            echo
+        fi
 
         trspt_dir_obs=${trspt_dir/earth/$obs}
-        mkdir $trspt_dir_obs
+        (( !skip_jobs )) && mkdir $trspt_dir_obs
 
         echo "[$(date -u +'%F %T')] Copying files to $trspt_dir_obs ..."
-        cp $iPATH_dir/Transport/trspt_input $trspt_dir_obs
+        (( !skip_jobs )) && cp $iPATH_dir/Transport/trspt_input $trspt_dir_obs
         mv ${run_time}_flare_${obs}_input.json $trspt_dir_obs/input.json
-        cp $trspt_dir/combine.out $trspt_dir_obs
-        cp $trspt_dir/trspt.out $trspt_dir_obs
+        (( !skip_jobs )) && cp $trspt_dir/combine.out $trspt_dir_obs
+        (( !skip_jobs )) && cp $trspt_dir/trspt.out $trspt_dir_obs
         cp $trspt_dir/output.json $trspt_dir_obs
         echo "[$(date -u +'%F %T')] Done"
         echo
@@ -285,6 +310,7 @@ fi
     # Now run the transport modules:
     # NB: logs are saved separately, so they don't mix up
     (( if_local )) && opts='-L' || opts=
+    (( skip_jobs )) && opts="$opts -S"
     for obs in ${Observers[@]}; do
         [[ $obs == PSP && $cur_date < $first_PSP_date ]] && continue
 
@@ -309,13 +335,15 @@ fi
     echo "[$(date -u +'%F %T')] Done"
 
     echo "[$(date -u +'%F %T')] SLURM jobs summary:"
-    cd $CME_dir
-    jobs=$(find -name 'slurm*' \
-      | sed -E 's/.*-([0-9]+).*/\1/' \
-      | sort -n \
-      | paste -sd',')
-    sacct -j $jobs -P -X -ojobid,submit,planned,start,end,elapsedraw,partition,ncpus,nnodes,cputimeraw,state,exitcode,workdir \
-    | column -s'|' -t
+    if (( !skip_jobs )); then
+         cd $CME_dir
+         jobs=$(find -name 'slurm*' \
+            | sed -E 's/.*-([0-9]+).*/\1/' \
+            | sort -n \
+            | paste -sd',')
+         sacct -j $jobs -P -X -ojobid,submit,planned,start,end,elapsedraw,partition,ncpus,nnodes,cputimeraw,state,exitcode,workdir \
+         | column -s'|' -t
+    fi
     echo "[$(date -u +'%F %T')] Done"
 
 } >>$logfile 2>&1

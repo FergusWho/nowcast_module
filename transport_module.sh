@@ -7,9 +7,10 @@ opsep_dir='/shared/iPATH/operational_sep_v3'
 
 # default values for command-line arguments
 if_local=0
+skip_jobs=0
 thread_count=12
 
-while getopts 'r:i:s:p:L' flag
+while getopts 'r:i:s:p:LS' flag
 do
     case "${flag}" in
         r) code_dir=${OPTARG};;
@@ -17,6 +18,7 @@ do
         s) starttime=${OPTARG};;
         p) location=${OPTARG};;
         L) if_local=1;;
+        S) skip_jobs=1;;
     esac
 done
 
@@ -43,28 +45,30 @@ cd $trspt_dir
 startdate=${starttime%T*}
 startdate=${startdate//-}
 
-echo "[$(date -u +'%F %T')] Running transport module for ${location^} ..."
-if (( if_local )); then
-   mpirun -np $thread_count trspt.out
-else
-   [[ $location == earth ]] && run_script=run_transport.sh || run_script=run_transport2.sh
+if (( !skip_jobs )); then
+   echo "[$(date -u +'%F %T')] Running transport module for ${location^} ..."
+   if (( if_local )); then
+      mpirun -np $thread_count trspt.out
+   else
+      [[ $location == earth ]] && run_script=run_transport.sh || run_script=run_transport2.sh
 
-   # wait for job to finish before returning
-   sbatch -W $code_dir/$run_script -r $trspt_dir
+      # wait for job to finish before returning
+      sbatch -W $code_dir/$run_script -r $trspt_dir
 
-   # compress Slurm logfile
-   for f in slurm*.out; do
-      [[ -s $f ]] && gzip $f
-   done
-fi
-./combine.out
-echo "[$(date -u +'%F %T')] ${location^}: Done"
-echo
+      # compress Slurm logfile
+      for f in slurm*.out; do
+         [[ -s $f ]] && gzip $f
+      done
+   fi
+   ./combine.out
+   echo "[$(date -u +'%F %T')] ${location^}: Done"
+   echo
 
-if [[ ! -s fp_total ]]; then
-   echo "[$(date -u +'%F %T')] ${location^}: iPATH fp_total missing: transport job or combine step probably failed"
-   echo "[$(date -u +'%F %T')] ${location^}: Skipping plotting and OpSEP"
-   exit 1
+   if [[ ! -s fp_total ]]; then
+      echo "[$(date -u +'%F %T')] ${location^}: iPATH fp_total missing: transport job or combine step probably failed"
+      echo "[$(date -u +'%F %T')] ${location^}: Skipping plotting and OpSEP"
+      exit 1
+   fi
 fi
 
 echo "[$(date -u +'%F %T')] ${location^}: Plotting transport results ..."
@@ -115,8 +119,7 @@ echo "[$(date -u +'%F %T')] ${location^}: Cleaning up ..."
 cd $trspt_dir
 rm -f RawData*
 
-# compress transport files
-tar --remove-files -zcf fp.tar.gz fp_*
+(( !skip_jobs )) && tar --remove-files -zcf fp.tar.gz fp_* || rm fp_total
 
 # remove source pngs if the animation exists and contains the right number of frames
 cd $CME_dir/path_output
