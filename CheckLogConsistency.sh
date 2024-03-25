@@ -103,7 +103,7 @@ for type in ${Types//,/ }; do
    touch $type/lists/missing-simulations.list
    comm -3 \
       <(find $type -mindepth 1 -maxdepth 1 -type d -printf '%P\n' | grep -v lists | sort -V) \
-      <(jq -r '.[] | ((.flrID // .associatedCMEID) | "\(.[:19] | gsub("[-:]"; ""))\(.[19:])") + (if .link == null then "" else .link | gsub(".*/(?<id>[0-9]+)/-1"; "_\(.id)") end)' $type/past.json | sort -V) \
+      <(jq -r '.[] | ((.flrID // .associatedCMEID) | "\(.[:19] | gsub("[-:]"; ""))\(.[19:])") + (if .version == null then (if .link == null then "" else .link | gsub(".*/(?<id>[0-9]+)/-1"; "_\(.id)") end) else "_\(.version)" end)' $type/past.json | sort -V) \
    | tr '\t' ',' \
    | awk -F, 'NF==1{ print $1, "MissingLog" } NF==2{ print $2, "MissingSim" }' \
    > $type/lists/missing-simulations.new.list
