@@ -6,7 +6,7 @@ StagingDir=/data/iPATH/nowcast_module_v1/staging
 date -u +'%F %T'
 echo "Moving files older than $nDays days from staging to archive area:"
 
-find $StagingDir -type f -mtime +$nDays \
+find $StagingDir -type f -mmin +$((nDays*1440)) \
 | sort -V \
 | while read path; do
    echo $path
