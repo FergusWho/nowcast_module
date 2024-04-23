@@ -154,6 +154,12 @@ fi
 CME_dir=$data_dir/CME/$CME_id
 logfile=$CME_dir/log.txt
 
+# rename already existing simulation folder, just in case
+[[ -d $CME_dir ]] && {
+   echo "[$(date -u +'%F %T')] Renaming already existent simulation folder to $CME_dir.bak"
+   mv $CME_dir $CME_dir.bak
+}
+
 if (( skip_jobs )); then
    echo "[$(date -u +'%F %T')] Skipping jobs enabled"
 
@@ -168,7 +174,6 @@ if (( skip_jobs )); then
    echo "[$(date -u +'%F %T')] Done"
 else
    echo "[$(date -u +'%F %T')] Copying background simulation to $CME_dir ..."
-   [[ -d $CME_dir ]] && mv $CME_dir $CME_dir.bak # rename already existing simulation folder, just in case
    cp -r $data_dir/Background/$bgsw_folder_name $CME_dir
 
    # use the modified dzeus36 version for nowcasting
