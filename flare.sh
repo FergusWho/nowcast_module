@@ -79,7 +79,7 @@ if [[ -z $CME_id ]]; then
    CME_id=${strarr[1]}     # this is actually flare_id
    only_time_changed=${strarr[2]}
 
-   [[ $only_time_changed == True ]] && skip_jobs=1
+   [[ $only_time_changed == True ]] && skip_jobs=2
 
    echo "[$(date -u +'%F %T')] Background simulation: $bgsw_folder_name"
 
@@ -163,35 +163,18 @@ logfile=$CME_dir/log.txt
    mv $CME_dir $CME_dir.bak
 }
 
-if (( skip_jobs )); then
-   echo "[$(date -u +'%F %T')] Skipping jobs enabled"
-
-   # look for the most recent previous flare version folder
+# use the most recent previous flare version folder as starting point, if available
+# this can only happen if check_flare.py detects that only start and/or peak time changed
+if (( skip_jobs == 2 )); then
    version=${CME_id#*_}
    for (( v = version-1; v > 0; --v )); do
       previous_dir=${CME_dir/_$version/_$v}
       [[ -d $previous_dir ]] && break || previous_dir=
    done
 
-   # no previous flare version folder found: check if folder name is still in the old format
-   if [[ -z $previous_dir ]]; then
-      previous_dir=${CME_dir/_$version/}
-      [[ ! -d $previous_dir ]] && previous_dir=
-   fi
-
    if [[ ! -z $previous_dir ]]; then
       echo "[$(date -u +'%F %T')] Copying previous flare version simulation $previous_dir to $CME_dir ..."
       cp -r $previous_dir $CME_dir
-      echo "[$(date -u +'%F %T')] Done"
-
-      echo "[$(date -u +'%F %T')] Setting up necessary files for skipping jobs ..."
-      cp $data_dir/Background/$bgsw_folder_name/${run_time}_*.json $CME_dir/
-      rm -f $CME_dir/log.txt
-      rm -f $CME_dir/path_output/{CME.gif,staging.info}
-      rm -f $CME_dir/path_output/transport_*/{ZEUS+iPATH*,*.csv,*.txt,*.png,*.pkl}
-      for dir in $CME_dir/path_output/transport_*; do
-         tar -xzf $dir/fp.tar.gz -C $dir fp_total
-      done
       echo "[$(date -u +'%F %T')] Done"
    else
       echo "[$(date -u +'%F %T')] No previous flare version folder found: skipping jobs disabled"
@@ -199,7 +182,20 @@ if (( skip_jobs )); then
    fi
 fi
 
-if (( !skip_jobs )); then
+if (( skip_jobs )); then
+   echo "[$(date -u +'%F %T')] Skipping jobs enabled"
+
+   echo "[$(date -u +'%F %T')] Setting up necessary files for skipping jobs ..."
+   mkdir -p $CME_dir
+   cp $data_dir/Background/$bgsw_folder_name/${run_time}_*.json $CME_dir/
+   rm -f $CME_dir/log.txt
+   rm -f $CME_dir/path_output/{CME.gif,staging.info}
+   rm -f $CME_dir/path_output/transport_*/{ZEUS+iPATH*,*.csv,*.txt,*.png,*.pkl}
+   for dir in $CME_dir/path_output/transport_*; do
+      tar -xzf $dir/fp.tar.gz -C $dir fp_total
+   done
+   echo "[$(date -u +'%F %T')] Done"
+else
    echo "[$(date -u +'%F %T')] Copying background simulation to $CME_dir ..."
    cp -r $data_dir/Background/$bgsw_folder_name $CME_dir
 

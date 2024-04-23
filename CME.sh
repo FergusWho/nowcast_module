@@ -164,6 +164,7 @@ if (( skip_jobs )); then
    echo "[$(date -u +'%F %T')] Skipping jobs enabled"
 
    echo "[$(date -u +'%F %T')] Setting up necessary files for skipping jobs ..."
+   mkdir -p $CME_dir
    cp $data_dir/Background/$bgsw_folder_name/${run_time}_*.json $CME_dir/
    rm -f $CME_dir/log.txt
    rm -f $CME_dir/path_output/{CME.gif,staging.info}
