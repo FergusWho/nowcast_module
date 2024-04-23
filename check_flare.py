@@ -242,8 +242,8 @@ if len(flare_index) != 0:
        if loc_tokens[3]=='E':
            phi_e = 100 + angle
 
-       print('Flare class = {} -> Vcme = {}, location = {} -> phi_e = {}'.format(
-          flare_class, Vcme, flare_location, phi_e), file=sys.stderr)
+       print('Flare class = {} -> Vcme = {}, width = {}, location = {} -> phi_e = {}'.format(
+          flare_class, Vcme, width, flare_location, phi_e), file=sys.stderr)
 
     except Exception as e:
        traceback.print_exception(e, file=sys.stderr)
