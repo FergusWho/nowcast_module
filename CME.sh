@@ -154,17 +154,15 @@ fi
 CME_dir=$data_dir/CME/$CME_id
 logfile=$CME_dir/log.txt
 
-# rename already existing simulation folder, just in case
-[[ -d $CME_dir ]] && {
-   echo "[$(date -u +'%F %T')] Renaming already existent simulation folder to $CME_dir.bak"
-   mv $CME_dir $CME_dir.bak
-}
-
 if (( skip_jobs )); then
    echo "[$(date -u +'%F %T')] Skipping jobs enabled"
 
+   [[ -d $CME_dir ]] && {
+      echo "[$(date -u +'%F %T')] Copying already existent simulation folder to $CME_dir.bak"
+      cp -r $CME_dir $CME_dir.bak
+   }
+
    echo "[$(date -u +'%F %T')] Setting up necessary files for skipping jobs ..."
-   mkdir -p $CME_dir
    cp $data_dir/Background/$bgsw_folder_name/${run_time}_*.json $CME_dir/
    rm -f $CME_dir/log.txt
    rm -f $CME_dir/path_output/{CME.gif,staging.info}
@@ -174,6 +172,11 @@ if (( skip_jobs )); then
    done
    echo "[$(date -u +'%F %T')] Done"
 else
+   [[ -d $CME_dir ]] && {
+      echo "[$(date -u +'%F %T')] Renaming already existent simulation folder to $CME_dir.bak"
+      mv $CME_dir $CME_dir.bak
+   }
+
    echo "[$(date -u +'%F %T')] Copying background simulation to $CME_dir ..."
    cp -r $data_dir/Background/$bgsw_folder_name $CME_dir
 
