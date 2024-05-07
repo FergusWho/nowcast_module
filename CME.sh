@@ -114,13 +114,13 @@ if [[ -z $CME_id ]]; then
       # 95% of the background simulations are completed within 70 minutes
       job_status=$(sacct -j $jobid -P -X -n -ostate 2>/dev/null)
       (( n = 0, MAX_WAIT = 14 ))
-      while [[ $job_status != RUNNING && $n -lt $MAX_WAIT ]]; do
-         echo "[$(date -u +'%F %T')] Waiting for ZEUS job $jobid to finish ..."
+      while [[ $job_status != COMPLETED && $n -lt $MAX_WAIT ]]; do
+         echo "[$(date -u +'%F %T')] Waiting for ZEUS job $jobid to finish (status = $job_status) ..."
          sleep 5m
          (( ++n ))
       done
 
-      [[ $jobs_status != COMPLETED || ! -f $data_dir/Background/$bgsw_folder_name/zr006JH ]] && {
+      [[ $job_status != COMPLETED || ! -f $data_dir/Background/$bgsw_folder_name/zr006JH ]] && {
          # NB: the CME has already been added to past.json, so it won't be
          # rerun in the next cron; if the background simulation is still running
          # or it has been manually fixed, then this CME needs to be manually
