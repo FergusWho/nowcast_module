@@ -130,6 +130,11 @@ for i in range(0, len(data)):
          print('     Found DONKI automatic alert: skipping', file=sys.stderr)
          continue
 
+      # skip small flares, to reduce trigger rate
+      if flare_class[0] != 'M' and flare_class[0] != 'X':
+         print('     Small flare (class: {}): skipping'.format(flare_class), file=sys.stderr)
+         continue
+
       if datetime_flare > dt_start and datetime_flare <= utc_datetime:
          # retrieve flare version number from flare URL
          nreqs = 0
