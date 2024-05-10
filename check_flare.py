@@ -168,7 +168,7 @@ for i in range(0, len(data)):
             print('     New flare found:', flare_id, flare_link, flare_version, flare_begin_time, flare_peak_time, flare_class, flare_location, file=sys.stderr)
          elif result[-1].get('version') is None or result[-1].get('version') == flare_version:
             # (old past.json format) or (new past.json format, same flare version)
-            print('     Previous simulation run found:', result, file=sys.stderr)
+            print('     Previous simulation run found:', result[-1], file=sys.stderr)
          else:
             # new past.json format, different version
             if result[-1].get('classType') != flare_class or result[-1].get('sourceLocation') != flare_location:
@@ -176,16 +176,16 @@ for i in range(0, len(data)):
                flare_index.append(i)
                data[i]['only_time_changed'] = False
                data[i]['version'] = flare_version
-               print('     Previous flare with different class and/or location found:', flare_class, flare_location, result, file=sys.stderr)
+               print('     Previous flare with different class and/or location found: new = {{ {}, {}, {} }}; old = {}'.format(flare_version, flare_class, flare_location, result[-1]), file=sys.stderr)
             elif result[-1].get('peakTime') != flare_peak_time or result[-1].get('beginTime') != flare_begin_time:
                # start and/or peak time changed, but class and location still the same => reuse previous version simulation
                flare_index.append(i)
                data[i]['only_time_changed'] = True
                data[i]['version'] = flare_version
-               print('     Previous flare with different start and/or peak time found:', flare_begin_time, flare_peak_time, result, file=sys.stderr)
+               print('     Previous flare with different start and/or peak time found: new = {{ {}, {}, {} }}; old = {}'.format(flare_version, flare_begin_time, flare_peak_time, result[-1]), file=sys.stderr)
             else:
                # different version, but none of the relevant properties changed => skip it
-               print('     Previous flare with different version but same relevant properties found:', result, file=sys.stderr)
+               print('     Previous flare with different version but same relevant properties found: new = {{ {} }}; old = {}'.format(flare_version, result[-1]), file=sys.stderr)
 
    except Exception as e:
       traceback.print_exception(e, file=sys.stderr)
