@@ -158,7 +158,7 @@ logfile=$CME_dir/log.txt
 if (( skip_jobs )); then
    echo "[$(date -u +'%F %T')] Skipping jobs enabled"
 
-   [[ -d $CME_dir ]] && {
+   [[ -d $CME_dir && $skip_jobs -eq 1 ]] && {
       echo "[$(date -u +'%F %T')] Copying already existent simulation folder to $CME_dir.bak"
       cp -r $CME_dir $CME_dir.bak
    }
