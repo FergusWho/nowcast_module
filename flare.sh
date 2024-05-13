@@ -108,18 +108,19 @@ if [[ -z $CME_id ]]; then
       (( n = 0, MAX_WAIT = 12 ))
       while (( jobid == 0 && n < MAX_WAIT )); do
          echo "[$(date -u +'%F %T')] Waiting for ZEUS job to be submitted ..."
-         jobid=$(awk '/Submitted batch job/{ print $4 }' $data_dir/Background/$bgsw_folder_name/log.txt)
          sleep 10s
+         jobid=$(awk '/Submitted batch job/{ print $4 }' $data_dir/Background/$bgsw_folder_name/log.txt)
          (( ++n ))
       done
 
       # retrieve job status, eventually waiting up to 70 minutes for its completion
       # 95% of the background simulations are completed within 70 minutes
       job_status=$(sacct -j $jobid -P -X -n -ostate 2>/dev/null)
-      (( n = 0, MAX_WAIT = 14 ))
+      (( n = 0, MAX_WAIT = 70 ))
       while [[ $job_status != COMPLETED && $n -lt $MAX_WAIT ]]; do
          echo "[$(date -u +'%F %T')] Waiting for ZEUS job $jobid to finish (status = $job_status) ..."
-         sleep 5m
+         sleep 1m
+         job_status=$(sacct -j $jobid -P -X -n -ostate 2>/dev/null)
          (( ++n ))
       done
 
