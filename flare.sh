@@ -168,9 +168,25 @@ if (( skip_jobs == 2 )); then
    done
 
    if [[ ! -z $previous_dir ]]; then
-      echo "[$(date -u +'%F %T')] Copying previous flare version simulation $previous_dir to $CME_dir ..."
-      cp -r $previous_dir $CME_dir
-      echo "[$(date -u +'%F %T')] Done"
+      # retrieve previous simulation status, eventually waiting up to 96 minutes for its completion
+      # 95% of the background simulations are completed within 96 minutes
+      prev_status=$(awk '/Cleanup and exit/{ print "ERROR" } /SLURM jobs summary/{ print "OK" }' $previous_dir/log.txt 2>/dev/null)
+      (( n = 0, MAX_WAIT = 96 ))
+      while [[ -z $prev_status && $n -lt $MAX_WAIT ]]; do
+         echo "[$(date -u +'%F %T')] Waiting for previous flare version simulation to finish ..."
+         sleep 1m
+         prev_status=$(awk '/Cleanup and exit/{ print "ERROR" } /SLURM jobs summary/{ print "OK" }' $previous_dir/log.txt 2>/dev/null)
+         (( ++n ))
+      done
+
+      [[ $prev_status == OK && -f $previous_dir/path_output/transport_earth/fp.tar.gz ]] && {
+         echo "[$(date -u +'%F %T')] Copying previous flare version simulation $previous_dir to $CME_dir ..."
+         cp -r $previous_dir $CME_dir
+         echo "[$(date -u +'%F %T')] Done"
+      } || {
+         echo "[$(date -u +'%F %T')] Previous flare version simulation $previous_dir not completed yet or exited with error: skipping jobs disabled"
+         skip_jobs=0
+      }
    else
       echo "[$(date -u +'%F %T')] No previous flare version folder found: skipping jobs disabled"
       skip_jobs=0
