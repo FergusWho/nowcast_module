@@ -10,10 +10,10 @@ SHELL=/bin/bash
 */15 * * * * /shared/iPATH/nowcast_module_v1/flare.sh >/data/iPATH/nowcast_module_v1/cron/Flare/$(date -u +\%Y\%m\%d_\%H\%M).log 2>&1
 
 # Daily monitoring report
-55 23 * * * /shared/iPATH/nowcast_module_v1/DailyReport.sh &>>/data/iPATH/nowcast_module_v1/cron/DailyReport/$(date -u +\%Y\%m\%d).log
+55 23 * * * /shared/iPATH/nowcast_module_v1/support/DailyReport.sh &>>/data/iPATH/nowcast_module_v1/cron/DailyReport/$(date -u +\%Y\%m\%d).log
 
 # Daily cleaning of staging area
-0 0 * * * /shared/iPATH/nowcast_module_v1/DailyStagingToArchive.sh &>>/data/iPATH/nowcast_module_v1/cron/DailyStagingCleanup/$(date -u +\%Y\%m\%d).log
+0 0 * * * /shared/iPATH/nowcast_module_v1/support/DailyStagingToArchive.sh &>>/data/iPATH/nowcast_module_v1/cron/DailyStagingCleanup/$(date -u +\%Y\%m\%d).log
 
 # Daily disk cleaning of simulation folders
-0 0 * * * /shared/iPATH/nowcast_module_v1/DailyDiskCleanup.sh &>>/data/iPATH/nowcast_module_v1/cron/DailyDiskCleanup/$(date -u +\%Y\%m\%d).log
+0 0 * * * /shared/iPATH/nowcast_module_v1/support/DailyDiskCleanup.sh &>>/data/iPATH/nowcast_module_v1/cron/DailyDiskCleanup/$(date -u +\%Y\%m\%d).log
