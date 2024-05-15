@@ -104,7 +104,6 @@ for type in ${Types//,/ }; do
       }
 
       dir=$(sed -En "/Switching/s|.*($type/.*)/log\.txt|\1|p" $cron_log)
-      [[ -z $dir && $type == Background ]] && dir=$type/$run_time
       [[ ! -z $dir && ! -d $dir ]] && dir=''
       if [[ -z $dir ]]; then
          echo "$run_time $type cron:$cron_status" >>$type/status

@@ -257,7 +257,7 @@ for ii in range(0, shell_num):
        ## plot field lines that go through certain points
        # find vantage point locations: (assumes Earth at 1 AU and doesn't move during the time)
        current_time = shell_datetime[ii]
-       root_dir1 = root_dir+'../../../'
+       root_dir1 = root_dir+'../../../..'
 
        earth_r, earth_lat, earth_lon = find_location('planets/earth', current_time, root_dir1)
        STA_r, STA_lat, STA_lon = find_location('spacecraft/stereoa', current_time, root_dir1)

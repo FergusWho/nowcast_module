@@ -107,7 +107,7 @@ for type in ${Types//,/ }; do
    (( Recreate )) && rm -rf $type/datasize
    touch $type/datasize
 
-   ntot=$(find $type -mindepth 1 -maxdepth 1 -type d | wc -l)
+   ntot=$(find $type -mindepth 2 -maxdepth 2 -type d | wc -l)
    len=${#ntot}
    (( del = 2*len + 3 ))
 
@@ -146,7 +146,7 @@ for type in ${Types//,/ }; do
          echo " ZEUS $tot"
       } >>$type/datasize
    done < <(
-      find $type -mindepth 1 -maxdepth 1 -type d \
+      find $type -mindepth 2 -maxdepth 2 -type d \
       | sort -V
    )
 

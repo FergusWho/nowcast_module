@@ -41,17 +41,18 @@ for type in ${Types//,/ }; do
    printf '=%.0s' $(seq $(( ${#type}+8 )))
    printf '\n'
 
-   mkdir -p $type/lists
+   lists_dir=lists/$type
+   mkdir -p $lists_dir
 
    echo "### Looking for missing cron jobs ..."
-   touch $type/lists/missing-cron.list
+   touch $lists_dir/missing-cron.list
    find cron/$type -type f -name '*.log' -printf '%f\n' \
    | cut -d'_' -f1 | sort -V | uniq -c \
    | awk -vn=${ExpectedCronJobs[$type]} '$1 != n{ printf "%s %d\n", $2, $1 }' \
-   >$type/lists/missing-cron.new.list
+   >$lists_dir/missing-cron.new.list
    comm -3 \
-      <(cut -d' ' -f1,2 $type/lists/missing-cron.new.list) \
-      <(cut -d' ' -f1,2 $type/lists/missing-cron.list) \
+      <(cut -d' ' -f1,2 $lists_dir/missing-cron.new.list) \
+      <(cut -d' ' -f1,2 $lists_dir/missing-cron.list) \
    | grep -v $today
    echo
 
@@ -63,17 +64,17 @@ for type in ${Types//,/ }; do
    echo
 
    echo "### Looking for mismatches between status and log.txt ..."
-   touch $type/lists/missing-log.list $type/lists/missing-status.list
+   touch $lists_dir/missing-log.list $lists_dir/missing-status.list
 
    echo "    Missing from log.txt:"
    comm -2 -3 \
       <(cut -d' ' -f1 $type/status | sort -V) \
       <(sed -E "${ExtractDateTimeRegEx[$type]}" $type/log.txt | sort -Vu) \
    | grep -v $today \
-   >$type/lists/missing-log.new.list
+   >$lists_dir/missing-log.new.list
    comm -3 \
-      <(cut -d' ' -f1 $type/lists/missing-log.new.list) \
-      <(cut -d' ' -f1 $type/lists/missing-log.list)
+      <(cut -d' ' -f1 $lists_dir/missing-log.new.list) \
+      <(cut -d' ' -f1 $lists_dir/missing-log.list)
    echo
 
    echo "    Missing from status:"
@@ -81,16 +82,16 @@ for type in ${Types//,/ }; do
       <(cut -d' ' -f1 $type/status | sort -V) \
       <(sed -E "${ExtractDateTimeRegEx[$type]}" $type/log.txt | sort -Vu) \
    | grep -v $today \
-   >$type/lists/missing-status.new.list
+   >$lists_dir/missing-status.new.list
    comm -3 \
-      <(cut -d' ' -f1 $type/lists/missing-status.new.list) \
-      <(cut -d' ' -f1 $type/lists/missing-status.list)
+      <(cut -d' ' -f1 $lists_dir/missing-status.new.list) \
+      <(cut -d' ' -f1 $lists_dir/missing-status.list)
    echo
 
    echo "### Looking for mismatches between status and simulation folders ..."
    comm -3 \
       <(sed -En "/$type\//s|.* $type/(.*) .*|\1|p" $type/status | sort -V) \
-      <(find $type -mindepth 1 -maxdepth 1 -type d ! -newermt $today -printf '%P\n' | grep -v lists | sort -V) \
+      <(find $type -mindepth 2 -maxdepth 2 -type d ! -newermt $today -printf '%P\n' | sort -V) \
    | grep -v $today
    echo
 
@@ -100,20 +101,20 @@ for type in ${Types//,/ }; do
    }
 
    echo "### Looking for mismatches between simulation folders and past.json ..."
-   touch $type/lists/missing-simulations.list
+   touch $lists_dir/missing-simulations.list
    comm -3 \
-      <(find $type -mindepth 1 -maxdepth 1 -type d -printf '%P\n' | grep -v lists | sort -V) \
-      <(jq -r '.[] | ((.flrID // .associatedCMEID) | "\(.[:19] | gsub("[-:]"; ""))\(.[19:])") + (if .version == null then (if .link == null then "" else .link | gsub(".*/(?<id>[0-9]+)/-1"; "_\(.id)") end) else "_\(.version)" end)' $type/past.json | sort -V) \
+      <(find $type -mindepth 2 -maxdepth 2 -type d -printf '%P\n' | sort -V) \
+      <(jq -r '.[] | ((.flrID // .associatedCMEID) | "\(.[:19] | gsub("[-:]"; ""))\(.[19:])") + (if .version == null then (if .link == null then "" else .link | gsub(".*/(?<id>[0-9]+)/-1"; "_\(.id)") end) else "_\(.version)" end)' $type/past.json | sed -E 's|(.{4})(.*)|\1/\1\2|' | sort -V) \
    | tr '\t' ',' \
    | awk -F, 'NF==1{ print $1, "MissingLog" } NF==2{ print $2, "MissingSim" }' \
-   > $type/lists/missing-simulations.new.list
+   > $lists_dir/missing-simulations.new.list
    comm -3 \
-      <(cut -d' ' -f1 $type/lists/missing-simulations.new.list) \
-      <(cut -d' ' -f1 $type/lists/missing-simulations.list)
+      <(cut -d' ' -f1 $lists_dir/missing-simulations.new.list) \
+      <(cut -d' ' -f1 $lists_dir/missing-simulations.list)
    echo
 
    printf '\n\n\n'
 done
 
 echo "After merging new issues, type:"
-echo "rm $DataDir/*/lists/*.new.list"
+echo "rm $DataDir/lists/*/missing*.new.list"

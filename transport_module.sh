@@ -37,7 +37,7 @@ done
 }
 
 [[ $CME_id == *CME* ]] && type=CME || type=Flare
-CME_dir=$data_dir/$type/$CME_id
+CME_dir=$data_dir/$type/${CME_id:0:4}/$CME_id
 trspt_dir=$CME_dir/path_output/transport_$location
 cd $trspt_dir
 

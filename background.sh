@@ -52,11 +52,11 @@ echo "[$(date -u +'%F %T')] Background simulation: $run_dir"
    exit 1
 }
 
-bkg_dir=$data_dir/Background/$run_dir
+bkg_dir=$data_dir/Background/${run_dir:0:4}/$run_dir
 logfile=$bkg_dir/log.txt
 
 echo "[$(date -u +'%F %T')] Copying files to $bkg_dir ..."
-mkdir $bkg_dir
+mkdir -p $bkg_dir
 # copy ZEUS source code
 cp -r $iPATH_dir/Acceleration/zeus3.6/* $bkg_dir/
 

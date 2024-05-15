@@ -269,12 +269,13 @@ if len(flare_index) != 0:
         bgsw_folder_name =t2.strftime('%Y%m%d_%H%M')
     else:
         bgsw_folder_name =t3.strftime('%Y%m%d_%H%M')
+    bkg_root_dir = root_dir + '/Background/' + bgsw_folder_name[0:4] + '/'
 
     # handle missing background folder here, so errors from accesing input.json are avoided
     # note that we exit the script here, just to avoid putting the rest of the code after an else block
     # printing MISSING_BKG will force flare.sh to check for files in the background folder, so
     # when it fails it will correctly identify a missing background simulation error
-    if not os.path.exists(root_dir + '/Background/' + bgsw_folder_name):
+    if not os.path.exists(bkg_root_dir + bgsw_folder_name):
        print('MISSING_BKG:' + bgsw_folder_name, file=sys.stderr)
        print('Trying previous background simulation folder', file=sys.stderr)
 
@@ -282,7 +283,8 @@ if len(flare_index) != 0:
        current_bkg_dir = bgsw_folder_name
        prev_bkg_dt = datetime.strptime(bgsw_folder_name, '%Y%m%d_%H%M') - timedelta(hours=8)
        bgsw_folder_name = prev_bkg_dt.strftime('%Y%m%d_%H%M')
-       if not os.path.exists(root_dir + '/Background/' + bgsw_folder_name):
+       bkg_root_dir = root_dir + '/Background/' + bgsw_folder_name[0:4] + '/'
+       if not os.path.exists(bkg_root_dir + bgsw_folder_name):
             print('MISSING_BKG:' + current_bkg_dir + ',' + bgsw_folder_name)
             f4.close()
             exit_after_error(utc_time, 'Missing background folder', 'ERROR:MISSING_BKG')
@@ -300,7 +302,7 @@ if len(flare_index) != 0:
        json.dump(list_obj, write_file, indent=4)
 
     #### modify input.json for the flare run
-    with open(root_dir+'/Background/'+bgsw_folder_name+'/input.json', 'r') as f2:
+    with open(bkg_root_dir+bgsw_folder_name+'/input.json', 'r') as f2:
        input_data = json.load(f2)
 
     input_data['cme_speed'] = Vcme
@@ -314,7 +316,7 @@ if len(flare_index) != 0:
         n_multi = Vcme*2e-3 + 1.
     input_data['n_multi'] = n_multi
 
-    with open(root_dir+'/Background/'+bgsw_folder_name+'/'+run_time+'_flare_earth_input.json', 'w') as f3:
+    with open(bkg_root_dir+bgsw_folder_name+'/'+run_time+'_flare_earth_input.json', 'w') as f3:
        json.dump(input_data, f3, indent=4)
 
     earth_r, earth_lat, earth_lon = find_location('planets/earth', datetime_flare, root_dir)
@@ -329,7 +331,7 @@ if len(flare_index) != 0:
        input_data['phi_e'] = phi_e + lon - earth_lon
        input_data['r0_e'] = rad
 
-       with open(root_dir+'/Background/'+bgsw_folder_name+'/'+run_time+'_CME_'+obs+'_input.json', 'w') as f3:
+       with open(bkg_root_dir+bgsw_folder_name+'/'+run_time+'_flare_'+obs+'_input.json', 'w') as f3:
           json.dump(input_data, f3, indent=4)
 
     #### Generating Output JSON
@@ -404,7 +406,7 @@ if len(flare_index) != 0:
     json_data["sep_forecast_submission"]["triggers"].append(flare)
     json_data["sep_forecast_submission"]["triggers"].append(cme)
 
-    with open(root_dir+'/Background/'+bgsw_folder_name+'/'+run_time+'_flare_earth_output.json', 'w') as write_file:
+    with open(bkg_root_dir+bgsw_folder_name+'/'+run_time+'_flare_earth_output.json', 'w') as write_file:
         json.dump(json_data, write_file, indent=4)
     flare_id = flare_id.replace('-', '', 2).replace(':', '', 2) + '_' + flare_version
 else:

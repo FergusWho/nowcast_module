@@ -12,7 +12,7 @@ squeue --me -h -o "%.18i %.10M %.6D %R %Z" \
 echo
 
 echo "  --- Simulation logs (most recent 10/type) ---"
-find -mindepth 3 -maxdepth 3 -type f -name log.txt -printf "%P\n" \
+find Background CME Flare -mindepth 3 -maxdepth 3 -type f -name log.txt \
 | sort -rV \
 | awk '
    $0 ~ /Background/ && nbkg < 10 { ++nbkg; print $0 }

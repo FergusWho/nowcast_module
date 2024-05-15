@@ -26,7 +26,7 @@ opsep_dir='/shared/iPATH/operational_sep_v3'
 MPI_comp='mpif90'
 FCOMP='gfortran'
 
-echo "------------- Flare Module -------------"
+echo "-------------- Flare Module --------------"
 
 # default values for command-line arguments
 run_time=$(date -u +'%Y%m%d_%H%M')
@@ -76,6 +76,7 @@ if [[ -z $CME_id ]]; then
    IFS=' '
    read -a strarr <<<$last_line
    bgsw_folder_name=${strarr[0]}
+   bkg_dir=$data_dir/Background/${bgsw_folder_name:0:4}/$bgsw_folder_name
    CME_id=${strarr[1]}     # this is actually flare_id
    only_time_changed=${strarr[2]}
 
@@ -99,32 +100,41 @@ if [[ -z $CME_id ]]; then
       # with the AWS instance or with iSWA servers
       echo "[$(date -u +'%F %T')] Background simulation not found: exit"
       exit 1
-   elif [[ ! -f $data_dir/Background/$bgsw_folder_name/zr006JH ]]; then
+   elif [[ ! -f $bkg_dir/zr006JH ]]; then
       # the background simulation is not done yet or it failed
 
       # retrieve job id, eventually waiting up to 2 minutes for its submission
       # jobs are always submitted within 2 minutes from the background cron job start time
-      jobid=$(awk '/Submitted batch job/{ print $4 }' $data_dir/Background/$bgsw_folder_name/log.txt)
-      (( n = 0, MAX_WAIT = 12 ))
-      while (( jobid == 0 && n < MAX_WAIT )); do
-         echo "[$(date -u +'%F %T')] Waiting for ZEUS job to be submitted ..."
+      jobid=$(awk '/Submitted batch job/{ print $4 }' $bkg_dir/log.txt)
+      (( n = 1, MAX_WAIT = 12 ))
+      while (( jobid == 0 && n <= MAX_WAIT )); do
+         echo "[$(date -u +'%F %T')] Waiting for ZEUS job to be submitted [$n/$MAX_WAIT] ..."
          sleep 10s
-         jobid=$(awk '/Submitted batch job/{ print $4 }' $data_dir/Background/$bgsw_folder_name/log.txt)
+         jobid=$(awk '/Submitted batch job/{ print $4 }' $bkg_dir/log.txt)
          (( ++n ))
       done
+
+      (( jobid == 0 )) && {
+         # NB: the CME has already been added to past.json, so it won't be
+         # rerun in the next cron; if the background simulation is still running
+         # or it has been manually fixed, then this CME needs to be manually
+         # rerun
+         echo "[$(date -u +'%F %T')] Background simulation failed or taking longer than expected: exit"
+         exit 1
+      }
 
       # retrieve job status, eventually waiting up to 70 minutes for its completion
       # 95% of the background simulations are completed within 70 minutes
       job_status=$(sacct -j $jobid -P -X -n -ostate 2>/dev/null)
-      (( n = 0, MAX_WAIT = 70 ))
-      while [[ $job_status != COMPLETED && $n -lt $MAX_WAIT ]]; do
-         echo "[$(date -u +'%F %T')] Waiting for ZEUS job $jobid to finish (status = $job_status) ..."
+      (( n = 1, MAX_WAIT = 70 ))
+      while [[ $job_status != COMPLETED && $n -le $MAX_WAIT ]]; do
+         echo "[$(date -u +'%F %T')] Waiting for ZEUS job $jobid to finish (status = $job_status) [$n/$MAX_WAIT] ..."
          sleep 1m
          job_status=$(sacct -j $jobid -P -X -n -ostate 2>/dev/null)
          (( ++n ))
       done
 
-      [[ $job_status != COMPLETED || ! -f $data_dir/Background/$bgsw_folder_name/zr006JH ]] && {
+      [[ $job_status != COMPLETED || ! -f $bkg_dir/zr006JH ]] && {
          # NB: the flare has already been added to past.json, so it won't be
          # rerun in the next cron; if the background simulation is still running
          # or it has been manually fixed, then this flare needs to be manually
@@ -149,14 +159,23 @@ else
       hour=16
    fi
    bgsw_folder_name=${CME_id%%T*}_${hour}00
+   bkg_dir=$data_dir/Background/${bgsw_folder_name:0:4}/$bgsw_folder_name
 
    echo "[$(date -u +'%F %T')] Background simulation: $bgsw_folder_name"
 fi
 
 #-----------------------------------------------
 # CME setup and acceleration:
-CME_dir=$data_dir/Flare/$CME_id
+CME_dir=$data_dir/Flare/${CME_id:0:4}/$CME_id
 logfile=$CME_dir/log.txt
+
+# make sure correct folder hierarchy exists
+mkdir -p $data_dir/CME/${CME_id:0:4}
+
+(( skip_jobs == 1 )) && [[ ! -d $CME_dir ]] && {
+   echo "[$(date -u +'%F %T')] Simulation folder $CME_dir does not exists; disabling skipping jobs"
+   skip_jobs=0
+}
 
 # use the most recent previous flare version folder as starting point, if available
 # this can only happen if check_flare.py detects that only start and/or peak time changed
@@ -202,7 +221,7 @@ if (( skip_jobs )); then
    }
 
    echo "[$(date -u +'%F %T')] Setting up necessary files for skipping jobs ..."
-   cp $data_dir/Background/$bgsw_folder_name/${run_time}_*.json $CME_dir/
+   cp $bkg_dir/${run_time}_*.json $CME_dir/
    rm -f $CME_dir/log.txt
    rm -f $CME_dir/path_output/{CME.gif,staging.info}
    rm -f $CME_dir/path_output/transport_*/{ZEUS+iPATH*,*.csv,*.txt,*.png,*.pkl}
@@ -217,7 +236,7 @@ else
    }
 
    echo "[$(date -u +'%F %T')] Copying background simulation to $CME_dir ..."
-   cp -r $data_dir/Background/$bgsw_folder_name $CME_dir
+   cp -r $bkg_dir $CME_dir
 
    # use the modified dzeus36 version for nowcasting
    cp $code_dir/dzeus36_alt $CME_dir/dzeus36
