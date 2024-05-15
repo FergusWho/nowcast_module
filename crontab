@@ -14,3 +14,6 @@ SHELL=/bin/bash
 
 # Daily cleaning of staging area
 0 0 * * * /shared/iPATH/nowcast_module_v1/DailyStagingToArchive.sh &>>/data/iPATH/nowcast_module_v1/cron/DailyStagingCleanup/$(date -u +\%Y\%m\%d).log
+
+# Daily disk cleaning of simulation folders
+0 0 * * * /shared/iPATH/nowcast_module_v1/DailyDiskCleanup.sh &>>/data/iPATH/nowcast_module_v1/cron/DailyDiskCleanup/$(date -u +\%Y\%m\%d).log

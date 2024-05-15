@@ -51,23 +51,23 @@ for type in ${Types//,/ }; do
    len=${#ntot}
    (( del = 2*len + 3 ))
 
-   (( Progress )) && printf '[%*d/%*d]' $len 0 $len $ntot
+   (( Progress )) && printf '[%*d/%*d]' $len 0 $len $ntot || echo "[$ntot]"
 
    (( n = 0 ))
    for dir in ${dirs[@]}; do
       (( ++n ))
-      (( Progress )) && printf '\033[%dD[%*d/%*d]' $del $len $n $len $ntot
+      (( Progress )) && printf '\033[%dD[%*d/%*d]' $del $len $n $len $ntot || echo $dir
 
       [[ $type == Background ]] && {
          files=($(find $dir -type f ! \( -name '*.json' -o -name 'z*JH' -o -name '*.gz' -o -name log.txt \) -printf '%P\n'))
          tar -C $dir --remove-files -czf $dir/files.tar.gz ${files[@]}
-         rm -rf $dir/dzeus3.6
       } || {
          find $dir -type f ! \( -path '*/path_output/*' -o -name '*.json' -o -name '*.gz' -o -name log.txt \) -delete
       }
+      rm -rf $dir/dzeus3.6
    done
 
-   echo
+   (( Progress )) && echo
    du -hs $type | awk '{ printf "%s size after cleaning: %s\n", $2, $1 }'
 done
 
