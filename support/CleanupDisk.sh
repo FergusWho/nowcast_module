@@ -63,6 +63,7 @@ for type in ${Types//,/ }; do
          tar -C $dir --remove-files -czf $dir/files.tar.gz ${files[@]}
       } || {
          find $dir -type f ! \( -path '*/path_output/*' -o -name '*.json' -o -name '*.gz' -o -name log.txt \) -delete
+         find $dir -type f -name '*.out' -delete
       }
       rm -rf $dir/dzeus3.6
    done
