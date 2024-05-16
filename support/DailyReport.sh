@@ -1,7 +1,7 @@
 #!/bin/bash
 
 CodeDir=$(dirname "$(realpath "$0")")
-DataDir=${CodeDir/shared/data}
+DataDir=/data/iPATH/nowcast_module_v1
 
 MinStartDate=$(date -udyesterday +%s)
 MaxStartDate=$(date -udtoday +%s)
