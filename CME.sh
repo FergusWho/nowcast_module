@@ -14,7 +14,6 @@ cleanup_acceleration_files() {
    rm -f dist_all_shl.dat
 
     echo "[$(date -u +'%F %T')] Done"
-    echo
 }
 
 # default values for CCMC AWS on rt-hpc-prod
@@ -358,6 +357,7 @@ echo "[$(date -u +'%F %T')] Switching to $logfile"
 
     cleanup_acceleration_files
 
+    echo
     echo "[$(date -u +'%F %T')] Copying output files to the iSWA staging area"
     cd $CME_dir/path_output
     $code_dir/cp2staging.sh -d iSWA
