@@ -57,7 +57,7 @@ for type in ${Types//,/ }; do
    logs=($({
          printf "%s\n" ${logs[@]};
          find cron/$type -name '*.log' $from_test $to_test;
-      } | sort -V))
+      }))
 
    ntot=${#logs[@]}
    len=${#ntot}
@@ -184,6 +184,9 @@ for type in ${Types//,/ }; do
 
    printf "\n"
 
+   sort -V $type/status >$type/status.sort
+   mv $type/status.sort $type/status
+
    TZ=UTC awk -vMinStartDate=$MinStartDate -vMaxStartDate=$MaxStartDate '
       !/OK$/ {
          y = substr($1, 1, 4)
@@ -194,5 +197,5 @@ for type in ${Types//,/ }; do
          ut = mktime(y" "m" "d" "H" "M" 00")
          if (MinStartDate <= ut && ut < MaxStartDate) print
       }
-   ' $type/status | sort -V
+   ' $type/status
 done

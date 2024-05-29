@@ -146,9 +146,11 @@ for type in ${Types//,/ }; do
          echo " ZEUS $tot"
       } >>$type/datasize
    done < <(
-      find $type -mindepth 2 -maxdepth 2 -type d \
-      | sort -V
+      find $type -mindepth 2 -maxdepth 2 -type d
    )
+
+   sort -V $type/datasize >$type/datasize.sort
+   mv $type/datasize.sort $type/datasize
 
    printf "\n"
    printf -- '--------------------------------------------------------------------\n'

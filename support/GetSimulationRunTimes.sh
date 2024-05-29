@@ -153,9 +153,11 @@ for type in ${Types//,/ }; do
          echo
       } >>$type/runtimes
    done < <(
-      find $type -mindepth 2 -maxdepth 2 -type d \
-      | sort -V
+      find $type -mindepth 2 -maxdepth 2 -type d
    )
+
+   sort -V $type/runtimes >$type/runtimes.sort
+   mv $type/runtimes.sort $type/runtimes
 
    printf "\n"
    printf -- '--------------------------------------------------------------------\n'
