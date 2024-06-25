@@ -392,6 +392,8 @@ if len(flare_index) != 0:
            "end_time": flare_end_time,
            "location": flare_location,
            "intensity": FSXR,
+           "catalog": "DONKI",
+           "catalog_id": flare_id,
            "urls": [ flare_link, flare_link.replace('-1', str(flare_version)) ]
            }
     }
@@ -400,6 +402,7 @@ if len(flare_index) != 0:
            "start_time": flare_begin_time,
            "half_width": width/2.,
            "speed": Vcme,
+           "derivation_technique": { "process": "automatic", "method": "FlareDerived" }
            }
     }
 
@@ -415,7 +418,7 @@ else:
     only_time_changed = ''
     if len(data) > 0:
         f4.write('Checking Time:{} | No new flare found, last flare in 7 days: {}\n'.format(
-            utc_time, data[len(data)-1].get('flrID') ))
+            utc_time, data[-1].get('flrID') ))
     else:
         f4.write('Checking Time:{} | No new flare found, no flare in past 7 days.\n'.format(utc_time))
 f4.close()
