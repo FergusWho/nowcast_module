@@ -122,8 +122,16 @@ for i in range(0, len(data)):
       CME_link = data[i].get('link')
       CME_analysis_id = CME_link.split('/')[6]
 
+      CME_feature = data[i].get('featureCode')
+
       datetime_CME = datetime.strptime(CME_start_time, '%Y-%m-%dT%H:%M:%S')
-      print('[{:2d}] CME date: {}, analysis: {}'.format(i, datetime_CME, CME_analysis_id), file=sys.stderr)
+      print('[{:2d}] CME date: {}, analysis: {}, measurement type: {}'.format(i, datetime_CME, CME_analysis_id, CME_feature), file=sys.stderr)
+
+      # skip CME measurements not related to bulk (LE)  or shock speed (SH)
+      # assume missing feature info is equivalent to LE
+      if CME_feature is not None and CME_feature != 'LE' and CME_feature != 'SH':
+         print('     Measurement type not supported: skipping', file=sys.stderr)
+         continue
 
       if datetime_CME > dt_start and datetime_CME <= utc_datetime:
          # check whether this CME has been simulated before
@@ -161,6 +169,8 @@ if len(CME_index) != 0:
        CME_latitude  = data[CME_index[ii]].get('latitude')
        CME_longitude = data[CME_index[ii]].get('longitude')
        CME_time21_5  = data[CME_index[ii]].get('time21_5')
+       CME_method    = data[CME_index[ii]].get('measurementTechnique')
+       CME_feature   = data[CME_index[ii]].get('featureCode')
 
        CME_start_time = CME_id.split("-CME-")[0]
        datetime_CME = datetime.strptime(CME_start_time, '%Y-%m-%dT%H:%M:%S')
@@ -184,9 +194,10 @@ if len(CME_index) != 0:
        f4.close()
        exit_after_error(utc_time, 'Wrong format in DONKI data', 'ERROR:DONKI_WRONG_DATA_FORMAT')
 
-    f4.write('Checking Time:{} | CME found:{}_{} speed:{} width:{} lat:{} lon:{} time_21.5:{}\n'.format(
+    f4.write('Checking Time:{} | CME found:{}_{} speed:{} width:{} lat:{} lon:{} time_21.5:{} measurement:{}/{}\n'.format(
       utc_time, CME_id, CME_analysis_id, CME_speed,
-      CME_halfAngle*2, CME_latitude, CME_longitude, CME_time21_5))
+      CME_halfAngle*2, CME_latitude, CME_longitude, CME_time21_5,
+      CME_method, CME_feature))
 
     # assuming the background solar wind setup can finish in 15 mins
     if datetime_CME < t2:
@@ -315,7 +326,8 @@ if len(CME_index) != 0:
            "coordinates": "HEEQ",
            "catalog": "DONKI",
            "catalog_id": CME_id,
-           "urls": [ CME_link ]
+           "urls": [ CME_link ],
+           "derivation_technique": { "process": "manual", "method": CME_method, "measurement_type": CME_feature }
            }
     }
 
@@ -329,7 +341,7 @@ else:
     CME_id = ''
     if len(data) > 0:
         f4.write('Checking Time:{} | No new CME found, last CME in 7 days: {}_{}\n'.format(
-            utc_time, data[len(data)-1].get('associatedCMEID'), data[-1].get('link').split('/')[6]))
+            utc_time, data[-1].get('associatedCMEID'), data[-1].get('link').split('/')[6]))
     else:
         f4.write('Checking Time:{} | No new CME found, no CME in past 7 days.\n'.format(utc_time))
 f4.close()
