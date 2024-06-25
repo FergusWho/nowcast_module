@@ -30,7 +30,7 @@ args = parser.parse_args()
 root_dir = args.root_dir
 run_time = args.run_time
 model_mode = args.model_mode
-observers = { 'mars': 'planets/mars', 'venus': 'planets/venus', 'STA': 'spacecraft/stereoa', 'PSP': 'spacecraft/psp' }
+observers = { 'mars': 'planets/mars', 'venus': 'planets/venus', 'STA': 'spacecraft/stereoa', 'Bepi': 'spacecraft/bepicolombo' }
 ######################################################################################################
 
 def exit_after_error(utc_time, msg, error_type):

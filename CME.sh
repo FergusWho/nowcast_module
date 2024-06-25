@@ -30,7 +30,7 @@ echo "-------------- CME Module --------------"
 # default values for command-line arguments
 run_time=$(date -u +'%Y%m%d_%H%M')
 if_local=0
-Observers=(earth mars venus STA PSP)
+Observers=(earth mars venus STA Bepi)
 
 # testing for specific event:
 # example: bash CME.sh -t 20220120_0830
