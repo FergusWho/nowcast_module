@@ -66,6 +66,8 @@ for type in ${Types//,/ }; do
          find $dir -type f -name '*.out' -delete
       }
       rm -rf $dir/dzeus3.6
+
+      touch -r $dir/log.txt $dir # restore original modification time for folder
    done
 
    (( Progress )) && echo
