@@ -348,6 +348,9 @@ if n_mean < 1.5:
        n_mean = 1.5
        print('Warning: solar wind density too small, setting it to 1.5', file=sys.stderr)
 
+if v_mean < 275.0:
+   v_mean = 275.0
+   print('Warning: solar wind speed too small, setting it to 275.0', file=sys.stderr)
 
 if len(time3) != 0:
        flux_mean = 0.0
