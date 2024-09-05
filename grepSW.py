@@ -333,6 +333,12 @@ if count > 0:
    n_mean = n_mean/count
    v_mean = v_mean/count
    T_mean = T_mean/count
+else:
+   n_mean = 5
+   v_mean = 400
+   T_mean = 0.07e6
+   print('Warning! Solar wind plasma data missing!', file=sys.stderr)
+   print('Solar wind density, speed, and temperature set to default!', file=sys.stderr)
 
 print('Solar wind plasma: {} good points, <n> = {}, <v> = {}, <T> = {}'.format(
    count, n_mean, v_mean, T_mean), file=sys.stderr)
