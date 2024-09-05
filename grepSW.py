@@ -344,9 +344,9 @@ print('Solar wind plasma: {} good points, <n> = {}, <v> = {}, <T> = {}'.format(
    count, n_mean, v_mean, T_mean), file=sys.stderr)
 
 # avoid cases with n_mean too small
-if n_mean < 1.0:
-       n_mean = 1.0
-       print('Warning: solar wind density too small, setting it to 1.0', file=sys.stderr)
+if n_mean < 1.5:
+       n_mean = 1.5
+       print('Warning: solar wind density too small, setting it to 1.5', file=sys.stderr)
 
 
 if len(time3) != 0:
