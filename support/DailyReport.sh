@@ -8,13 +8,13 @@ MaxStartDate=$(date -udtoday +%s)
 
 # redirect output to both stdout and mailx
 {
-   $CodeDir/FindSimulationProblems.sh -f yesterday -t today -p no
+   $CodeDir/FindSimulationProblems.sh -f yesterday -t today -p no -s Background,CME
 
    # silently update data size and run time DBs
-   $CodeDir/GetSimulationDataSize.sh -f yesterday -t today -p no &>/dev/null
-   $CodeDir/GetSimulationRunTimes.sh -f yesterday -t today -p no &>/dev/null
+   $CodeDir/GetSimulationDataSize.sh -f yesterday -t today -p no -s Background,CME &>/dev/null
+   $CodeDir/GetSimulationRunTimes.sh -f yesterday -t today -p no -s Background,CME &>/dev/null
 
-   for type in CME Flare; do
+   for type in CME; do
       echo
       echo "Successful $type simulations:"
 
