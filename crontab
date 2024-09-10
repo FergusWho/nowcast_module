@@ -17,3 +17,6 @@ SHELL=/bin/bash
 
 # Daily disk cleaning of simulation folders
 0 0 * * * /shared/iPATH/nowcast_module_v1/support/DailyDiskCleanup.sh &>>/data/iPATH/nowcast_module_v1/cron/DailyDiskCleanup/$(date -u +\%Y\%m\%d).log
+
+# network check
+*/1 * * * * /shared/iPATH/nowcast_module_v1/support/CheckNetwork.sh &>>/data/iPATH/nowcast_module_v1/cron/NetworkCheck/$(date -u +\%Y\%m\%d).log

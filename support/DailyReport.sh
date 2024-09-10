@@ -64,6 +64,37 @@ MaxStartDate=$(date -udtoday +%s)
    done
 
    echo
+   echo "Network problems:"
+   TZ=UTC awk '
+      !/OK/ {
+         st = $3
+         if (st != lst && lut > 0) {
+            printf " - %s   %s\n", strftime("%T", lut+59), lst
+            lut = 0
+         }
+         lst = st
+
+         ut = mktime(gensub(/[:-]/, " ", "g", $1" "$2))
+         if (ut - lut > 60) {
+            printf "   %s", $2
+         }
+         lut = ut
+      }
+
+      /OK/ && lut {
+         printf " - %s   %s\n", strftime("%T", lut+59), lst
+         lut = 0
+      }
+
+      END {
+         if (lut) {
+            printf " - %s   %s\n", strftime("%T", lut+59), lst
+         }
+      }
+   ' $DataDir/cron/NetworkCheck/$(date -u +'%Y%m%d').log
+
+   echo
+   echo "Storage status:"
    df -h /data
 } \
 |& tee >(mailx -s "iPATH rt-hpc-prod summary" -r m_ipath corti@hawaii.edu)

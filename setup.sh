@@ -4,7 +4,7 @@ CodeDir=/shared/iPATH/nowcast_module_v1
 DataDir=/data/iPATH/nowcast_module_v1
 
 # create output folders for cron logs
-mkdir -p $DataDir/cron/{Background,CME,Flare,DailyReport,DailyStagingCleanup,DailyDiskCleanup}
+mkdir -p $DataDir/cron/{Background,CME,Flare,DailyReport,DailyStagingCleanup,DailyDiskCleanup,NetworkCheck}
 
 # create output folders for simulations
 mkdir -p $DataDir/{Background,CME,Flare}
