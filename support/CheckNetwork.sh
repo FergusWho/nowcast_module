@@ -4,7 +4,7 @@ check_ip() {
    ping -q -c1 -w1 $1 &>/dev/null && return 0 || return 1
 }
 
-printf "%s " $(date -u +'%F %T')
+date_str=$(date -u +'%F %T')
 
 # commonly used DNS IPs:
 #    Google (primary, secondary)
@@ -22,31 +22,31 @@ for ip in ${ips[@]}; do
    check_ip $ip && break || (( ++nbads ))
 done
 if (( nbads == ${#ips[@]} )); then
-   echo NETWORK_DOWN
+   echo $date_str NETWORK_DOWN $(date -u +'%F %T')
    exit
 fi
 
 if ! check_ip iswa.gsfc.nasa.gov; then
-   echo ISWA_DOWN
+   echo $date_str ISWA_DOWN $(date -u +'%F %T')
    exit
 fi
 
 hapi_status=$(curl --connect-timeout 2 -s https://iswa.gsfc.nasa.gov/IswaSystemWebApp/hapi/capabilities |
    jq -r '.status.message' 2>/dev/null)
 if [[ $hapi_status != OK ]]; then
-   echo ISWA_HAPI_DOWN
+   echo $date_str ISWA_HAPI_DOWN $(date -u +'%F %T')
    exit
 fi
 
 if ! check_ip kauai.ccmc.gsfc.nasa.gov; then
-   echo KAUAI_DOWN
+   echo $date_str KAUAI_DOWN $(date -u +'%F %T')
    exit
 fi
 
 donki_status=$(curl --connect-timeout 2 -s -o /dev/null -w "%{http_code}" https://kauai.ccmc.gsfc.nasa.gov/DONKI/WS/get/CMEAnalysis?startDate=$(date -u +%F))
 if [[ $donki_status != 200 ]]; then
-   echo DONKI_DOWN
+   echo $date_str DONKI_DOWN $(date -u +'%F %T')
    exit
 fi
 
-echo OK
+echo $date_str OK $(date -u +'%F %T')
