@@ -65,7 +65,8 @@ MaxStartDate=$(date -udtoday +%s)
 
    echo
    echo "Network problems:"
-   TZ=UTC awk '
+   sort $DataDir/cron/NetworkCheck/$(date -u +'%Y%m%d').log \
+   | TZ=UTC awk '
       !/OK/ {
          st = $3
          if (st != lst && lut > 0) {
@@ -90,8 +91,7 @@ MaxStartDate=$(date -udtoday +%s)
          if (lut) {
             printf " - %s   %s\n", strftime("%T", lut+59), lst
          }
-      }
-   ' $DataDir/cron/NetworkCheck/$(date -u +'%Y%m%d').log
+      }'
 
    echo
    echo "Storage status:"
