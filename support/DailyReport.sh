@@ -76,7 +76,7 @@ MaxStartDate=$(date -udtoday +%s)
          lst = st
 
          ut = mktime(gensub(/[:-]/, " ", "g", $1" "$2))
-         if (ut - lut > 60) {
+         if (!lut) {
             printf "   %s", $2
          }
          lut = ut
