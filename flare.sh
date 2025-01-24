@@ -20,7 +20,6 @@ cleanup_acceleration_files() {
 iPATH_dir='/shared/iPATH/ipath_v2'
 code_dir='/shared/iPATH/nowcast_module_v1'
 data_dir='/data/iPATH/nowcast_module_v1'
-opsep_dir='/shared/iPATH/operational_sep_v3'
 
 MPI_comp='mpif90'
 FCOMP='gfortran'

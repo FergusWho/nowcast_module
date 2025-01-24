@@ -3,7 +3,7 @@
 # default values for CCMC AWS on rt-hpc-prod
 code_dir='/shared/iPATH/nowcast_module_v1'
 data_dir='/data/iPATH/nowcast_module_v1'
-opsep_dir='/shared/iPATH/operational_sep_v3'
+opsep_dir='/shared/iPATH/fetchsep_v0.3'
 
 # default values for command-line arguments
 if_local=0
@@ -87,16 +87,17 @@ if [[ $location == earth ]]; then
    echo "[$(date -u +'%F %T')] ${location^}: Prediction window start and end time: $starttime, $endtime"
 
    # Use OpSep to produce output for SEP scoreboard
+   # add also a couple of fields specific to SEPVAL which are not required by the CCMC SEPSB JSON schema
    echo "[$(date -u +'%F %T')] ${location^}: Using OpSEP to generate output ..."
-   mkdir -p json/{library,data,output}
-   cp output.json json/library/model_template.json
+   mkdir -p json/{templates,data,output}
+   jq '.sep_forecast_submission += { "source_info": { "native_flux_type": "" }, "notes": [ { "note": "produced by https://github.com/ktindiana/fetchsep" } ] }' output.json >json/templates/output.json
    cp ${startdate}_differential_flux.csv json/data/
    cd json
-   python3 $opsep_dir/operational_sep_quantities.py --StartDate "$starttime" --EndDate "$endtime" --Experiment user --ModelName ZEUS+iPATH_$type --FluxType differential --UserFile ${startdate}_differential_flux.csv --spase spase://CCMC/SimulationModel/iPATH/2 --Threshold '30,1;50,1'
+   PYTHONPATH="$PYTHONPATH:$opsep_dir" python3 $opsep_dir/bin/opsep --StartDate "$starttime" --EndDate "$endtime" --Experiment user --ModelName ZEUS+iPATH_$type --FluxType differential --UserFile data/${startdate}_differential_flux.csv --spase spase://CCMC/SimulationModel/iPATH/2 --Threshold '30,1;50,1' --Template output.json
 
    # move opsep output to transport dir and cleanup
    cd $trspt_dir
-   mv json/output/* .
+   mv json/output/opsep/* .
    rm -r json
    echo "[$(date -u +'%F %T')] ${location^}: Done"
    echo
