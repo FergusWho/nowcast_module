@@ -89,9 +89,12 @@ for type in ${Types//,/ }; do
    echo
 
    echo "### Looking for mismatches between status and simulation folders ..."
+   # need to look for '*input.json' files older than today, because for
+   # Background runs, new triggers will put new files in the folder, changing
+   # the modification time, thus producing false mismatches
    comm -3 \
       <(sed -En "/$type\//s|.* $type/(.*) .*|\1|p" $type/status | sort -V) \
-      <(find $type -mindepth 2 -maxdepth 2 -type d ! -newermt $today -printf '%P\n' | sort -V) \
+      <(find $type -mindepth 3 -maxdepth 3 -type f -name '*input.json' ! -newermt $today -printf '%P\n' | cut -d'/' -f1-2 | sort -Vu) \
    | grep -v $today
    echo
 
