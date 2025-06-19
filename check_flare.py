@@ -76,7 +76,7 @@ nreqs = 0
 while nreqs < MAX_REQUESTS:
    try:
       print('Requesting flares [{}/{}]'.format(nreqs+1, MAX_REQUESTS), file=sys.stderr)
-      f1 = urllib.request.urlopen(url_flare)
+      f1 = urllib.request.urlopen(url_flare, timeout=60)
       if f1.getcode() == 200:
          print('Request succeeded', file=sys.stderr)
          break
@@ -140,7 +140,7 @@ for i in range(0, len(data)):
          nreqs = 0
          while nreqs < MAX_REQUESTS:
             try:
-               response = urllib.request.urlopen(flare_link)
+               response = urllib.request.urlopen(flare_link, timeout=60)
                if response.getcode() == 200:
                   break
             except Exception:

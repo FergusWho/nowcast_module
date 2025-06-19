@@ -114,7 +114,7 @@ nreqs = 0
 while nreqs < MAX_REQUESTS:
        try:
               print('Requesting magnetic field data [{}/{}]'.format(nreqs+1, MAX_REQUESTS), file=sys.stderr)
-              f1 = urllib.request.urlopen(url_mag)
+              f1 = urllib.request.urlopen(url_mag, timeout=60)
               if f1.getcode() == 200:
                      print('Request succeeded', file=sys.stderr)
                      break
@@ -131,7 +131,7 @@ nreqs = 0
 while nreqs < MAX_REQUESTS:
        try:
               print('Requesting solar wind plasma data [{}/{}]'.format(nreqs+1, MAX_REQUESTS), file=sys.stderr)
-              f2 = urllib.request.urlopen(url_pla)
+              f2 = urllib.request.urlopen(url_pla, timeout=60)
               if f2.getcode() == 200:
                      print('Request succeeded', file=sys.stderr)
                      break
@@ -148,7 +148,7 @@ nreqs = 0
 while nreqs < MAX_REQUESTS:
        try:
               print('Requesting seed population data [{}/{}]'.format(nreqs+1, MAX_REQUESTS), file=sys.stderr)
-              f4 = urllib.request.urlopen(url_seed)
+              f4 = urllib.request.urlopen(url_seed, timeout=60)
               if f4.getcode() == 200:
                      print('Request succeeded', file=sys.stderr)
                      break

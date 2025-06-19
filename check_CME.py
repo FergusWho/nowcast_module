@@ -78,7 +78,7 @@ nreqs = 0
 while nreqs < MAX_REQUESTS:
    try:
       print('Requesting CMEs [{}/{}]'.format(nreqs+1, MAX_REQUESTS), file=sys.stderr)
-      f1 = urllib.request.urlopen(url_cme)
+      f1 = urllib.request.urlopen(url_cme, timeout=60)
       if f1.getcode() == 200:
          print('Request succeeded', file=sys.stderr)
          break
