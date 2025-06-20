@@ -81,13 +81,13 @@ encoded_endtime = (utc_datetime + timedelta(minutes=1)).strftime("%Y-%m-%dT%H:%M
 swpc_start_time = datetime.strptime('2016-07-24_00:00', '%Y-%m-%d_%H:%M')
 # NOAA/SWPC real-time solar wind data data only available after this time
 if utc_datetime > swpc_start_time:
-       url_mag = "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/hapi/data?id=swpc_rtsw_mag_p1m&time.min="+encoded_starttime+"&time.max="+encoded_endtime+"&include=header&format=json&parameters=B_t,B_x,B_y,B_z"
-       url_pla = "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/hapi/data?id=swpc_rtsw_plasma_p1m&time.min="+encoded_starttime+"&time.max="+encoded_endtime+"&include=header&format=json&parameters=BulkSpeed,ProtonDensity,IonTemperature"
+       url_mag = "https://iswa.ccmc.gsfc.nasa.gov/IswaSystemWebApp/hapi/data?id=swpc_rtsw_mag_p1m&time.min="+encoded_starttime+"&time.max="+encoded_endtime+"&include=header&format=json&parameters=B_t,B_x,B_y,B_z"
+       url_pla = "https://iswa.ccmc.gsfc.nasa.gov/IswaSystemWebApp/hapi/data?id=swpc_rtsw_plasma_p1m&time.min="+encoded_starttime+"&time.max="+encoded_endtime+"&include=header&format=json&parameters=BulkSpeed,ProtonDensity,IonTemperature"
 else:
-       url_mag = "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/hapi/data?id=ace_mag_p1m&time.min="+encoded_starttime+"&time.max="+encoded_endtime+"&include=header&format=json&parameters=B_t,B_x,B_y,B_z"
-       url_pla = "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/hapi/data?id=ace_swepam_p1m&time.min="+encoded_starttime+"&time.max="+encoded_endtime+"&include=header&format=json&parameters=BulkSpeed,ProtonDensity,IonTemperature"
+       url_mag = "https://iswa.ccmc.gsfc.nasa.gov/IswaSystemWebApp/hapi/data?id=ace_mag_p1m&time.min="+encoded_starttime+"&time.max="+encoded_endtime+"&include=header&format=json&parameters=B_t,B_x,B_y,B_z"
+       url_pla = "https://iswa.ccmc.gsfc.nasa.gov/IswaSystemWebApp/hapi/data?id=ace_swepam_p1m&time.min="+encoded_starttime+"&time.max="+encoded_endtime+"&include=header&format=json&parameters=BulkSpeed,ProtonDensity,IonTemperature"
 
-url_seed = "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/hapi/data?id=ace_epam_p5m&time.min="+encoded_starttime+"&time.max="+encoded_endtime+"&include=header&format=json&parameters=ProtonFlux_47_68"
+url_seed = "https://iswa.ccmc.gsfc.nasa.gov/IswaSystemWebApp/hapi/data?id=ace_epam_p5m&time.min="+encoded_starttime+"&time.max="+encoded_endtime+"&include=header&format=json&parameters=ProtonFlux_47_68"
 
 print('iSWA URLs:', file=sys.stderr)
 print(url_mag, file=sys.stderr)

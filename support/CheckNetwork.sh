@@ -26,12 +26,12 @@ if (( nbads == ${#ips[@]} )); then
    exit
 fi
 
-if ! check_ip iswa.gsfc.nasa.gov; then
+if ! check_ip iswa.ccmc.gsfc.nasa.gov; then
    echo $date_str ISWA_DOWN $(date -u +'%F %T')
    exit
 fi
 
-hapi_status=$(curl --connect-timeout 10 -s https://iswa.gsfc.nasa.gov/IswaSystemWebApp/hapi/capabilities |
+hapi_status=$(curl --connect-timeout 10 -s https://iswa.ccmc.gsfc.nasa.gov/IswaSystemWebApp/hapi/capabilities |
    jq -r '.status.message' 2>/dev/null)
 if [[ $hapi_status != OK ]]; then
    echo $date_str ISWA_HAPI_DOWN $(date -u +'%F %T')
