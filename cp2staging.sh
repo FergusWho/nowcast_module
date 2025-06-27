@@ -6,11 +6,13 @@ StagingDir=/data/iPATH/nowcast_module_v1/staging
 # -t simulation type: CME or Flare
 # -s start date: yyyymmdd_HHMMSS
 # -d where to copy files, comma-separated list: any of iSWA or SEPSB
-while getopts 's:t:d:' flag; do
+# -p location, only used for SEPSB
+while getopts 's:t:d:p:' flag; do
    case "${flag}" in
       t) Type=${OPTARG};;
       s) StartDate=${OPTARG};;
       d) Destination=${OPTARG};;
+      p) Location=${OPTARG};;
    esac
 done
 
@@ -57,36 +59,38 @@ if [[ $Destination == *iSWA* ]]; then
 fi
 
 # SEP files for iSWA and SEP scoreboard
+declare -A SEPSB_issue_date=()
 while read dir; do
    cd $dir
 
    IFS=_ read skip obs <<<$dir
 
    # SEP scoreboard
-   if [[ $obs == earth ]]; then
-      while read f; do
-         if [[ $Destination == *SEPSB* ]]; then
-            # strip '_differential' from file names, including files pointed to inside the json file.
-            # 'differential' is added by Katie's OpSEP code to differentiate the source files used to create the output files.
-            # Since we use the option --FluxType differential when invoking opsep_dir/bin/opsep,
-            # this is carried over to the output files.
-            # However, the time profiles (.txt files) correspond to integral fluxes, so '_differential' is removed to avoid confusion.
-            dest=$StagingDir/sep_scoreboard/${f/_differential/}
-            cp -p $f $dest
-            [[ $f == *.json ]] && {
-               # remove also the extra field sep_forecast_submission.model_type.flux_type,
-               # including the leading comma, since the previous field will become
-               # the last field in the model object (JSON spec does not allow a
-               # comma after the last item of an object/list)
-               sed -Ei -e's/, +"flux_type": +"[^"]+"//' -e's/_differential//g' $dest
-               touch -r $f $dest # restore original modification time
-            }
-         fi
+   while read f; do
+      if [[ $Destination == *SEPSB* && $obs == $Location ]]; then
+         # strip '_differential' from file names, including files pointed to inside the json file.
+         # 'differential' is added by Katie's OpSEP code to differentiate the source files used to create the output files.
+         # Since we use the option --FluxType differential when invoking opsep_dir/bin/opsep,
+         # this is carried over to the output files.
+         # However, the time profiles (.txt files) correspond to integral fluxes, so '_differential' is removed to avoid confusion.
+         # Add observer name before timestamps, except for Earth
+         [[ $obs != earth ]] && str=.${obs^} || str=
+         dest=$StagingDir/sep_scoreboard/${f/_differential/$str}
+         cp -p $f $dest
+         [[ $f == *.json ]] && {
+            # remove also the extra field sep_forecast_submission.model_type.flux_type,
+            # including the leading comma, since the previous field will become
+            # the last field in the model object (JSON spec does not allow a
+            # comma after the last item of an object/list).
+            # add also observer name, to match modified file names
+            sed -Ei -e's/, +"flux_type": +"[^"]+"//' -e"s/_differential/$str/g" $dest
+            touch -r $f $dest # restore original modification time
+         }
+      fi
 
-         # save issue date, to be used for all Earth and CME files
-         [[ $f == *.json ]] && SEPSB_issue_date=$(sed -E -e's/.*\.([^.]+)Z\.json/\1/' -e's/-//g' -e's/T/_/' <<<$f)
-      done < <(find -type f -name 'ZEUS+iPATH_*')
-   fi
+      # save issue date, to be used for all Earth and CME files
+      [[ $f == *.json ]] && SEPSB_issue_date[$obs]=$(sed -E -e's/.*\.([^.]+)Z\.json/\1/' -e's/-//g' -e's/T/_/' <<<$f)
+   done < <(find -type f -name 'ZEUS+iPATH_*')
 
    # iSWA
    if [[ $Destination == *iSWA* ]]; then
@@ -94,7 +98,7 @@ while read dir; do
       if [[ -z $f ]]; then
          echo " !!! No differential flux in $dir: skippping"
       else
-         [[ $obs == earth && ! -z $SEPSB_issue_date ]] && IssueDate=$SEPSB_issue_date || IssueDate=$(date -ud@$(stat -c %Y $f) '+%Y%m%d_%H%M%S')
+         [[ ! -z ${SEPSB_issue_date[$obs]} ]] && IssueDate=${SEPSB_issue_date[$obs]} || IssueDate=$(date -ud@$(stat -c %Y $f) '+%Y%m%d_%H%M%S')
          declare -A alias=(
             [differential_flux]=differential-flux
             [event_integrated_fluence]=event-integrated-fluence
@@ -118,7 +122,7 @@ done < <(find -type d -name 'transport_*' -printf '%P\n')
 
 # CME & shock files for iSWA
 cp -p staging.info $StagingDir/iswa/info
-[[ ! -z $SEPSB_issue_date ]] && IssueDate=$SEPSB_issue_date || IssueDate=$(date -ud@$(stat -c %Y shock_momenta.dat) '+%Y%m%d_%H%M%S')
+[[ ! -z ${SEPSB_issue_date[earth]} ]] && IssueDate=${SEPSB_issue_date[earth]} || IssueDate=$(date -ud@$(stat -c %Y shock_momenta.dat) '+%Y%m%d_%H%M%S')
 declare -A alias=(
    [CME]=CME-shock-parameters
    [shock_momenta]=shock-momenta

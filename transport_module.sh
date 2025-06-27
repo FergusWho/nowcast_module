@@ -10,6 +10,9 @@ if_local=0
 skip_jobs=0
 thread_count=12
 
+SBObservers=(earth mars)
+declare -A SBLocations=([STA]=stereoa [Bepi]=bepi [PSP]=psp)
+
 while getopts 'r:i:s:p:LS' flag
 do
     case "${flag}" in
@@ -76,7 +79,8 @@ python3 $code_dir/plot_iPATH_nowcast.py
 echo "[$(date -u +'%F %T')] ${location^}: Done"
 echo
 
-if [[ $location == earth ]]; then
+# create SEP SB files only for selected observers
+if [[ ${SBObservers[*]} == *$location* ]]; then
    # convert from yyyy-mm-ddTHH:MM:SSZ to yyyy-mm-dd HH:MM:SS, optionally adding the seconds part if it's missing
    starttime=${starttime/T/ }
    starttime=${starttime/Z}
@@ -95,6 +99,11 @@ if [[ $location == earth ]]; then
    cd json
    PYTHONPATH="$PYTHONPATH:$opsep_dir" python3 $opsep_dir/bin/opsep --StartDate "$starttime" --EndDate "$endtime" --Experiment user --ModelName ZEUS+iPATH_$type --FluxType differential --UserFile data/${startdate}_differential_flux.csv --spase spase://CCMC/SimulationModel/iPATH/2 --Threshold '30,1;50,1' --Template output.json
 
+   # update location in JSON file, if needed
+   [[ $location != earth ]] && {
+      sed -Ei "s/earth/${SBLocations[$location]:-$location}/g" output/opsep/*.json
+   }
+
    # move opsep output to transport dir and cleanup
    cd $trspt_dir
    mv json/output/opsep/* .
@@ -104,14 +113,16 @@ if [[ $location == earth ]]; then
 
    echo "[$(date -u +'%F %T')] Copying output files to the SEP scoreboard staging area"
    cd $CME_dir/path_output
-   $code_dir/cp2staging.sh -d SEPSB
+   $code_dir/cp2staging.sh -d SEPSB -p $location
    echo "[$(date -u +'%F %T')] Done"
 
-   echo "[$(date -u +'%F %T')] ${location^}: Making CME movie ..."
-   python3 $code_dir/plot_CME_info.py
-   convert -delay 5 CME*.png CME.gif
-   echo "[$(date -u +'%F %T')] ${location^}: Done"
-   echo
+   [[ $location == earth ]] && {
+      echo "[$(date -u +'%F %T')] ${location^}: Making CME movie ..."
+      python3 $code_dir/plot_CME_info.py
+      convert -delay 5 CME*.png CME.gif
+      echo "[$(date -u +'%F %T')] ${location^}: Done"
+      echo
+   }
 fi
 
 echo "[$(date -u +'%F %T')] ${location^}: Cleaning up ..."

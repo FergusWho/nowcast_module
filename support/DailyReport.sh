@@ -55,7 +55,7 @@ MaxStartDate=$(date -udtoday +%s)
          nseps=0
          while read f; do
             f=$(basename $f .json)
-            n=$(ls $DataDir/staging/sep_scoreboard/${f/_differential/}.* 2>/dev/null | wc -l)
+            n=$(ls $DataDir/staging/sep_scoreboard/${f/_differential/*}.* 2>/dev/null | wc -l)
             (( nseps += n ))
          done < <(find $DataDir/$dir -name 'ZEUS+iPATH*.json')
 
