@@ -6,7 +6,7 @@ cd $DataDir
 w=$(tput cols)
 
 echo "  --- Simulation jobs ---"
-squeue --me -h -o "%.18i %.10M %.6D %R %Z" \
+squeue --me -o "%.18i %.10M %.6D %R %Z %T" \
 | column -t
 echo
 
