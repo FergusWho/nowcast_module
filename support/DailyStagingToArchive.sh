@@ -16,7 +16,7 @@ done
 echo
 echo "Creating iSWA tar.gz archives:"
 cd ${StagingDir/staging/archive}/iswa
-ls | grep -v tar.gz | cut -d'_' -f1-4 | sort -V | uniq -c \
+find -type f ! -name '*.tar.gz' -printf '%P\n' | cut -d'_' -f1-4 | sort -V | uniq -c \
 | while read n f; do
    # if there's already an archive with the same prefix from previous runs,
    # first extract files from it, so all files are added to the same archive
@@ -32,7 +32,7 @@ done
 echo
 echo "Creating SEP Scoreboard tar.gz archives:"
 cd ${StagingDir/staging/archive}/sep_scoreboard
-ls | grep -v tar.gz | cut -d'.' -f1-2 | sort -V | uniq -c \
+find -type f ! -name '*.tar.gz' -printf '%P\n' | sed -E 's/(.*Z)\..*Z.*/\1/' | sort -V | uniq -c \
 | while read n f; do
    # if there's already an archive with the same prefix from previous runs,
    # first extract files from it, so all files are added to the same archive
