@@ -26,10 +26,11 @@ if (( nbads == ${#ips[@]} )); then
    exit
 fi
 
-if ! check_ip iswa.ccmc.gsfc.nasa.gov; then
-   echo $date_str ISWA_DOWN $(date -u +'%F %T')
-   exit
-fi
+# removed test: NASA started blocking inbound pings from outside NASA network
+#if ! check_ip iswa.ccmc.gsfc.nasa.gov; then
+#   echo $date_str ISWA_DOWN $(date -u +'%F %T')
+#   exit
+#fi
 
 hapi_status=$(curl --connect-timeout 10 -s https://iswa.ccmc.gsfc.nasa.gov/IswaSystemWebApp/hapi/capabilities |
    jq -r '.status.message' 2>/dev/null)
@@ -38,12 +39,13 @@ if [[ $hapi_status != OK ]]; then
    exit
 fi
 
-if ! check_ip kauai.ccmc.gsfc.nasa.gov; then
-   echo $date_str KAUAI_DOWN $(date -u +'%F %T')
-   exit
-fi
+# removed test: NASA started blocking inbound pings from outside NASA network
+#if ! check_ip kauai.ccmc.gsfc.nasa.gov; then
+#   echo $date_str KAUAI_DOWN $(date -u +'%F %T')
+#   exit
+#fi
 
-donki_status=$(curl --connect-timeout 10 -s -o /dev/null -w "%{http_code}" https://kauai.ccmc.gsfc.nasa.gov/DONKI/WS/get/CMEAnalysis?startDate=$(date -u +%F))
+donki_status=$(curl --connect-timeout 10 -s -o /dev/null -w "%{http_code}" https://kauai.ccmc.gsfc.nasa.gov/DONKI/WS/get/CMEAnalysis)
 if [[ $donki_status != 200 ]]; then
    echo $date_str DONKI_DOWN $(date -u +'%F %T')
    exit
