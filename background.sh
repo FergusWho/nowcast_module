@@ -13,11 +13,14 @@ if_local=0
 
 # testing for specific event:
 # example: bash background.sh -t '20220120_0830'
-while getopts 't:L' flag
+# rerun already processed event:
+# example: bash background.sh -t 20230819_0830 -i 20230819_0800
+while getopts 't:i:L' flag
 do
     case "${flag}" in
         t) run_time=${OPTARG};;
         L) if_local=1;;
+        i) run_dir=${OPTARG};;
     esac
 done
 echo "[$(date -u +'%F %T')] Run time: $run_time"
@@ -33,55 +36,72 @@ fi
 echo "-----------------------------------------"
 echo
 
-# download solar wind quantities from iSWA
-# create the file ${run_dir}_input.json with simulation input parameters
-echo "[$(date -u +'%F %T')] Downloading solar wind data ..."
-run_dir=$(python3 $code_dir/grepSW.py --root_dir $data_dir --run_time $run_time | tail -1)
-echo "[$(date -u +'%F %T')] Done"
-echo
+if [[ -z $run_dir ]]; then
+   # download solar wind quantities from iSWA
+   # create the file ${run_dir}_input.json with simulation input parameters
+   echo "[$(date -u +'%F %T')] Downloading solar wind data ..."
+   run_dir=$(python3 $code_dir/grepSW.py --root_dir $data_dir --run_time $run_time | tail -1)
+   echo "[$(date -u +'%F %T')] Done"
+   echo
 
-[[ -z $run_dir ]] && {
-   echo "[$(date -u +'%F %T')] Empty background folder name: exit"
-   exit 1
-}
+   [[ -z $run_dir ]] && {
+      echo "[$(date -u +'%F %T')] Empty background folder name: exit"
+      exit 1
+   }
 
-echo "[$(date -u +'%F %T')] Background simulation: $run_dir"
+   echo "[$(date -u +'%F %T')] Background simulation: $run_dir"
 
-[[ ! -s $data_dir/${run_dir}_input.json ]] && {
-   echo "[$(date -u +'%F %T')] Missing input.json: exit"
-   exit 1
-}
+   [[ ! -s $data_dir/${run_dir}_input.json ]] && {
+      echo "[$(date -u +'%F %T')] Missing input.json: exit"
+      exit 1
+   }
+
+   jump_to_job=0
+else
+   echo "[$(date -u +'%F %T')] Requested background id: $run_dir"
+   jump_to_job=1
+fi
 
 bkg_dir=$data_dir/Background/${run_dir:0:4}/$run_dir
 logfile=$bkg_dir/log.txt
 
-echo "[$(date -u +'%F %T')] Copying files to $bkg_dir ..."
-mkdir -p $bkg_dir
-# copy ZEUS source code
-cp -r $iPATH_dir/Acceleration/zeus3.6/* $bkg_dir/
+[[ -d $bkg_dir && $jump_to_job -eq 1 ]] && {
+   echo "[$(date -u +'%F %T')] Copying already existent simulation folder to $bkg_dir.bak"
+   cp -a $bkg_dir $bkg_dir.bak
+} || {
+   jump_to_job=0
 
-# use the modified dzeus36 version for nowcasting
-cp $code_dir/dzeus36_alt $bkg_dir/dzeus36
+   echo "[$(date -u +'%F %T')] Copying files to $bkg_dir ..."
+   mkdir -p $bkg_dir
 
-mv $data_dir/${run_dir}_input.json $bkg_dir/input.json
-echo "[$(date -u +'%F %T')] Done"
-echo
-echo "[$(date -u +'%F %T')] Switching to $logfile"
+   # copy ZEUS source code
+   cp -r $iPATH_dir/Acceleration/zeus3.6/* $bkg_dir/
+
+   # use the modified dzeus36 version for nowcasting
+   cp $code_dir/dzeus36_alt $bkg_dir/dzeus36
+
+   mv $data_dir/${run_dir}_input.json $bkg_dir/input.json
+   echo "[$(date -u +'%F %T')] Done"
+   echo
+   echo "[$(date -u +'%F %T')] Switching to $logfile"
+}
 
 # redirect everything to the logfile
 {
    cd $bkg_dir
 
-   # modify ZEUS source code according to the input json file
-   echo "[$(date -u +'%F %T')] Setting up background module ..."
-   python3 $code_dir/prepare_PATH.py --root_dir $bkg_dir --path_dir $iPATH_dir --run_mode 1 --input $bkg_dir/input.json
-   echo "[$(date -u +'%F %T')] Done"
-   echo
+   if (( !jump_to_job )); then
+      # modify ZEUS source code according to the input json file
+      echo "[$(date -u +'%F %T')] Setting up background module ..."
+      python3 $code_dir/prepare_PATH.py --root_dir $bkg_dir --path_dir $iPATH_dir --run_mode 1 --input $bkg_dir/input.json
+      echo "[$(date -u +'%F %T')] Done"
+      echo
 
-   echo "[$(date -u +'%F %T')] Compiling ZEUS ..."
-   csh -v ./iPATH_zeus.s
-   echo "[$(date -u +'%F %T')] Done"
-   echo
+      echo "[$(date -u +'%F %T')] Compiling ZEUS ..."
+      csh -v ./iPATH_zeus.s
+      echo "[$(date -u +'%F %T')] Done"
+      echo
+   fi
 
    echo "[$(date -u +'%F %T')] Running background module ..."
    if [ $if_local -eq 1 ]
